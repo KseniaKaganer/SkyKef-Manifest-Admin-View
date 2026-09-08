@@ -20,3 +20,191 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .data-key{color:var(--muted);font-size:.78rem;text-transform:uppercase;margin-bottom:5px}.data-val{font-weight:700;overflow-wrap:anywhere}
 .notice{margin-bottom:18px;padding:14px 16px;border:1px solid #624343;border-radius:14px;background:#231415;color:#ffb7b7;line-height:1.5}
 @media(max-width:800px){.button-grid{grid-template-columns:1fr}.admin-grid{grid-template-columns:1fr}.jumpers-list{max-height:44vh}.data-grid{grid-template-columns:1fr}}
+
+
+.detail-tabs{
+  display:flex;
+  gap:0;
+  border-bottom:1px solid var(--border);
+  background:#0f1317;
+}
+.detail-tab{
+  flex:1 1 0;
+  min-height:54px;
+  border:0;
+  border-right:1px solid var(--border);
+  background:transparent;
+  color:var(--muted);
+  font-weight:800;
+  cursor:pointer;
+  padding:0 16px;
+  text-align:left;
+}
+.detail-tab:last-child{border-right:0}
+.detail-tab:hover{background:#151b21;color:var(--text)}
+.detail-tab.active{
+  color:var(--text);
+  background:var(--panel);
+  box-shadow:inset 0 -3px 0 var(--accent);
+}
+.logbook-status{
+  padding:13px 16px;
+  color:var(--muted);
+  border-bottom:1px solid var(--border);
+  font-size:.9rem;
+}
+.logbook-scroll{
+  max-height:68vh;
+  overflow:auto;
+}
+.logbook-table{
+  width:100%;
+  border-collapse:collapse;
+  min-width:650px;
+}
+.logbook-table thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:#11161b;
+  color:#b7c6d5;
+  text-align:left;
+  padding:12px 14px;
+  font-size:.78rem;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  border-bottom:1px solid var(--border);
+}
+.logbook-table td{
+  padding:12px 14px;
+  border-bottom:1px solid #232a31;
+  vertical-align:top;
+}
+.logbook-table tbody tr:nth-child(even){background:#14191f}
+.logbook-table tbody tr:hover{background:#17212b}
+.logbook-table td:nth-child(1),
+.logbook-table td:nth-child(2){white-space:nowrap;font-weight:700}
+
+
+/* v3 Jumpers detail/logbook refinements */
+.detail-tabs{
+  display:flex;
+  width:100%;
+  gap:0;
+  border-bottom:1px solid var(--border);
+  background:#0e1216;
+}
+.detail-tab{
+  flex:1 1 50%;
+  min-height:58px;
+  border:0;
+  border-right:1px solid var(--border);
+  background:#0e1216;
+  color:#8d98a5;
+  font-weight:900;
+  font-size:.98rem;
+  cursor:pointer;
+  padding:0 18px;
+  text-align:center;
+  transition:.15s ease;
+}
+.detail-tab:last-child{border-right:0}
+.detail-tab:hover{
+  color:#fff;
+  background:#141b22;
+}
+.detail-tab.active{
+  color:#fff;
+  background:#17314a;
+  box-shadow:inset 0 -4px 0 var(--accent);
+}
+.detail-tab.active::before{
+  content:"●";
+  color:var(--accent);
+  margin-right:8px;
+  font-size:.75rem;
+  vertical-align:1px;
+}
+
+.logbook-scroll{
+  width:100%;
+  max-height:68vh;
+  overflow:auto;
+}
+.logbook-table{
+  width:100%;
+  min-width:0;
+  table-layout:fixed;
+  border-collapse:separate;
+  border-spacing:0;
+}
+.logbook-table th,
+.logbook-table td{
+  padding:13px 16px;
+  text-align:left;
+}
+.logbook-table th:nth-child(1),
+.logbook-table td:nth-child(1){width:22%}
+.logbook-table th:nth-child(2),
+.logbook-table td:nth-child(2){width:16%}
+.logbook-table th:nth-child(3),
+.logbook-table td:nth-child(3){width:24%}
+.logbook-table th:nth-child(4),
+.logbook-table td:nth-child(4){width:38%}
+
+.logbook-table thead th{
+  position:sticky;
+  top:0;
+  z-index:3;
+  background:#111820;
+  color:#d5e4f1;
+  border-bottom:1px solid #34414d;
+}
+.logbook-table tbody tr{
+  background:#12171d;
+}
+.logbook-table tbody tr:nth-child(even){
+  background:#151b21;
+}
+.logbook-table tbody tr:hover{
+  background:#19242e;
+}
+.logbook-table tbody td{
+  border-bottom:1px solid #242d35;
+  overflow-wrap:anywhere;
+}
+.logbook-table tbody tr.day-separator td{
+  border-top:2px solid #3a4650;
+}
+.logbook-table tbody tr.year-separator td{
+  border-top:4px solid var(--accent);
+  padding-top:18px;
+}
+.logbook-table .date-cell{
+  font-weight:900;
+  color:#f4f7fa;
+}
+.logbook-status{
+  padding:12px 16px;
+  background:#10151a;
+  border-bottom:1px solid var(--border);
+  color:#9aa6b2;
+}
+.notice{
+  margin-top:22px;
+  margin-bottom:0;
+}
+
+@media(max-width:800px){
+  .detail-tab{
+    min-height:52px;
+    padding:0 10px;
+    font-size:.9rem;
+  }
+  .logbook-scroll{
+    overflow-x:auto;
+  }
+  .logbook-table{
+    min-width:680px;
+  }
+}

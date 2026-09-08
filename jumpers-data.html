@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumpers Data | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css"></head><body>
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav"><a class="active" href="jumpers-data.html">Jumpers Data</a><a href="jumpers-logbook.html">Jumpers Logbook</a><a href="loads-history.html">Loads History</a><a href="reports.html">Reports</a></nav></div></header>
-<main class="page"><div class="notice">Important: your Firebase screenshot shows public Realtime Database rules. This page only performs GET requests, but if you publish it publicly while the database is public, anyone may be able to read jumper information directly from Firebase.</div>
+<main class="page">
 <div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button></div>
 <div id="status" class="status">Loading jumpers…</div><section class="admin-grid"><div class="list-panel"><div class="panel-head">Jumpers</div><div id="jumpersList" class="jumpers-list"></div></div><div class="detail-panel">
   <div class="detail-tabs" role="tablist" aria-label="Jumper information">
@@ -28,7 +28,8 @@
       </table>
     </div>
   </div>
-</div></section></main>
+</div></section><div class="notice">Important: your Firebase screenshot shows public Realtime Database rules. This page only performs GET requests, but if you publish it publicly while the database is public, anyone may be able to read jumper information directly from Firebase.</div>
+</main>
 <script>
 const FIREBASE_URL="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app/jumpers.json";
 const listEl=document.getElementById("jumpersList"),
@@ -148,12 +149,28 @@ function renderLogbookRows(rawData){
 
   logbookStatus.textContent=`${rows.length} logbook entr${rows.length===1?"y":"ies"} · newest first`;
 
+  let previousDayKey=null;
+  let previousYear=null;
+
   rows.forEach(row=>{
     const tr=document.createElement("tr");
     const parsed=parseLoadValue(row.value);
 
+    const dayKey=`${row.year}-${row.month}-${row.day}`;
+    const isNewDay=dayKey!==previousDayKey;
+    const isNewYear=row.year!==previousYear;
+
+    if(isNewYear && previousYear!==null){
+      tr.classList.add("year-separator");
+    } else if(isNewDay && previousDayKey!==null){
+      tr.classList.add("day-separator");
+    }
+
     const date=document.createElement("td");
-    date.textContent=`${String(row.day).padStart(2,"0")}/${String(row.month).padStart(2,"0")}/${row.year}`;
+    date.className="date-cell";
+    date.textContent=isNewDay
+      ? `${String(row.day).padStart(2,"0")}/${String(row.month).padStart(2,"0")}/${row.year}`
+      : "";
 
     const load=document.createElement("td");
     const loadNo=parseLoadNumber(row.loadKey);
@@ -167,6 +184,9 @@ function renderLogbookRows(rawData){
 
     tr.append(date,load,activity,details);
     logbookBody.appendChild(tr);
+
+    previousDayKey=dayKey;
+    previousYear=row.year;
   });
 }
 
