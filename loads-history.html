@@ -1,1 +1,441 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Loads History | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css"></head><body><header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav"><a href="jumpers-data.html">Jumpers Data</a><a href="jumpers-logbook.html">Jumpers Logbook</a><a href="loads-history.html">Loads History</a><a href="reports.html">Reports</a></nav></div></header><main class="page"><section class="hero"><h2>Loads History</h2><p>This page is ready for the next data view.</p></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Loads History | SkyKef Manifest Admin View</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <h1>SkyKef Manifest Admin View</h1>
+    <nav class="nav">
+      <a href="jumpers-data.html">Jumpers Data</a>
+      <a class="active" href="loads-history.html">Loads History</a>
+      <a href="reports.html">Reports</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <section class="loads-head">
+    <div>
+      <h2>Loads History</h2>
+      <p>Browse historical loads by date. Select a load to see every jumper and what they did on that load.</p>
+    </div>
+
+    <div class="loads-controls">
+      <label>
+        <span>Year</span>
+        <select id="yearSelect"></select>
+      </label>
+
+      <label>
+        <span>Month</span>
+        <select id="monthSelect">
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </label>
+
+      <label>
+        <span>Day</span>
+        <select id="daySelect"></select>
+      </label>
+
+      <button id="reloadBtn" class="small-btn" type="button">Load</button>
+    </div>
+  </section>
+
+  <div id="loadsStatus" class="status">Loading loads…</div>
+
+  <section class="loads-layout">
+    <div class="loads-list-panel">
+      <div class="panel-head">Loads</div>
+      <div id="loadsList" class="loads-list"></div>
+    </div>
+
+    <div class="load-detail-panel">
+      <div class="panel-head" id="loadTitle">Load Details</div>
+      <div id="loadEmpty" class="detail-empty">Select a load to view jumpers.</div>
+
+      <div id="loadDetail" hidden>
+        <div class="load-summary" id="loadSummary"></div>
+        <div class="load-table-scroll">
+          <table class="load-table">
+            <thead>
+              <tr>
+                <th>Jumper</th>
+                <th>UID</th>
+                <th>Activity</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="loadBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+
+  const yearSelect = document.getElementById("yearSelect");
+  const monthSelect = document.getElementById("monthSelect");
+  const daySelect = document.getElementById("daySelect");
+  const reloadBtn = document.getElementById("reloadBtn");
+  const loadsStatus = document.getElementById("loadsStatus");
+  const loadsList = document.getElementById("loadsList");
+  const loadTitle = document.getElementById("loadTitle");
+  const loadEmpty = document.getElementById("loadEmpty");
+  const loadDetail = document.getElementById("loadDetail");
+  const loadSummary = document.getElementById("loadSummary");
+  const loadBody = document.getElementById("loadBody");
+
+  let jumpersByUid = new Map();
+  let currentDayData = null;
+  let selectedLoadKey = null;
+
+  const monthNames = [
+    "", "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  function displayName(j, uid) {
+    if (!j || typeof j !== "object") return `UID ${uid}`;
+    const name = `${j.Name ?? ""} ${j.Surname ?? ""}`.trim();
+    return name || `UID ${uid}`;
+  }
+
+  function normalizeJumpers(data) {
+    const map = new Map();
+    if (!data || typeof data !== "object") return map;
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!value || typeof value !== "object") return;
+      const uid = value.Uid ?? value.uid ?? key;
+      map.set(String(uid), value);
+    });
+
+    return map;
+  }
+
+  async function fetchJson(path) {
+    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+    return response.json();
+  }
+
+  function parseActivityValue(value) {
+    if (value === null || value === undefined) {
+      return { activity: "—", details: "—" };
+    }
+
+    if (typeof value === "object") {
+      return {
+        activity: "Record",
+        details: JSON.stringify(value)
+      };
+    }
+
+    const raw = String(value).trim();
+
+    // Examples from your data: fun|12, fun_rental|12
+    if (raw.includes("|")) {
+      const parts = raw.split("|");
+      return {
+        activity: parts[0] || "—",
+        details: parts.slice(1).filter(Boolean).join(" · ") || "—"
+      };
+    }
+
+    return {
+      activity: raw || "—",
+      details: "—"
+    };
+  }
+
+  function getLoadNumber(loadKey) {
+    const match = String(loadKey).match(/\d+/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function normalizeLoadEntries(loadValue) {
+    if (!loadValue || typeof loadValue !== "object") return [];
+
+    return Object.entries(loadValue)
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([uid, value]) => {
+        const parsed = parseActivityValue(value);
+        return {
+          uid: String(uid),
+          activity: parsed.activity,
+          details: parsed.details
+        };
+      })
+      .sort((a, b) => {
+        const an = displayName(jumpersByUid.get(a.uid), a.uid);
+        const bn = displayName(jumpersByUid.get(b.uid), b.uid);
+        return an.localeCompare(bn, undefined, { sensitivity: "base" });
+      });
+  }
+
+  function renderLoads() {
+    loadsList.innerHTML = "";
+    selectedLoadKey = null;
+    loadEmpty.hidden = false;
+    loadDetail.hidden = true;
+    loadTitle.textContent = "Load Details";
+
+    if (!currentDayData || typeof currentDayData !== "object") {
+      loadsStatus.textContent = "No loads found for this date.";
+      return;
+    }
+
+    const loads = Object.entries(currentDayData)
+      .filter(([, value]) => value && typeof value === "object")
+      .sort((a, b) => getLoadNumber(b[0]) - getLoadNumber(a[0]));
+
+    if (!loads.length) {
+      loadsStatus.textContent = "No loads found for this date.";
+      return;
+    }
+
+    loadsStatus.textContent =
+      `${loads.length} load${loads.length === 1 ? "" : "s"} · newest load first`;
+
+    loads.forEach(([loadKey, loadValue]) => {
+      const entries = normalizeLoadEntries(loadValue);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "load-row";
+      btn.dataset.key = loadKey;
+
+      const left = document.createElement("div");
+
+      const title = document.createElement("div");
+      title.className = "load-row-title";
+      const loadNo = getLoadNumber(loadKey);
+      title.textContent = loadNo ? `Load ${loadNo}` : loadKey;
+
+      const sub = document.createElement("div");
+      sub.className = "load-row-sub";
+      sub.textContent = `${entries.length} jumper${entries.length === 1 ? "" : "s"}`;
+
+      left.append(title, sub);
+
+      const arrow = document.createElement("div");
+      arrow.className = "load-row-arrow";
+      arrow.textContent = "→";
+
+      btn.append(left, arrow);
+
+      btn.addEventListener("click", () => {
+        selectedLoadKey = loadKey;
+        document.querySelectorAll(".load-row").forEach(row => {
+          row.classList.toggle("active", row.dataset.key === loadKey);
+        });
+        renderLoadDetail(loadKey, loadValue);
+      });
+
+      loadsList.appendChild(btn);
+    });
+
+    // Automatically open highest/latest load.
+    const [firstKey, firstValue] = loads[0];
+    selectedLoadKey = firstKey;
+    const firstButton = loadsList.querySelector(".load-row");
+    if (firstButton) firstButton.classList.add("active");
+    renderLoadDetail(firstKey, firstValue);
+  }
+
+  function renderLoadDetail(loadKey, loadValue) {
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+    const day = daySelect.value;
+    const entries = normalizeLoadEntries(loadValue);
+
+    const loadNo = getLoadNumber(loadKey);
+    loadTitle.textContent = loadNo ? `Load ${loadNo}` : loadKey;
+    loadSummary.textContent =
+      `${day}/${month}/${year} · ${entries.length} jumper${entries.length === 1 ? "" : "s"}`;
+
+    loadBody.innerHTML = "";
+
+    if (!entries.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "report-empty";
+      td.textContent = "No jumper records in this load.";
+      tr.appendChild(td);
+      loadBody.appendChild(tr);
+    } else {
+      entries.forEach(entry => {
+        const tr = document.createElement("tr");
+
+        const name = document.createElement("td");
+        name.className = "load-jumper-name";
+        name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
+
+        const uid = document.createElement("td");
+        uid.textContent = entry.uid;
+
+        const activity = document.createElement("td");
+        activity.textContent = entry.activity;
+
+        const details = document.createElement("td");
+        details.textContent = entry.details;
+
+        tr.append(name, uid, activity, details);
+        loadBody.appendChild(tr);
+      });
+    }
+
+    loadEmpty.hidden = true;
+    loadDetail.hidden = false;
+  }
+
+  async function populateDays() {
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+
+    daySelect.innerHTML = "";
+    loadsStatus.textContent = "Loading days…";
+
+    try {
+      const monthData = await fetchJson(`loads_history/${year}/${month}`);
+
+      const days = monthData && typeof monthData === "object"
+        ? Object.keys(monthData)
+            .map(Number)
+            .filter(Number.isFinite)
+            .sort((a, b) => b - a)
+        : [];
+
+      if (!days.length) {
+        daySelect.innerHTML = '<option value="">No days</option>';
+        currentDayData = null;
+        renderLoads();
+        return;
+      }
+
+      days.forEach(day => {
+        const option = document.createElement("option");
+        option.value = day;
+        option.textContent = day;
+        daySelect.appendChild(option);
+      });
+
+      daySelect.value = String(days[0]);
+      await loadDay();
+    } catch (err) {
+      console.error(err);
+      loadsStatus.textContent = "Could not load available days.";
+    }
+  }
+
+  async function loadDay() {
+    const year = yearSelect.value;
+    const month = monthSelect.value;
+    const day = daySelect.value;
+
+    if (!day) {
+      currentDayData = null;
+      renderLoads();
+      return;
+    }
+
+    loadsStatus.textContent = "Loading loads…";
+    reloadBtn.disabled = true;
+
+    try {
+      const [dayData, jumpersData] = await Promise.all([
+        fetchJson(`loads_history/${year}/${month}/${day}`),
+        jumpersByUid.size ? Promise.resolve(null) : fetchJson("jumpers")
+      ]);
+
+      if (jumpersData) jumpersByUid = normalizeJumpers(jumpersData);
+      currentDayData = dayData;
+      renderLoads();
+    } catch (err) {
+      console.error(err);
+      loadsStatus.textContent = "Could not load loads history.";
+      loadsList.innerHTML = "";
+      loadEmpty.hidden = false;
+      loadDetail.hidden = true;
+    } finally {
+      reloadBtn.disabled = false;
+    }
+  }
+
+  async function setupYears() {
+    loadsStatus.textContent = "Loading years…";
+    yearSelect.innerHTML = "";
+
+    try {
+      const data = await fetchJson("loads_history");
+
+      const years = data && typeof data === "object"
+        ? Object.keys(data)
+            .map(Number)
+            .filter(Number.isFinite)
+            .sort((a, b) => b - a)
+        : [];
+
+      years.forEach(year => {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      });
+
+      if (!years.length) {
+        loadsStatus.textContent = "No loads history found.";
+        return;
+      }
+
+      const latestYear = years[0];
+      yearSelect.value = String(latestYear);
+
+      const months = Object.keys(data[String(latestYear)] || {})
+        .map(Number)
+        .filter(Number.isFinite)
+        .sort((a, b) => b - a);
+
+      if (months.length) {
+        monthSelect.value = String(months[0]);
+      }
+
+      await populateDays();
+    } catch (err) {
+      console.error(err);
+      loadsStatus.textContent = "Could not load loads history.";
+    }
+  }
+
+  yearSelect.addEventListener("change", populateDays);
+  monthSelect.addEventListener("change", populateDays);
+  daySelect.addEventListener("change", loadDay);
+  reloadBtn.addEventListener("click", loadDay);
+
+  setupYears();
+})();
+</script>
+</body>
+</html>
