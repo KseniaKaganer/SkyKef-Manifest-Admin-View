@@ -2,20 +2,221 @@
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav"><a class="active" href="jumpers-data.html">Jumpers Data</a><a href="jumpers-logbook.html">Jumpers Logbook</a><a href="loads-history.html">Loads History</a><a href="reports.html">Reports</a></nav></div></header>
 <main class="page"><div class="notice">Important: your Firebase screenshot shows public Realtime Database rules. This page only performs GET requests, but if you publish it publicly while the database is public, anyone may be able to read jumper information directly from Firebase.</div>
 <div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button></div>
-<div id="status" class="status">Loading jumpers…</div><section class="admin-grid"><div class="list-panel"><div class="panel-head">Jumpers</div><div id="jumpersList" class="jumpers-list"></div></div><div class="detail-panel"><div class="panel-head">Jumper Details</div><div id="details" class="detail-empty">Select a jumper to view all data.</div></div></section></main>
+<div id="status" class="status">Loading jumpers…</div><section class="admin-grid"><div class="list-panel"><div class="panel-head">Jumpers</div><div id="jumpersList" class="jumpers-list"></div></div><div class="detail-panel">
+  <div class="detail-tabs" role="tablist" aria-label="Jumper information">
+    <button id="detailsTab" class="detail-tab active" type="button" role="tab" aria-selected="true">Jumper Details</button>
+    <button id="logbookTab" class="detail-tab" type="button" role="tab" aria-selected="false">Jumper Logbook</button>
+  </div>
+
+  <div id="detailsView">
+    <div id="details" class="detail-empty">Select a jumper to view all data.</div>
+  </div>
+
+  <div id="logbookView" hidden>
+    <div id="logbookStatus" class="logbook-status">Select a jumper to view the logbook.</div>
+    <div class="logbook-scroll">
+      <table class="logbook-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Load</th>
+            <th>Activity</th>
+            <th>Details</th>
+          </tr>
+        </thead>
+        <tbody id="logbookBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div></section></main>
 <script>
 const FIREBASE_URL="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app/jumpers.json";
-const listEl=document.getElementById("jumpersList"),detailsEl=document.getElementById("details"),searchInput=document.getElementById("searchInput"),statusEl=document.getElementById("status"),reloadBtn=document.getElementById("reloadBtn");
-let jumpers=[],selectedKey=null;
+const listEl=document.getElementById("jumpersList"),
+detailsEl=document.getElementById("details"),
+searchInput=document.getElementById("searchInput"),
+statusEl=document.getElementById("status"),
+reloadBtn=document.getElementById("reloadBtn"),
+detailsTab=document.getElementById("detailsTab"),
+logbookTab=document.getElementById("logbookTab"),
+detailsView=document.getElementById("detailsView"),
+logbookView=document.getElementById("logbookView"),
+logbookStatus=document.getElementById("logbookStatus"),
+logbookBody=document.getElementById("logbookBody");
+let jumpers=[],selectedKey=null,selectedJumper=null;
+const logbookCache=new Map();
 const displayName=j=>`${j.Name??""} ${j.Surname??""}`.trim()||"Unnamed jumper";
 function normalize(data){if(!data)return[];if(Array.isArray(data))return data.map((v,i)=>v?({key:String(i),...v}):null).filter(Boolean);if(typeof data==="object")return Object.entries(data).filter(([,v])=>v&&typeof v==="object").map(([k,v])=>({key:k,...v}));return[]}
 function renderList(){const q=searchInput.value.trim().toLowerCase();const filtered=jumpers.filter(j=>[j.Name,j.Surname,j.Phone,j.Id,j.Uid].filter(v=>v!==undefined&&v!==null).join(" ").toLowerCase().includes(q));listEl.innerHTML="";
 if(!filtered.length){const e=document.createElement("div");e.className="detail-empty";e.textContent=q?"No jumpers match your search.":"No jumpers found.";listEl.appendChild(e)}
-else filtered.forEach(j=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;b.append(n,s);b.onclick=()=>{selectedKey=j.key;renderList();renderDetails(j)};listEl.appendChild(b)});
+else filtered.forEach(j=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;b.append(n,s);b.onclick=()=>{
+  selectedKey=j.key;
+  selectedJumper=j;
+  renderList();
+  renderDetails(j);
+  if(!logbookView.hidden) loadLogbook(j);
+};listEl.appendChild(b)});
 statusEl.textContent=`${filtered.length} of ${jumpers.length} jumper${jumpers.length===1?"":"s"}`;}
 function renderDetails(j){detailsEl.className="detail-content";detailsEl.innerHTML="";const t=document.createElement("div");t.className="detail-title";t.textContent=displayName(j);detailsEl.appendChild(t);const g=document.createElement("div");g.className="data-grid";
 const pref=["Name","Surname","Id","Uid","Phone","Emergency","License","AffLevel","Balance","Weight","IsRental","NumberOfJumpsToday","ReserveDate","WaiverDate"];
 Object.keys(j).filter(k=>k!=="key").sort((a,b)=>{const ai=pref.indexOf(a),bi=pref.indexOf(b);if(ai!==-1||bi!==-1)return(ai===-1?999:ai)-(bi===-1?999:bi);return a.localeCompare(b)}).forEach(k=>{const i=document.createElement("div");i.className="data-item";const kk=document.createElement("div");kk.className="data-key";kk.textContent=k;const vv=document.createElement("div");vv.className="data-val";const v=j[k];vv.textContent=v===null||v===undefined||v===""?"—":typeof v==="object"?JSON.stringify(v):String(v);i.append(kk,vv);g.appendChild(i)});detailsEl.appendChild(g)}
-async function load(){statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;try{const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);jumpers=normalize(await r.json()).sort((a,b)=>displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"}));selectedKey=null;detailsEl.className="detail-empty";detailsEl.textContent="Select a jumper to view all data.";renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
+
+function setDetailTab(tab){
+  const showDetails=tab==="details";
+  detailsTab.classList.toggle("active",showDetails);
+  logbookTab.classList.toggle("active",!showDetails);
+  detailsTab.setAttribute("aria-selected",String(showDetails));
+  logbookTab.setAttribute("aria-selected",String(!showDetails));
+  detailsView.hidden=!showDetails;
+  logbookView.hidden=showDetails;
+
+  if(!showDetails){
+    if(selectedJumper) loadLogbook(selectedJumper);
+    else {
+      logbookStatus.textContent="Select a jumper to view the logbook.";
+      logbookBody.innerHTML="";
+    }
+  }
+}
+
+function safeNumber(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n:0;
+}
+
+function flattenHistoryNode(node, path=[], rows=[]){
+  if(node===null || node===undefined) return rows;
+
+  if(typeof node!=="object"){
+    if(path.length>=4){
+      const [year,month,day,loadKey]=path;
+      rows.push({
+        year:safeNumber(year),
+        month:safeNumber(month),
+        day:safeNumber(day),
+        loadKey:String(loadKey),
+        value:node
+      });
+    }
+    return rows;
+  }
+
+  Object.entries(node).forEach(([key,value])=>{
+    flattenHistoryNode(value,[...path,key],rows);
+  });
+  return rows;
+}
+
+function parseLoadNumber(loadKey){
+  const match=String(loadKey).match(/(\d+)/);
+  return match?Number(match[1]):0;
+}
+
+function parseLoadValue(value){
+  if(value===null || value===undefined) return {activity:"—",details:"—"};
+  if(typeof value==="object"){
+    return {activity:"Record",details:JSON.stringify(value)};
+  }
+
+  const raw=String(value);
+  const parts=raw.split("|").map(s=>s.trim()).filter(Boolean);
+
+  if(parts.length===0) return {activity:"—",details:"—"};
+  if(parts.length===1) return {activity:parts[0],details:"—"};
+
+  return {
+    activity:parts[0],
+    details:parts.slice(1).join(" · ")
+  };
+}
+
+function renderLogbookRows(rawData){
+  const rows=flattenHistoryNode(rawData);
+
+  rows.sort((a,b)=>{
+    if(b.year!==a.year) return b.year-a.year;
+    if(b.month!==a.month) return b.month-a.month;
+    if(b.day!==a.day) return b.day-a.day;
+    return parseLoadNumber(b.loadKey)-parseLoadNumber(a.loadKey);
+  });
+
+  logbookBody.innerHTML="";
+
+  if(!rows.length){
+    logbookStatus.textContent="No logbook history found for this jumper.";
+    return;
+  }
+
+  logbookStatus.textContent=`${rows.length} logbook entr${rows.length===1?"y":"ies"} · newest first`;
+
+  rows.forEach(row=>{
+    const tr=document.createElement("tr");
+    const parsed=parseLoadValue(row.value);
+
+    const date=document.createElement("td");
+    date.textContent=`${String(row.day).padStart(2,"0")}/${String(row.month).padStart(2,"0")}/${row.year}`;
+
+    const load=document.createElement("td");
+    const loadNo=parseLoadNumber(row.loadKey);
+    load.textContent=loadNo?`Load ${loadNo}`:row.loadKey;
+
+    const activity=document.createElement("td");
+    activity.textContent=parsed.activity;
+
+    const details=document.createElement("td");
+    details.textContent=parsed.details;
+
+    tr.append(date,load,activity,details);
+    logbookBody.appendChild(tr);
+  });
+}
+
+async function loadLogbook(jumper){
+  if(!jumper){
+    logbookStatus.textContent="Select a jumper to view the logbook.";
+    logbookBody.innerHTML="";
+    return;
+  }
+
+  const uid=jumper.Uid;
+  if(uid===undefined || uid===null || uid===""){
+    logbookStatus.textContent="This jumper does not have a UID.";
+    logbookBody.innerHTML="";
+    return;
+  }
+
+  const cacheKey=String(uid);
+  logbookStatus.textContent=`Loading logbook for ${displayName(jumper)}…`;
+  logbookBody.innerHTML="";
+
+  if(logbookCache.has(cacheKey)){
+    renderLogbookRows(logbookCache.get(cacheKey));
+    return;
+  }
+
+  try{
+    const url=`https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app/jumpers_history/${encodeURIComponent(cacheKey)}.json`;
+    const response=await fetch(url,{cache:"no-store"});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data=await response.json();
+    logbookCache.set(cacheKey,data);
+    renderLogbookRows(data);
+  }catch(err){
+    console.error(err);
+    logbookStatus.textContent="Could not load this jumper's logbook.";
+  }
+}
+
+detailsTab.addEventListener("click",()=>setDetailTab("details"));
+logbookTab.addEventListener("click",()=>setDetailTab("logbook"));
+
+async function load(){statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;try{const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);jumpers=normalize(await r.json()).sort((a,b)=>displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"}));
+selectedKey=null;
+selectedJumper=null;
+detailsEl.className="detail-empty";
+detailsEl.textContent="Select a jumper to view all data.";
+logbookStatus.textContent="Select a jumper to view the logbook.";
+logbookBody.innerHTML="";
+renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
 searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",load);load();
 </script></body></html>
