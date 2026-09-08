@@ -50,6 +50,7 @@
       </label>
 
       <button id="loadReportBtn" class="small-btn" type="button">Load Report</button>
+      <button id="exportReportBtn" class="small-btn export-btn" type="button">Export Spreadsheet</button>
     </div>
   </section>
 
@@ -65,10 +66,6 @@
   </section>
 
   <div id="pricingInfo" class="pricing-info"></div>
-
-  <div class="notice">
-    Important: your Firebase Realtime Database is currently configured as public. This admin view only reads data, but public database rules can allow other people to access or modify the database directly.
-  </div>
 </main>
 
 <script>
@@ -78,6 +75,7 @@
   const yearSelect = document.getElementById("yearSelect");
   const monthSelect = document.getElementById("monthSelect");
   const loadReportBtn = document.getElementById("loadReportBtn");
+  const exportReportBtn = document.getElementById("exportReportBtn");
   const reportStatus = document.getElementById("reportStatus");
   const reportHead = document.getElementById("reportHead");
   const reportBody = document.getElementById("reportBody");
@@ -399,6 +397,44 @@
     }
   }
 
+
+  function csvEscape(value) {
+    const text = String(value ?? "");
+    return `"${text.replace(/"/g, '""')}"`;
+  }
+
+  function exportReportCsv() {
+    const rows = [];
+    const table = document.getElementById("reportTable");
+
+    if (!table || !reportBody.children.length) {
+      alert("There is no report to export.");
+      return;
+    }
+
+    table.querySelectorAll("tr").forEach(tr => {
+      const cells = [...tr.querySelectorAll("th,td")].map(cell => csvEscape(cell.innerText.trim()));
+      rows.push(cells.join(","));
+    });
+
+    const bom = "\uFEFF";
+    const csv = bom + rows.join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+
+    const year = yearSelect.value;
+    const month = String(monthSelect.value).padStart(2, "0");
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `SkyKef_Report_${year}_${month}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
   function setupDateSelectors() {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -415,6 +451,7 @@
   }
 
   loadReportBtn.addEventListener("click", loadReport);
+  exportReportBtn.addEventListener("click", exportReportCsv);
   yearSelect.addEventListener("change", loadReport);
   monthSelect.addEventListener("change", loadReport);
 

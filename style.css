@@ -361,3 +361,121 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
     flex:1 1 100%;
   }
 }
+
+
+/* v5 report readability + export */
+.report-card{
+  border:1px solid #46515d;
+  border-radius:18px;
+  background:#10151a;
+  overflow:hidden;
+}
+
+.report-scroll{
+  max-height:72vh;
+  overflow:auto;
+  background:#10151a;
+}
+
+.monthly-report-table{
+  width:max-content;
+  min-width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  background:#10151a;
+  font-size:.94rem;
+}
+
+.monthly-report-table th,
+.monthly-report-table td{
+  min-width:160px;
+  max-width:285px;
+  padding:15px 16px;
+  border-right:1px solid #3a4652;
+  border-bottom:1px solid #303a44;
+  line-height:1.45;
+  vertical-align:middle;
+  text-align:left;
+}
+
+.monthly-report-table th:last-child,
+.monthly-report-table td:last-child{
+  border-right:0;
+}
+
+.monthly-report-table thead th{
+  position:sticky;
+  top:0;
+  z-index:4;
+  background:#17202a;
+  color:#f0f5fa;
+  border-bottom:2px solid #596776;
+  font-weight:900;
+}
+
+.monthly-report-table .sticky-worker{
+  position:sticky;
+  left:0;
+  z-index:3;
+  min-width:210px;
+  max-width:240px;
+  background:#151c23;
+  border-right:2px solid #596776;
+}
+
+.monthly-report-table thead .sticky-worker{
+  z-index:6;
+  background:#17202a;
+}
+
+.monthly-report-table tbody tr:nth-child(even) td{
+  background:#141a20;
+}
+
+.monthly-report-table tbody tr:nth-child(even) .sticky-worker{
+  background:#141a20;
+}
+
+.monthly-report-table tbody tr:nth-child(odd) td{
+  background:#10151a;
+}
+
+.monthly-report-table tbody tr:nth-child(odd) .sticky-worker{
+  background:#10151a;
+}
+
+.monthly-report-table tbody tr:hover td,
+.monthly-report-table tbody tr:hover .sticky-worker{
+  background:#1a2631;
+}
+
+.monthly-report-table .worker-name{
+  font-weight:900;
+  color:#fff;
+}
+
+.monthly-report-table .date-head{
+  min-width:150px;
+}
+
+.monthly-report-table .summary-cell{
+  min-width:250px;
+  font-weight:700;
+}
+
+.monthly-report-table .balance-cell{
+  min-width:125px;
+  max-width:150px;
+  text-align:right;
+  font-weight:900;
+}
+
+.export-btn{
+  border-color:#3f6f98;
+  background:#10263a;
+}
+
+.export-btn:hover{
+  border-color:var(--accent);
+  background:#15324c;
+}
