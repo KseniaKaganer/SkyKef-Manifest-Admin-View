@@ -174,6 +174,18 @@
     return match ? Number(match[0]) : 0;
   }
 
+
+  function jumperCountForActivity(activity) {
+    const value = String(activity ?? "").trim().toUpperCase();
+    return value.startsWith("T") ? 2 : 1;
+  }
+
+  function getLoadJumperCount(entries) {
+    return entries.reduce((sum, entry) => {
+      return sum + jumperCountForActivity(entry.activity);
+    }, 0);
+  }
+
   function normalizeLoadEntries(loadValue) {
     if (!loadValue || typeof loadValue !== "object") return [];
 
@@ -235,7 +247,8 @@
 
       const sub = document.createElement("div");
       sub.className = "load-row-sub";
-      sub.textContent = `${entries.length} jumper${entries.length === 1 ? "" : "s"}`;
+      const jumperCount = getLoadJumperCount(entries);
+      sub.textContent = `${jumperCount} jumper${jumperCount === 1 ? "" : "s"}`;
 
       left.append(title, sub);
 
@@ -272,8 +285,9 @@
 
     const loadNo = getLoadNumber(loadKey);
     loadTitle.textContent = loadNo ? `Load ${loadNo}` : loadKey;
+    const jumperCount = getLoadJumperCount(entries);
     loadSummary.textContent =
-      `${day}/${month}/${year} · ${entries.length} jumper${entries.length === 1 ? "" : "s"}`;
+      `${day}/${month}/${year} · ${jumperCount} jumper${jumperCount === 1 ? "" : "s"}`;
 
     loadBody.innerHTML = "";
 
@@ -298,6 +312,9 @@
 
         const activity = document.createElement("td");
         activity.textContent = entry.activity;
+        if (jumperCountForActivity(entry.activity) === 2) {
+          activity.title = "Counts as 2 jumpers";
+        }
 
         const details = document.createElement("td");
         details.textContent = entry.details;
