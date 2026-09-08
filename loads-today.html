@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Loads | SkyKef Manifest Admin View</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <h1>SkyKef Manifest Admin View</h1>
+    <nav class="nav">
+      <a href="jumpers-data.html">Jumpers Data</a>
+      <a class="active" href="loads.html">Loads</a>
+      <a href="loads-history.html">Loads History</a>
+      <a href="reports.html">Reports</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <section class="today-loads-head">
+    <div>
+      <h2>Today's Loads</h2>
+      <p id="todayLabel">Loading today's manifest…</p>
+    </div>
+    <button id="reloadBtn" class="small-btn" type="button">Reload Loads</button>
+  </section>
+
+  <div id="loadsStatus" class="status">Loading today's loads…</div>
+
+  <section id="notStartedCard" class="day-not-started" hidden>
+    <div class="not-started-icon">◷</div>
+    <h3>The day didn't started yet</h3>
+    <p>There is currently no <strong>loads</strong> entity in Firebase.</p>
+  </section>
+
+  <section id="todayLoadsLayout" class="loads-layout" hidden>
+    <div class="loads-list-panel">
+      <div class="panel-head">Today's Loads</div>
+      <div id="loadsList" class="loads-list"></div>
+    </div>
+
+    <div class="load-detail-panel">
+      <div class="panel-head" id="loadTitle">Load Details</div>
+
+      <div id="loadDetail">
+        <div class="load-summary" id="loadSummary"></div>
+
+        <div class="load-table-scroll">
+          <table class="load-table">
+            <thead>
+              <tr>
+                <th>Jumper</th>
+                <th>UID</th>
+                <th>Activity</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="loadBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+
+  const reloadBtn = document.getElementById("reloadBtn");
+  const todayLabel = document.getElementById("todayLabel");
+  const loadsStatus = document.getElementById("loadsStatus");
+  const notStartedCard = document.getElementById("notStartedCard");
+  const todayLoadsLayout = document.getElementById("todayLoadsLayout");
+  const loadsList = document.getElementById("loadsList");
+  const loadTitle = document.getElementById("loadTitle");
+  const loadSummary = document.getElementById("loadSummary");
+  const loadBody = document.getElementById("loadBody");
+
+  let jumpersByUid = new Map();
+  let currentLoads = [];
+
+  function formatToday() {
+    const d = new Date();
+    return d.toLocaleDateString(undefined, {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  function displayName(j, uid) {
+    if (!j || typeof j !== "object") return `UID ${uid}`;
+    const name = `${j.Name ?? ""} ${j.Surname ?? ""}`.trim();
+    return name || `UID ${uid}`;
+  }
+
+  function normalizeJumpers(data) {
+    const map = new Map();
+    if (!data || typeof data !== "object") return map;
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!value || typeof value !== "object") return;
+      const uid = value.Uid ?? value.uid ?? key;
+      map.set(String(uid), value);
+    });
+
+    return map;
+  }
+
+  async function fetchJson(path) {
+    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+    return response.json();
+  }
+
+  function parseActivityValue(value) {
+    if (value === null || value === undefined) {
+      return { activity: "—", details: "—" };
+    }
+
+    if (typeof value === "object") {
+      return { activity: "Record", details: JSON.stringify(value) };
+    }
+
+    const raw = String(value).trim();
+
+    if (raw.includes("|")) {
+      const parts = raw.split("|");
+      return {
+        activity: parts[0] || "—",
+        details: parts.slice(1).filter(Boolean).join(" · ") || "—"
+      };
+    }
+
+    return { activity: raw || "—", details: "—" };
+  }
+
+  function jumperCountForActivity(activity) {
+    const value = String(activity ?? "").trim().toUpperCase();
+    return value.startsWith("T") ? 2 : 1;
+  }
+
+  function getLoadNumber(loadKey) {
+    const match = String(loadKey).match(/\d+/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function normalizeLoadEntries(loadValue) {
+    if (!loadValue || typeof loadValue !== "object") return [];
+
+    return Object.entries(loadValue)
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([uid, value]) => {
+        const parsed = parseActivityValue(value);
+        return {
+          uid: String(uid),
+          activity: parsed.activity,
+          details: parsed.details
+        };
+      })
+      .sort((a, b) => {
+        const an = displayName(jumpersByUid.get(a.uid), a.uid);
+        const bn = displayName(jumpersByUid.get(b.uid), b.uid);
+        return an.localeCompare(bn, undefined, { sensitivity: "base" });
+      });
+  }
+
+  function getJumperCount(entries) {
+    return entries.reduce(
+      (sum, entry) => sum + jumperCountForActivity(entry.activity),
+      0
+    );
+  }
+
+  // Supports:
+  // 1) /loads/{load}/{uid}
+  // 2) /loads/{day}/{load}/{uid}
+  // 3) /loads/{year}/{month}/{day}/{load}/{uid}
+  // in case your live node includes a date layer.
+  function detectTodayLoads(data) {
+    if (!data || typeof data !== "object") return null;
+
+    const now = new Date();
+    const y = String(now.getFullYear());
+    const m = String(now.getMonth() + 1);
+    const d = String(now.getDate());
+
+    // Year/month/day nested.
+    if (data[y] && typeof data[y] === "object") {
+      const yearNode = data[y];
+      const monthNode = yearNode[m] ?? yearNode[String(Number(m)).padStart(2, "0")];
+      if (monthNode && typeof monthNode === "object") {
+        const dayNode = monthNode[d] ?? monthNode[String(Number(d)).padStart(2, "0")];
+        if (dayNode && typeof dayNode === "object") return dayNode;
+      }
+    }
+
+    // Day nested.
+    if (data[d] && typeof data[d] === "object") {
+      const maybeDay = data[d];
+      const childKeys = Object.keys(maybeDay);
+      if (childKeys.some(k => /load/i.test(k) || /^\d+$/.test(k))) {
+        return maybeDay;
+      }
+    }
+
+    // Direct load collection.
+    return data;
+  }
+
+  function normalizeLoads(loadsNode) {
+    if (!loadsNode || typeof loadsNode !== "object") return [];
+
+    return Object.entries(loadsNode)
+      .filter(([, value]) => value && typeof value === "object")
+      .map(([key, value]) => ({
+        key,
+        number: getLoadNumber(key),
+        value,
+        entries: normalizeLoadEntries(value)
+      }))
+      .sort((a, b) => b.number - a.number);
+  }
+
+  function renderLoadDetail(load) {
+    loadTitle.textContent = load.number ? `Load ${load.number}` : load.key;
+
+    const count = getJumperCount(load.entries);
+    loadSummary.textContent =
+      `${count} jumper${count === 1 ? "" : "s"} · ${load.entries.length} record${load.entries.length === 1 ? "" : "s"}`;
+
+    loadBody.innerHTML = "";
+
+    if (!load.entries.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "report-empty";
+      td.textContent = "No jumper records in this load.";
+      tr.appendChild(td);
+      loadBody.appendChild(tr);
+      return;
+    }
+
+    load.entries.forEach(entry => {
+      const tr = document.createElement("tr");
+
+      const name = document.createElement("td");
+      name.className = "load-jumper-name";
+      name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
+
+      const uid = document.createElement("td");
+      uid.textContent = entry.uid;
+
+      const activity = document.createElement("td");
+      activity.textContent = entry.activity;
+      if (jumperCountForActivity(entry.activity) === 2) {
+        activity.title = "Counts as 2 jumpers";
+      }
+
+      const details = document.createElement("td");
+      details.textContent = entry.details;
+
+      tr.append(name, uid, activity, details);
+      loadBody.appendChild(tr);
+    });
+  }
+
+  function renderLoads() {
+    loadsList.innerHTML = "";
+
+    if (!currentLoads.length) {
+      todayLoadsLayout.hidden = true;
+      notStartedCard.hidden = false;
+      loadsStatus.textContent = "No loads found.";
+      return;
+    }
+
+    notStartedCard.hidden = true;
+    todayLoadsLayout.hidden = false;
+
+    const totalJumpers = currentLoads.reduce(
+      (sum, load) => sum + getJumperCount(load.entries),
+      0
+    );
+
+    loadsStatus.textContent =
+      `${currentLoads.length} load${currentLoads.length === 1 ? "" : "s"} today · ${totalJumpers} total jumper slot${totalJumpers === 1 ? "" : "s"}`;
+
+    currentLoads.forEach((load, index) => {
+      const count = getJumperCount(load.entries);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "load-row" + (index === 0 ? " active" : "");
+
+      const left = document.createElement("div");
+
+      const title = document.createElement("div");
+      title.className = "load-row-title";
+      title.textContent = load.number ? `Load ${load.number}` : load.key;
+
+      const sub = document.createElement("div");
+      sub.className = "load-row-sub";
+      sub.textContent = `${count} jumper${count === 1 ? "" : "s"}`;
+
+      const arrow = document.createElement("div");
+      arrow.className = "load-row-arrow";
+      arrow.textContent = "→";
+
+      left.append(title, sub);
+      btn.append(left, arrow);
+
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".load-row").forEach(row => row.classList.remove("active"));
+        btn.classList.add("active");
+        renderLoadDetail(load);
+      });
+
+      loadsList.appendChild(btn);
+    });
+
+    renderLoadDetail(currentLoads[0]);
+  }
+
+  async function loadToday() {
+    todayLabel.textContent = formatToday();
+    loadsStatus.textContent = "Loading today's loads…";
+    reloadBtn.disabled = true;
+
+    try {
+      const [loadsData, jumpersData] = await Promise.all([
+        fetchJson("loads"),
+        fetchJson("jumpers")
+      ]);
+
+      jumpersByUid = normalizeJumpers(jumpersData);
+
+      if (loadsData === null || loadsData === undefined) {
+        currentLoads = [];
+        todayLoadsLayout.hidden = true;
+        notStartedCard.hidden = false;
+        loadsStatus.textContent = "The day didn't started yet.";
+        return;
+      }
+
+      const todayNode = detectTodayLoads(loadsData);
+      currentLoads = normalizeLoads(todayNode);
+
+      if (!currentLoads.length) {
+        todayLoadsLayout.hidden = true;
+        notStartedCard.hidden = false;
+        loadsStatus.textContent = "The day didn't started yet.";
+        return;
+      }
+
+      renderLoads();
+    } catch (err) {
+      console.error(err);
+      loadsStatus.textContent = "Could not load today's loads.";
+      todayLoadsLayout.hidden = true;
+      notStartedCard.hidden = true;
+    } finally {
+      reloadBtn.disabled = false;
+    }
+  }
+
+  reloadBtn.addEventListener("click", loadToday);
+  loadToday();
+})();
+</script>
+</body>
+</html>
