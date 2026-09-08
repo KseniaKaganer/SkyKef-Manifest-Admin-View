@@ -1,1 +1,426 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reports | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css"></head><body><header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav"><a href="jumpers-data.html">Jumpers Data</a><a href="jumpers-logbook.html">Jumpers Logbook</a><a href="loads-history.html">Loads History</a><a href="reports.html">Reports</a></nav></div></header><main class="page"><section class="hero"><h2>Reports</h2><p>This page is ready for the next data view.</p></section></main></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Reports | SkyKef Manifest Admin View</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <h1>SkyKef Manifest Admin View</h1>
+    <nav class="nav">
+      <a href="jumpers-data.html">Jumpers Data</a>
+      <a href="loads-history.html">Loads History</a>
+      <a class="active" href="reports.html">Reports</a>
+    </nav>
+  </div>
+</header>
+
+<main class="page">
+  <section class="report-head">
+    <div>
+      <h2>Monthly Report</h2>
+      <p>Jobs performed by each jumper, organized by day, with monthly totals and calculated balance.</p>
+    </div>
+
+    <div class="report-controls">
+      <label>
+        <span>Year</span>
+        <select id="yearSelect"></select>
+      </label>
+
+      <label>
+        <span>Month</span>
+        <select id="monthSelect">
+          <option value="1">January</option>
+          <option value="2">February</option>
+          <option value="3">March</option>
+          <option value="4">April</option>
+          <option value="5">May</option>
+          <option value="6">June</option>
+          <option value="7">July</option>
+          <option value="8">August</option>
+          <option value="9">September</option>
+          <option value="10">October</option>
+          <option value="11">November</option>
+          <option value="12">December</option>
+        </select>
+      </label>
+
+      <button id="loadReportBtn" class="small-btn" type="button">Load Report</button>
+    </div>
+  </section>
+
+  <div id="reportStatus" class="status">Loading report…</div>
+
+  <section class="report-card">
+    <div class="report-scroll">
+      <table class="monthly-report-table" id="reportTable">
+        <thead id="reportHead"></thead>
+        <tbody id="reportBody"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div id="pricingInfo" class="pricing-info"></div>
+
+  <div class="notice">
+    Important: your Firebase Realtime Database is currently configured as public. This admin view only reads data, but public database rules can allow other people to access or modify the database directly.
+  </div>
+</main>
+
+<script>
+(() => {
+  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+
+  const yearSelect = document.getElementById("yearSelect");
+  const monthSelect = document.getElementById("monthSelect");
+  const loadReportBtn = document.getElementById("loadReportBtn");
+  const reportStatus = document.getElementById("reportStatus");
+  const reportHead = document.getElementById("reportHead");
+  const reportBody = document.getElementById("reportBody");
+  const pricingInfo = document.getElementById("pricingInfo");
+
+  const monthNames = [
+    "", "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  let jumpersByUid = new Map();
+  let prices = new Map();
+
+  function normalizeKey(value) {
+    return String(value ?? "").trim().toLowerCase().replace(/\s+/g, "_");
+  }
+
+  function displayName(j, uid) {
+    if (!j || typeof j !== "object") return `UID ${uid}`;
+    const name = `${j.Name ?? ""} ${j.Surname ?? ""}`.trim();
+    return name || `UID ${uid}`;
+  }
+
+  function objectEntries(data) {
+    return data && typeof data === "object" ? Object.entries(data) : [];
+  }
+
+  function buildJumpersMap(data) {
+    const map = new Map();
+    objectEntries(data).forEach(([key, value]) => {
+      if (!value || typeof value !== "object") return;
+      const uid = value.Uid ?? value.uid ?? key;
+      map.set(String(uid), value);
+    });
+    return map;
+  }
+
+  // tickets_worker can be a direct code->price map, or objects such as
+  // {code:"fun", price:12}. This parser supports both forms.
+  function buildPriceMap(data) {
+    const map = new Map();
+
+    function remember(code, value) {
+      const n = Number(value);
+      const k = normalizeKey(code);
+      if (k && Number.isFinite(n)) map.set(k, n);
+    }
+
+    function walk(node, path = []) {
+      if (node === null || node === undefined) return;
+
+      if (typeof node === "number") {
+        if (path.length) remember(path[path.length - 1], node);
+        return;
+      }
+
+      if (typeof node !== "object") return;
+
+      const keys = Object.keys(node);
+      const codeKey = keys.find(k => /^(code|job|name|type|ticket|key)$/i.test(k));
+      const priceKey = keys.find(k => /^(price|value|cost|amount|salary|worker_price)$/i.test(k));
+
+      if (codeKey && priceKey) {
+        remember(node[codeKey], node[priceKey]);
+      }
+
+      Object.entries(node).forEach(([key, value]) => {
+        if (typeof value === "number") {
+          remember(key, value);
+        } else {
+          walk(value, [...path, key]);
+        }
+      });
+    }
+
+    walk(data);
+    return map;
+  }
+
+  function mergeJobCounts(target, source) {
+    Object.entries(source).forEach(([job, count]) => {
+      const key = String(job);
+      const n = Number(count);
+      if (!Number.isFinite(n)) return;
+      target[key] = (target[key] || 0) + n;
+    });
+  }
+
+  // Converts a worker/day report record into {jobCode: count}.
+  function extractJobs(value) {
+    const result = {};
+
+    if (value === null || value === undefined) return result;
+
+    if (typeof value === "string") {
+      // Supports strings like "fun-1 t-2 v-1"
+      const matches = value.matchAll(/([A-Za-z0-9_><-]+?)[-:](\-?\d+(?:\.\d+)?)(?=\s|$)/g);
+      for (const m of matches) {
+        const job = m[1];
+        const count = Number(m[2]);
+        if (job && Number.isFinite(count)) {
+          result[job] = (result[job] || 0) + count;
+        }
+      }
+      return result;
+    }
+
+    if (typeof value === "number") return result;
+
+    if (typeof value === "object") {
+      Object.entries(value).forEach(([key, child]) => {
+        if (typeof child === "number") {
+          result[key] = (result[key] || 0) + child;
+        } else if (child && typeof child === "object") {
+          mergeJobCounts(result, extractJobs(child));
+        } else if (typeof child === "string") {
+          const parsed = extractJobs(child);
+          if (Object.keys(parsed).length) mergeJobCounts(result, parsed);
+        }
+      });
+    }
+
+    return result;
+  }
+
+  function formatJobs(jobs) {
+    const entries = Object.entries(jobs)
+      .filter(([, count]) => Number(count) !== 0)
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    if (!entries.length) return "";
+
+    return entries
+      .map(([job, count]) => `${job}-${count}`)
+      .join(" ");
+  }
+
+  function calcBalance(summary) {
+    let total = 0;
+    const missing = [];
+
+    Object.entries(summary).forEach(([job, count]) => {
+      const key = normalizeKey(job);
+      if (!prices.has(key)) {
+        missing.push(job);
+        return;
+      }
+      total += Number(count) * prices.get(key);
+    });
+
+    return { total, missing };
+  }
+
+  function formatNumber(n) {
+    if (!Number.isFinite(n)) return "—";
+    return Number.isInteger(n)
+      ? String(n)
+      : n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  }
+
+  function normalizeMonthData(monthData) {
+    const byUid = new Map();
+    const days = [];
+
+    objectEntries(monthData).forEach(([dayKey, dayValue]) => {
+      const day = Number(dayKey);
+      if (!Number.isFinite(day) || !dayValue || typeof dayValue !== "object") return;
+
+      days.push(day);
+
+      objectEntries(dayValue).forEach(([uid, record]) => {
+        const jobs = extractJobs(record);
+        if (!Object.keys(jobs).length) return;
+
+        const uidKey = String(uid);
+        if (!byUid.has(uidKey)) {
+          byUid.set(uidKey, { uid: uidKey, days: new Map(), summary: {} });
+        }
+
+        const worker = byUid.get(uidKey);
+        worker.days.set(day, jobs);
+        mergeJobCounts(worker.summary, jobs);
+      });
+    });
+
+    days.sort((a, b) => a - b);
+
+    const workers = [...byUid.values()].sort((a, b) => {
+      const an = displayName(jumpersByUid.get(a.uid), a.uid);
+      const bn = displayName(jumpersByUid.get(b.uid), b.uid);
+      return an.localeCompare(bn, undefined, { sensitivity: "base" });
+    });
+
+    return { days, workers };
+  }
+
+  function renderReport(year, month, monthData) {
+    const { days, workers } = normalizeMonthData(monthData);
+
+    reportHead.innerHTML = "";
+    reportBody.innerHTML = "";
+
+    const headRow = document.createElement("tr");
+
+    const workerHead = document.createElement("th");
+    workerHead.textContent = "Worker";
+    workerHead.className = "sticky-worker";
+    headRow.appendChild(workerHead);
+
+    days.forEach(day => {
+      const th = document.createElement("th");
+      th.textContent = `${day}/${month}/${year}`;
+      th.className = "date-head";
+      headRow.appendChild(th);
+    });
+
+    const summaryHead = document.createElement("th");
+    summaryHead.textContent = "Summary";
+    headRow.appendChild(summaryHead);
+
+    const balanceHead = document.createElement("th");
+    balanceHead.textContent = "Balance";
+    headRow.appendChild(balanceHead);
+
+    reportHead.appendChild(headRow);
+
+    const allMissing = new Set();
+
+    workers.forEach(worker => {
+      const tr = document.createElement("tr");
+
+      const workerCell = document.createElement("td");
+      workerCell.className = "sticky-worker worker-name";
+      workerCell.textContent = displayName(jumpersByUid.get(worker.uid), worker.uid);
+      tr.appendChild(workerCell);
+
+      days.forEach(day => {
+        const td = document.createElement("td");
+        td.className = "jobs-cell";
+        const jobs = worker.days.get(day);
+        td.textContent = jobs ? formatJobs(jobs) : "";
+        tr.appendChild(td);
+      });
+
+      const summaryCell = document.createElement("td");
+      summaryCell.className = "summary-cell";
+      summaryCell.textContent = formatJobs(worker.summary);
+      tr.appendChild(summaryCell);
+
+      const balanceCell = document.createElement("td");
+      balanceCell.className = "balance-cell";
+      const balance = calcBalance(worker.summary);
+      balance.missing.forEach(code => allMissing.add(code));
+      balanceCell.textContent = formatNumber(balance.total) + (balance.missing.length ? "*" : "");
+      balanceCell.title = balance.missing.length
+        ? `Missing prices: ${balance.missing.join(", ")}`
+        : "Calculated from tickets_worker";
+      tr.appendChild(balanceCell);
+
+      reportBody.appendChild(tr);
+    });
+
+    if (!workers.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = Math.max(3, days.length + 3);
+      td.className = "report-empty";
+      td.textContent = "No report data found for this month.";
+      tr.appendChild(td);
+      reportBody.appendChild(tr);
+    }
+
+    reportStatus.textContent =
+      `${monthNames[month]} ${year} · ${workers.length} worker${workers.length === 1 ? "" : "s"} · ${days.length} active day${days.length === 1 ? "" : "s"}`;
+
+    if (allMissing.size) {
+      pricingInfo.textContent =
+        `* Balance is partial for job codes without a matching price in tickets_worker: ${[...allMissing].sort().join(", ")}`;
+      pricingInfo.classList.add("warning");
+    } else {
+      pricingInfo.textContent =
+        `Balance calculated from tickets_worker prices.`;
+      pricingInfo.classList.remove("warning");
+    }
+  }
+
+  async function fetchJson(path) {
+    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+    return response.json();
+  }
+
+  async function loadReport() {
+    const year = Number(yearSelect.value);
+    const month = Number(monthSelect.value);
+
+    reportStatus.textContent = "Loading report…";
+    loadReportBtn.disabled = true;
+    pricingInfo.textContent = "";
+
+    try {
+      const [monthData, jumpersData, ticketsData] = await Promise.all([
+        fetchJson(`report/${year}/${month}`),
+        fetchJson("jumpers"),
+        fetchJson("tickets_worker")
+      ]);
+
+      jumpersByUid = buildJumpersMap(jumpersData);
+      prices = buildPriceMap(ticketsData);
+
+      renderReport(year, month, monthData);
+    } catch (err) {
+      console.error(err);
+      reportStatus.textContent = "Could not load report data.";
+      reportHead.innerHTML = "";
+      reportBody.innerHTML = `<tr><td class="report-empty">Check Firebase rules, network access, and the report/tickets_worker paths.</td></tr>`;
+    } finally {
+      loadReportBtn.disabled = false;
+    }
+  }
+
+  function setupDateSelectors() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+
+    for (let y = currentYear; y >= 2021; y--) {
+      const option = document.createElement("option");
+      option.value = y;
+      option.textContent = y;
+      yearSelect.appendChild(option);
+    }
+
+    yearSelect.value = String(currentYear);
+    monthSelect.value = String(now.getMonth() + 1);
+  }
+
+  loadReportBtn.addEventListener("click", loadReport);
+  yearSelect.addEventListener("change", loadReport);
+  monthSelect.addEventListener("change", loadReport);
+
+  setupDateSelectors();
+  loadReport();
+})();
+</script>
+</body>
+</html>
