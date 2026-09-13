@@ -187,6 +187,14 @@
     }, 0);
   }
 
+
+  function activityPriority(activity) {
+    const value = String(activity ?? "").trim().toUpperCase();
+    if (value.startsWith("T")) return 0;
+    if (value === "AFF" || value.startsWith("AFF")) return 1;
+    return 2;
+  }
+
   function normalizeLoadEntries(loadValue) {
     if (!loadValue || typeof loadValue !== "object") return [];
 
@@ -201,6 +209,9 @@
         };
       })
       .sort((a, b) => {
+        const priorityDiff = activityPriority(a.activity) - activityPriority(b.activity);
+        if (priorityDiff !== 0) return priorityDiff;
+
         const an = displayName(jumpersByUid.get(a.uid), a.uid);
         const bn = displayName(jumpersByUid.get(b.uid), b.uid);
         return an.localeCompare(bn, undefined, { sensitivity: "base" });
