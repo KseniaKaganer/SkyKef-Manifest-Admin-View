@@ -84,27 +84,63 @@ function collectNameKeys(node,j){
  }).map(([key])=>key))];
 }
 async function deletePath(path){const r=await fetch(`${DB}/${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error(`DELETE ${path}: HTTP ${r.status}`)}
+function showDeleteModal({title,name,uid,reasons=[],confirmMode=false}){
+ return new Promise(resolve=>{
+  const overlay=document.createElement("div");overlay.className="delete-modal-overlay";
+  const modal=document.createElement("div");modal.className="delete-modal";
+  const h=document.createElement("div");h.className="delete-modal-heading";h.textContent=title;
+  const n=document.createElement("div");n.className="delete-modal-name";n.textContent=name;
+  const u=document.createElement("div");u.className="delete-modal-uid";u.textContent=`UID: ${uid}`;
+  modal.append(h,n,u);
+  if(reasons.length){
+   const label=document.createElement("div");label.className="delete-modal-reasons-title";label.textContent="Reasons";
+   const ul=document.createElement("ul");ul.className="delete-modal-reasons";
+   reasons.forEach(reason=>{const li=document.createElement("li");li.textContent=reason;ul.appendChild(li)});
+   modal.append(label,ul);
+  }else if(confirmMode){
+   const warning=document.createElement("div");warning.className="delete-modal-warning";warning.textContent="This action cannot be undone.";
+   modal.appendChild(warning);
+  }
+  const actions=document.createElement("div");actions.className="delete-modal-actions";
+  const close=value=>{overlay.remove();resolve(value)};
+  if(confirmMode){
+   const cancel=document.createElement("button");cancel.type="button";cancel.className="small-btn";cancel.textContent="Cancel";cancel.onclick=()=>close(false);
+   const confirmBtn=document.createElement("button");confirmBtn.type="button";confirmBtn.className="delete-confirm-btn";confirmBtn.textContent="Delete Permanently";confirmBtn.onclick=()=>close(true);
+   actions.append(cancel,confirmBtn);
+  }else{
+   const ok=document.createElement("button");ok.type="button";ok.className="small-btn";ok.textContent="OK";ok.onclick=()=>close(false);actions.appendChild(ok);
+  }
+  modal.appendChild(actions);overlay.appendChild(modal);document.body.appendChild(overlay);
+ });
+}
 async function attemptDeleteJumper(j,button){
- const uid=String(j.Uid??j.key??"").trim(),name=displayName(j);
- if(!uid){alert("This jumper cannot be deleted because no UID was found.");return}
+ const uid=String(j.Uid??"").trim(),name=displayName(j);
+ if(!uid){await showDeleteModal({title:"Failed to delete jumper",name,uid:"Missing UID",reasons:["This jumper does not have a UID."]});return}
+ const confirmed=await showDeleteModal({title:"Are you sure you want to permanently delete this jumper?",name,uid,confirmMode:true});
+ if(!confirmed)return;
  button.disabled=true;button.textContent="Checking…";
  try{
-  if(hasWorkerArray(j)){alert(`${name} cannot be deleted because this jumper is a worker.`);return}
-  const [jh,lh,rp,jbn]=await Promise.all([fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report"),fetchDb("jumpers_by_name")]);
   const blockers=[];
-  if(hasData(jh))blockers.push("jumper has history in jumpers_history");
-  if(treeContainsUid(lh,uid))blockers.push("jumper exists in loads_history");
-  if(treeContainsUid(rp,uid))blockers.push("jumper exists in report");
-  if(blockers.length){alert(`${name} cannot be deleted:\n\n• ${blockers.join("\n• ")}`);return}
+  if(hasWorkerArray(j))blockers.push("Jumper is a worker.");
+  const [jh,lh,rp,jbn]=await Promise.all([fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report"),fetchDb("jumpers_by_name")]);
+  if(hasData(jh))blockers.push("Jumper has history in jumpers_history.");
+  if(treeContainsUid(lh,uid))blockers.push("Jumper exists in loads_history.");
+  if(treeContainsUid(rp,uid))blockers.push("Jumper exists in report.");
   const nameKeys=collectNameKeys(jbn,j);
-  if(!nameKeys.length){alert(`${name} cannot be deleted because the matching jumpers_by_name record could not be identified safely.`);return}
-  if(!confirm(`Are you sure you want to permanently delete ${name}?\n\nThis will delete the jumper from jumpers and jumpers_by_name. This action cannot be undone.`))return;
+  if(!nameKeys.length)blockers.push("Matching jumpers_by_name record could not be identified safely.");
+  if(blockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,reasons:blockers});return}
   const [fresh,fjh,flh,frp]=await Promise.all([fetchDb(`jumpers/${encodeURIComponent(j.key)}`),fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report")]);
-  if(!fresh||hasWorkerArray(fresh)||hasData(fjh)||treeContainsUid(flh,uid)||treeContainsUid(frp,uid)){alert("Delete cancelled because the jumper no longer meets all deletion rules.");return}
+  const freshBlockers=[];
+  if(!fresh)freshBlockers.push("Jumper record no longer exists.");
+  else if(hasWorkerArray(fresh))freshBlockers.push("Jumper is a worker.");
+  if(hasData(fjh))freshBlockers.push("Jumper has history in jumpers_history.");
+  if(treeContainsUid(flh,uid))freshBlockers.push("Jumper exists in loads_history.");
+  if(treeContainsUid(frp,uid))freshBlockers.push("Jumper exists in report.");
+  if(freshBlockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,reasons:freshBlockers});return}
   for(const key of nameKeys)await deletePath(`jumpers_by_name/${encodeURIComponent(key)}`);
   await deletePath(`jumpers/${encodeURIComponent(j.key)}`);
   alert(`${name} was permanently deleted.`);await load();
- }catch(e){console.error(e);alert("Delete failed. Check Firebase write permissions and database structure.")}
+ }catch(e){console.error(e);await showDeleteModal({title:"Failed to delete jumper",name,uid,reasons:["Firebase request failed. Check write permissions and database structure."]})}
  finally{button.disabled=false;button.textContent="Delete Jumper"}
 }
 function addDeleteButton(j){
