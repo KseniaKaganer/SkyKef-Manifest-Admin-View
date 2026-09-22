@@ -706,3 +706,6 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .delete-modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:28px}
 .delete-confirm-btn{border:1px solid #b42318;background:#b42318;color:#fff;border-radius:9px;padding:10px 15px;font:inherit;font-weight:700;cursor:pointer}
 .delete-confirm-btn:hover{filter:brightness(1.08)}
+
+.delete-modal-heading.success{color:#2fbf71}
+.delete-modal-heading.failure{color:#ef5350}
