@@ -1,13 +1,100 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css"></head><body>
-<header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav">
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SkyKef Manifest Admin View</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="auth.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner"><h1>SkyKef Manifest Admin View</h1></div>
+</header>
 
-<a href="jumpers-data.html">Jumpers Data</a>
+<main class="page">
+  <section id="loginCard" class="login-card">
+    <h2>Admin Login</h2>
+    <p>Sign in with an administrator username and password.</p>
+    <form id="loginForm" class="login-form">
+      <label>
+        <span>Username</span>
+        <input id="username" name="username" type="text" autocomplete="username" required>
+      </label>
+      <label>
+        <span>Password</span>
+        <input id="password" name="password" type="password" autocomplete="current-password" required>
+      </label>
+      <button id="loginBtn" class="small-btn" type="submit">Login</button>
+      <div id="loginStatus" class="login-status" aria-live="polite"></div>
+    </form>
+  </section>
 
-<a href="loads.html">Loads</a>
+  <section id="adminHome" hidden>
+    <section class="hero admin-home-head">
+      <div>
+        <h2>Manifest overview</h2>
+        <p id="welcomeAdmin"></p>
+      </div>
+      <button id="logoutBtn" class="small-btn" type="button">Logout</button>
+    </section>
+    <section class="button-grid">
+      <a class="big-btn" href="jumpers-data.html"><span>Jumpers Data</span><span>→</span></a>
+      <a class="big-btn" href="loads.html"><span>Loads</span><span>→</span></a>
+      <a class="big-btn" href="loads-history.html"><span>Loads History</span><span>→</span></a>
+      <a class="big-btn" href="reports.html"><span>Reports</span><span>→</span></a>
+    </section>
+  </section>
+</main>
 
-<a href="loads-history.html">Loads History</a>
+<script>
+(() => {
+  const loginCard = document.getElementById("loginCard");
+  const adminHome = document.getElementById("adminHome");
+  const loginForm = document.getElementById("loginForm");
+  const loginBtn = document.getElementById("loginBtn");
+  const loginStatus = document.getElementById("loginStatus");
+  const welcomeAdmin = document.getElementById("welcomeAdmin");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-<a href="reports.html">Reports</a>
+  function showHome(session) {
+    loginCard.hidden = true;
+    adminHome.hidden = false;
+    welcomeAdmin.textContent = `Logged in as ${session.username}`;
+  }
 
-</nav></div></header><main class="page"><section class="hero"><h2>Manifest overview</h2><p>Read-only administrative view for SkyKef data.</p></section>
-<section class="button-grid"><a class="big-btn" href="jumpers-data.html"><span>Jumpers Data</span><span>→</span></a><a class="big-btn" href="loads.html"><span>Loads</span><span>→</span></a><a class="big-btn" href="loads-history.html"><span>Loads History</span><span>→</span></a><a class="big-btn" href="reports.html"><span>Reports</span><span>→</span></a></section></main></body></html>
+  const existing = SkyKefAdminAuth.getSession();
+  if (existing) showHome(existing);
+
+  loginForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    loginStatus.textContent = "";
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Checking…";
+
+    const username = document.getElementById("username").value.trim();
+    const password = document.getElementById("password").value;
+
+    try {
+      const valid = await SkyKefAdminAuth.verifyAdmin(username, password);
+      if (!valid) {
+        loginStatus.textContent = "Incorrect username or password.";
+        return;
+      }
+      SkyKefAdminAuth.createSession(username);
+      showHome(SkyKefAdminAuth.getSession());
+      loginForm.reset();
+    } catch (error) {
+      console.error(error);
+      loginStatus.textContent = "Could not verify login. Check Firebase access.";
+    } finally {
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Login";
+    }
+  });
+
+  logoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
+})();
+</script>
+</body>
+</html>
