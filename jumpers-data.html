@@ -84,11 +84,11 @@ function collectNameKeys(node,j){
  }).map(([key])=>key))];
 }
 async function deletePath(path){const r=await fetch(`${DB}/${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error(`DELETE ${path}: HTTP ${r.status}`)}
-function showDeleteModal({title,name,uid,reasons=[],confirmMode=false}){
+function showDeleteModal({title,name,uid,reasons=[],confirmMode=false,status=""}){
  return new Promise(resolve=>{
   const overlay=document.createElement("div");overlay.className="delete-modal-overlay";
   const modal=document.createElement("div");modal.className="delete-modal";
-  const h=document.createElement("div");h.className="delete-modal-heading";h.textContent=title;
+  const h=document.createElement("div");h.className="delete-modal-heading"+(status?` ${status}`:"");h.textContent=title;
   const n=document.createElement("div");n.className="delete-modal-name";n.textContent=name;
   const u=document.createElement("div");u.className="delete-modal-uid";u.textContent=`UID: ${uid}`;
   modal.append(h,n,u);
@@ -115,7 +115,7 @@ function showDeleteModal({title,name,uid,reasons=[],confirmMode=false}){
 }
 async function attemptDeleteJumper(j,button){
  const uid=String(j.Uid??"").trim(),name=displayName(j);
- if(!uid){await showDeleteModal({title:"Failed to delete jumper",name,uid:"Missing UID",reasons:["This jumper does not have a UID."]});return}
+ if(!uid){await showDeleteModal({title:"Failed to delete jumper",name,uid:"Missing UID",status:"failure",reasons:["This jumper does not have a UID."]});return}
  const confirmed=await showDeleteModal({title:"Are you sure you want to permanently delete this jumper?",name,uid,confirmMode:true});
  if(!confirmed)return;
  button.disabled=true;button.textContent="Checking…";
@@ -128,7 +128,7 @@ async function attemptDeleteJumper(j,button){
   if(treeContainsUid(rp,uid))blockers.push("Jumper exists in report.");
   const nameKeys=collectNameKeys(jbn,j);
   if(!nameKeys.length)blockers.push("Matching jumpers_by_name record could not be identified safely.");
-  if(blockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,reasons:blockers});return}
+  if(blockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:blockers});return}
   const [fresh,fjh,flh,frp]=await Promise.all([fetchDb(`jumpers/${encodeURIComponent(j.key)}`),fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report")]);
   const freshBlockers=[];
   if(!fresh)freshBlockers.push("Jumper record no longer exists.");
@@ -136,11 +136,11 @@ async function attemptDeleteJumper(j,button){
   if(hasData(fjh))freshBlockers.push("Jumper has history in jumpers_history.");
   if(treeContainsUid(flh,uid))freshBlockers.push("Jumper exists in loads_history.");
   if(treeContainsUid(frp,uid))freshBlockers.push("Jumper exists in report.");
-  if(freshBlockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,reasons:freshBlockers});return}
+  if(freshBlockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:freshBlockers});return}
   for(const key of nameKeys)await deletePath(`jumpers_by_name/${encodeURIComponent(key)}`);
   await deletePath(`jumpers/${encodeURIComponent(j.key)}`);
-  alert(`${name} was permanently deleted.`);await load();
- }catch(e){console.error(e);await showDeleteModal({title:"Failed to delete jumper",name,uid,reasons:["Firebase request failed. Check write permissions and database structure."]})}
+  await showDeleteModal({title:"Jumper was deleted successfully",name,uid,status:"success"});await load();
+ }catch(e){console.error(e);await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:["Firebase request failed. Check write permissions and database structure."]})}
  finally{button.disabled=false;button.textContent="Delete Jumper"}
 }
 function addDeleteButton(j){
