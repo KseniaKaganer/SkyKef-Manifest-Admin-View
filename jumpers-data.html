@@ -36,7 +36,8 @@
 </div></section>
 </main>
 <script>
-const DB="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";\nconst FIREBASE_URL=`${DB}/jumpers.json`;
+const DB="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+const FIREBASE_URL=DB + "/jumpers.json";
 const listEl=document.getElementById("jumpersList"),
 detailsEl=document.getElementById("details"),
 searchInput=document.getElementById("searchInput"),
