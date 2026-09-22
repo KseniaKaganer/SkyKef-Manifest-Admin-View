@@ -694,3 +694,15 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .delete-jumper-btn{border:1px solid #b42318;background:#fff;color:#b42318;border-radius:8px;padding:9px 13px;font:inherit;font-weight:600;cursor:pointer}
 .delete-jumper-btn:hover{background:#fff1f0}
 .delete-jumper-btn:disabled{opacity:.55;cursor:not-allowed}
+
+.delete-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:20px;z-index:9999}
+.delete-modal{width:min(560px,100%);background:#12171d;border:1px solid #303844;border-radius:18px;padding:28px;box-shadow:0 24px 70px rgba(0,0,0,.45)}
+.delete-modal-heading{font-size:24px;font-weight:800;line-height:1.25;margin-bottom:24px}
+.delete-modal-name{font-size:30px;font-weight:800;line-height:1.15;margin-bottom:7px}
+.delete-modal-uid{font-size:18px;font-weight:700;color:#aeb8c5;word-break:break-all}
+.delete-modal-warning{margin-top:22px;color:#aeb8c5}
+.delete-modal-reasons-title{font-size:18px;font-weight:800;margin-top:25px}
+.delete-modal-reasons{margin:10px 0 0;padding-left:24px;line-height:1.6}
+.delete-modal-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:28px}
+.delete-confirm-btn{border:1px solid #b42318;background:#b42318;color:#fff;border-radius:9px;padding:10px 15px;font:inherit;font-weight:700;cursor:pointer}
+.delete-confirm-btn:hover{filter:brightness(1.08)}
