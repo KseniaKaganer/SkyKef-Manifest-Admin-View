@@ -36,7 +36,7 @@
 </div></section>
 </main>
 <script>
-const FIREBASE_URL="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app/jumpers.json";
+const DB="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";\nconst FIREBASE_URL=`${DB}/jumpers.json`;
 const listEl=document.getElementById("jumpersList"),
 detailsEl=document.getElementById("details"),
 searchInput=document.getElementById("searchInput"),
@@ -65,6 +65,52 @@ statusEl.textContent=`${filtered.length} of ${jumpers.length} jumper${jumpers.le
 function renderDetails(j){detailsEl.className="detail-content";detailsEl.innerHTML="";const t=document.createElement("div");t.className="detail-title";t.textContent=displayName(j);detailsEl.appendChild(t);const g=document.createElement("div");g.className="data-grid";
 const pref=["Name","Surname","Id","Uid","Phone","Emergency","License","AffLevel","Balance","Weight","IsRental","NumberOfJumpsToday","ReserveDate","WaiverDate"];
 Object.keys(j).filter(k=>k!=="key").sort((a,b)=>{const ai=pref.indexOf(a),bi=pref.indexOf(b);if(ai!==-1||bi!==-1)return(ai===-1?999:ai)-(bi===-1?999:bi);return a.localeCompare(b)}).forEach(k=>{const i=document.createElement("div");i.className="data-item";const kk=document.createElement("div");kk.className="data-key";kk.textContent=k;const vv=document.createElement("div");vv.className="data-val";const v=j[k];vv.textContent=v===null||v===undefined||v===""?"—":typeof v==="object"?JSON.stringify(v):String(v);i.append(kk,vv);g.appendChild(i)});detailsEl.appendChild(g)}
+
+
+function hasData(value){return value!==null&&value!==undefined&&(typeof value!=="object"||Object.keys(value).length>0)}
+function hasWorkerArray(j){return Object.keys(j||{}).some(k=>k.toLowerCase()==="worker"&&hasData(j[k]))}
+async function fetchDb(path){const r=await fetch(`${DB}/${path}.json`,{cache:"no-store"});if(!r.ok)throw new Error(`${path}: HTTP ${r.status}`);return r.json()}
+function treeContainsUid(node,uid){if(!node||typeof node!=="object")return false;if(Object.prototype.hasOwnProperty.call(node,String(uid)))return true;return Object.values(node).some(v=>treeContainsUid(v,uid))}
+function collectNameKeys(node,j){
+ if(!node||typeof node!=="object")return[];
+ const first=String(j.Name??"").trim().toLowerCase(),last=String(j.Surname??"").trim().toLowerCase();
+ const full=`${first} ${last}`.trim(),compact=`${first}${last}`,underscore=`${first}_${last}`,uid=String(j.Uid??j.key??"");
+ return [...new Set(Object.entries(node).filter(([key,v])=>{
+   const k=String(key).trim().toLowerCase();
+   const vn=v&&typeof v==="object"?`${String(v.Name??"").trim().toLowerCase()} ${String(v.Surname??"").trim().toLowerCase()}`.trim():"";
+   const vu=v&&typeof v==="object"?String(v.Uid??v.uid??""):"";
+   return vu===uid||(full&&vn===full)||k===full||k===compact||k===underscore;
+ }).map(([key])=>key))];
+}
+async function deletePath(path){const r=await fetch(`${DB}/${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error(`DELETE ${path}: HTTP ${r.status}`)}
+async function attemptDeleteJumper(j,button){
+ const uid=String(j.Uid??j.key??"").trim(),name=displayName(j);
+ if(!uid){alert("This jumper cannot be deleted because no UID was found.");return}
+ button.disabled=true;button.textContent="Checking…";
+ try{
+  if(hasWorkerArray(j)){alert(`${name} cannot be deleted because this jumper is a worker.`);return}
+  const [jh,lh,rp,jbn]=await Promise.all([fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report"),fetchDb("jumpers_by_name")]);
+  const blockers=[];
+  if(hasData(jh))blockers.push("jumper has history in jumpers_history");
+  if(treeContainsUid(lh,uid))blockers.push("jumper exists in loads_history");
+  if(treeContainsUid(rp,uid))blockers.push("jumper exists in report");
+  if(blockers.length){alert(`${name} cannot be deleted:\n\n• ${blockers.join("\n• ")}`);return}
+  const nameKeys=collectNameKeys(jbn,j);
+  if(!nameKeys.length){alert(`${name} cannot be deleted because the matching jumpers_by_name record could not be identified safely.`);return}
+  if(!confirm(`Are you sure you want to permanently delete ${name}?\n\nThis will delete the jumper from jumpers and jumpers_by_name. This action cannot be undone.`))return;
+  const [fresh,fjh,flh,frp]=await Promise.all([fetchDb(`jumpers/${encodeURIComponent(j.key)}`),fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report")]);
+  if(!fresh||hasWorkerArray(fresh)||hasData(fjh)||treeContainsUid(flh,uid)||treeContainsUid(frp,uid)){alert("Delete cancelled because the jumper no longer meets all deletion rules.");return}
+  for(const key of nameKeys)await deletePath(`jumpers_by_name/${encodeURIComponent(key)}`);
+  await deletePath(`jumpers/${encodeURIComponent(j.key)}`);
+  alert(`${name} was permanently deleted.`);await load();
+ }catch(e){console.error(e);alert("Delete failed. Check Firebase write permissions and database structure.")}
+ finally{button.disabled=false;button.textContent="Delete Jumper"}
+}
+function addDeleteButton(j){
+ const box=document.createElement("div");box.className="jumper-danger-zone";
+ const b=document.createElement("button");b.type="button";b.className="delete-jumper-btn";b.textContent="Delete Jumper";b.onclick=()=>attemptDeleteJumper(j,b);
+ box.appendChild(b);detailsEl.appendChild(box);
+}
 
 function setDetailTab(tab){
   const showDetails=tab==="details";
