@@ -1,4 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumpers Data | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css">  <script src="auth.js"></script>\n</head><body>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumpers Data | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css">  <script src="auth.js"></script>
+</head><body>
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav">
       <a href="jumpers-data.html">Jumpers Data</a>
       <a href="loads.html">Loads</a>
@@ -156,7 +157,12 @@ async function attemptDeleteJumper(j,button){
 }
 function addDeleteButton(j){
  const box=document.createElement("div");box.className="jumper-danger-zone";
- const b=document.createElement("button");b.type="button";b.className="delete-jumper-btn";b.textContent="Delete Jumper";\n const viewOnly=document.documentElement.classList.contains("manifest-view-only");\n b.disabled=viewOnly;\n b.setAttribute("aria-disabled",String(viewOnly));\n b.title=viewOnly?"Delete is disabled while a jumping day is running":"";\n if(!viewOnly)b.onclick=()=>attemptDeleteJumper(j,b);
+ const b=document.createElement("button");b.type="button";b.className="delete-jumper-btn";b.textContent="Delete Jumper";
+ const viewOnly=document.documentElement.classList.contains("manifest-view-only");
+ b.disabled=viewOnly;
+ b.setAttribute("aria-disabled",String(viewOnly));
+ b.title=viewOnly?"Delete is disabled while a jumping day is running":"";
+ if(!viewOnly)b.onclick=()=>attemptDeleteJumper(j,b);
  box.appendChild(b);detailsEl.appendChild(box);
 }
 
