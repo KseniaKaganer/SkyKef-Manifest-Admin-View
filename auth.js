@@ -55,6 +55,43 @@
     }));
   }
 
+  async function getDayState() {
+    const response = await fetch(`${DB}/current_data.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Day state check failed: HTTP ${response.status}`);
+    const data = await response.json();
+    return {
+      active: data?.day_start === true && data?.day_end === false,
+      data
+    };
+  }
+
+  async function applyViewOnlyMode() {
+    if (!getSession() || isLoginPage) return false;
+    let state;
+    try {
+      state = await getDayState();
+    } catch (error) {
+      console.error(error);
+      return false;
+    }
+    if (!state.active) return false;
+
+    document.documentElement.classList.add("manifest-view-only");
+
+    const showBanner = () => {
+      if (document.getElementById("manifestViewOnlyBanner")) return;
+      const banner = document.createElement("div");
+      banner.id = "manifestViewOnlyBanner";
+      banner.className = "view-only-banner";
+      banner.innerHTML = "<strong>A working day is currently running.</strong><span>You are logged in in view-only mode. Data cannot be edited until the day is ended.</span>";
+      document.body.prepend(banner);
+    };
+    if (document.body) showBanner();
+    else document.addEventListener("DOMContentLoaded", showBanner, { once: true });
+
+    return true;
+  }
+
   function logout() {
     sessionStorage.removeItem(SESSION_KEY);
     location.replace("index.html");
