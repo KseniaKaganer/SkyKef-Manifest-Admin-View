@@ -118,7 +118,7 @@ async function attemptDeleteJumper(j,button){
  if(!uid){await showDeleteModal({title:"Failed to delete jumper",name,uid:"Missing UID",status:"failure",reasons:["This jumper does not have a UID."]});return}
  try{
   const currentData=await fetchDb("current_data");
-  if(currentData?.day_start===true && currentData?.day_end===false){
+  if(currentData?.day_start===true && currentData?.end_of_day===false){
    await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:["A manifest day is currently running. Jumper deletion is disabled until the day is ended."]});
    return;
   }
