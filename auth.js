@@ -83,7 +83,7 @@
       const banner = document.createElement("div");
       banner.id = "manifestViewOnlyBanner";
       banner.className = "view-only-banner";
-      banner.innerHTML = "<strong>A working day is currently running.</strong><span>You are logged in in view-only mode. Data cannot be edited until the day is ended.</span>";
+      banner.innerHTML = "<strong>JUMPING DAY IS RUNNING LIVE</strong><span>EDIT CAN’T BE MADE — VIEW ONLY</span>";
       document.body.prepend(banner);
     };
     if (document.body) showBanner();
