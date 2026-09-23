@@ -60,7 +60,7 @@
     if (!response.ok) throw new Error(`Day state check failed: HTTP ${response.status}`);
     const data = await response.json();
     return {
-      active: data?.day_start === true && data?.day_end === false,
+      active: data?.day_start === true && data?.end_of_day === false,
       data
     };
   }
