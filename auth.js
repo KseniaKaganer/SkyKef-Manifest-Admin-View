@@ -97,6 +97,8 @@
     location.replace("index.html");
   }
 
-  window.SkyKefAdminAuth = { getSession, verifyAdmin, createSession, logout };
-  requireLogin();
+  window.SkyKefAdminAuth = { getSession, verifyAdmin, createSession, logout, getDayState, applyViewOnlyMode };
+  if (requireLogin()) {
+    applyViewOnlyMode();
+  }
 })();
