@@ -10,7 +10,7 @@
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const session = JSON.parse(raw);
-      return session && session.username ? session : null;
+      return session && session.username && ["admin", "manifest"].includes(session.role) ? session : null;
     } catch {
       return null;
     }
@@ -24,11 +24,11 @@
     return true;
   }
 
-  async function verifyAdmin(username, password) {
+  async function verifyUser(username, password, role) {
     const cleanUsername = String(username || "").trim();
-    if (!cleanUsername || !password) return false;
+    if (!cleanUsername || !password || !["admin", "manifest"].includes(role)) return false;
 
-    const url = `${DB}/users/admin/${encodeURIComponent(cleanUsername)}.json`;
+    const url = `${DB}/users/${role}/${encodeURIComponent(cleanUsername)}.json`;
     const response = await fetch(url, { cache: "no-store" });
     if (!response.ok) throw new Error(`Login check failed: HTTP ${response.status}`);
 
@@ -48,9 +48,11 @@
     return false;
   }
 
-  function createSession(username) {
+  function createSession(username, role) {
+    if (!["admin", "manifest"].includes(role)) throw new Error("Invalid login role");
     sessionStorage.setItem(SESSION_KEY, JSON.stringify({
       username: String(username).trim(),
+      role,
       loggedInAt: Date.now()
     }));
   }
@@ -97,7 +99,31 @@
     location.replace("index.html");
   }
 
-  window.SkyKefAdminAuth = { getSession, verifyAdmin, createSession, logout, getDayState, applyViewOnlyMode };
+  async function getLoginUsers() {
+    const lists = await Promise.all(["admin", "manifest"].map(async role => {
+      const response = await fetch(`${DB}/users/${role}.json?shallow=true`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not load usernames");
+      const keys = await response.json();
+      return Object.keys(keys || {}).sort((a, b) => a.localeCompare(b)).map(username => ({ username, role }));
+    }));
+    return lists.flat();
+  }
+
+  function isAdmin() { return getSession()?.role === "admin"; }
+
+  function showSessionRole() {
+    const session = getSession();
+    if (!session) return;
+    const header = document.querySelector(".header-inner");
+    if (!header || document.getElementById("sessionRole")) return;
+    const badge = document.createElement("span");
+    badge.id = "sessionRole";
+    badge.textContent = `${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
+    badge.style.cssText = "display:inline-block;padding:6px 10px;border:1px solid currentColor;border-radius:8px;font-size:14px";
+    header.appendChild(badge);
+  }
+  document.addEventListener("DOMContentLoaded", showSessionRole);
+  window.SkyKefAdminAuth = { getSession, verifyUser, getLoginUsers, isAdmin, createSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
   if (requireLogin()) {
     applyViewOnlyMode();
   }
