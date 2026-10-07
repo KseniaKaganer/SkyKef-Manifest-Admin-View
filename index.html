@@ -14,12 +14,12 @@
 
 <main class="page">
   <section id="loginCard" class="login-card">
-    <h2>Admin Login</h2>
-    <p>Sign in with an administrator username and password.</p>
+    <h2>Login</h2>
+    <p>Select an admin or manifest user and enter your password.</p>
     <form id="loginForm" class="login-form">
       <label>
         <span>Username</span>
-        <input id="username" name="username" type="text" autocomplete="username" required>
+        <select id="username" name="username" autocomplete="username" required disabled><option value="">Loading usernames…</option></select>
       </label>
       <label>
         <span>Password</span>
@@ -60,11 +60,38 @@
   function showHome(session) {
     loginCard.hidden = true;
     adminHome.hidden = false;
-    welcomeAdmin.textContent = `Logged in as ${session.username}`;
+    welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
+    SkyKefAdminAuth.showSessionRole();
   }
 
   const existing = SkyKefAdminAuth.getSession();
   if (existing) showHome(existing);
+
+  const usernameSelect = document.getElementById("username");
+  let loginUsers = [];
+  loginBtn.disabled = true;
+  SkyKefAdminAuth.getLoginUsers().then(users => {
+    loginUsers = users;
+    usernameSelect.replaceChildren();
+    const placeholder = document.createElement("option");
+    placeholder.value = ""; placeholder.textContent = "Select username";
+    usernameSelect.appendChild(placeholder);
+    ["admin", "manifest"].forEach(role => {
+      const group = document.createElement("optgroup"); group.label = role === "admin" ? "Admin" : "Manifest";
+      users.forEach((user, index) => {
+        if (user.role !== role) return;
+        const option = document.createElement("option");
+        option.value = String(index); option.textContent = user.username;
+        group.appendChild(option);
+      });
+      usernameSelect.appendChild(group);
+    });
+    usernameSelect.disabled = users.length === 0;
+    loginBtn.disabled = users.length === 0;
+    if (!users.length) loginStatus.textContent = "No login users found.";
+  }).catch(() => {
+    loginStatus.textContent = "Could not load usernames. Reload to retry.";
+  });
 
   loginForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -72,16 +99,17 @@
     loginBtn.disabled = true;
     loginBtn.textContent = "Checking…";
 
-    const username = document.getElementById("username").value.trim();
+    const user = usernameSelect.value === "" ? null : loginUsers[Number(usernameSelect.value)];
+    const username = user?.username || "";
     const password = document.getElementById("password").value;
 
     try {
-      const valid = await SkyKefAdminAuth.verifyAdmin(username, password);
+      const valid = await SkyKefAdminAuth.verifyUser(username, password, user?.role);
       if (!valid) {
         loginStatus.textContent = "Incorrect username or password.";
         return;
       }
-      SkyKefAdminAuth.createSession(username);
+      SkyKefAdminAuth.createSession(username, user.role);
       showHome(SkyKefAdminAuth.getSession());
       loginForm.reset();
     } catch (error) {
