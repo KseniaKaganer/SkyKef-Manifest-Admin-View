@@ -4,17 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads | SkyKef Manifest Admin View</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="auth.js"></script>\n</head>
+  <link rel="stylesheet" href="style.css?v=public-loads-1">
+  <script src="auth.js?v=public-loads-1"></script>\n</head>
 <body>
 <header class="site-header">
   <div class="header-inner">
     <h1>SkyKef Manifest Admin View</h1>
     <nav class="nav">
-      <a href="jumpers-data.html">Jumpers Data</a>
-      <a class="active" href="loads.html">Loads</a>
-      <a href="loads-history.html">Loads History</a>
-      <a href="reports.html">Reports</a>
+      <a href="index.html">Home / Login</a>
+      <a class="active" href="loads-today.html">Today's Loads</a>
     </nav>
   </div>
 </header>
@@ -32,8 +30,8 @@
 
   <section id="notStartedCard" class="day-not-started" hidden>
     <div class="not-started-icon">◷</div>
-    <h3>The day didn't started yet</h3>
-    <p>There is currently no <strong>loads</strong> entity in Firebase.</p>
+    <h3>Day has not started yet</h3>
+    <p>Today's loads will appear here when they are ready.</p>
   </section>
 
   <section id="todayLoadsLayout" class="loads-layout" hidden>
@@ -345,7 +343,7 @@
         currentLoads = [];
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
-        loadsStatus.textContent = "The day didn't started yet.";
+        loadsStatus.textContent = "Day has not started yet.";
         return;
       }
 
