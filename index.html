@@ -252,7 +252,18 @@
         "Id", "ID", "id", "password", "Password",
         "AffLevel", "Aff Level", "License", "Uid", "uid", "WaiverDate", "Waiver Date"
       ]);
-      Object.entries(jumper).forEach(([key, value]) => {
+      const preferredOrder = ["Name", "Surname", "Balance", "NumberOfJumpsToday"];
+      Object.entries(jumper)
+        .sort(([keyA], [keyB]) => {
+          const indexA = preferredOrder.indexOf(keyA);
+          const indexB = preferredOrder.indexOf(keyB);
+          if (indexA !== -1 || indexB !== -1) {
+            return (indexA === -1 ? preferredOrder.length : indexA) -
+              (indexB === -1 ? preferredOrder.length : indexB);
+          }
+          return keyA.localeCompare(keyB);
+        })
+        .forEach(([key, value]) => {
         if (hiddenFields.has(key) || value === null || value === undefined || value === "" || typeof value === "object") return;
         const row = document.createElement("div");
         row.className = "profile-detail-row";
