@@ -808,3 +808,5 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .public-loads-link[aria-hidden="true"]{
   display:none !important;
 }
+
+.public-loads-card[hidden]{display:none !important}
