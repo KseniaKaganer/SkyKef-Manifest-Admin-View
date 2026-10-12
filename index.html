@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=profile-logbook-export-1">
+  <link rel="stylesheet" href="style.css?v=registration-button-1">
   <script src="auth.js?v=jumper-login-1"></script>
 </head>
 <body>
@@ -33,6 +33,10 @@
       <span>Today's loads will appear here when they are ready.</span>
     </div>
   </section>
+
+  <div id="registrationAction" class="registration-action">
+    <a class="small-btn registration-btn" href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform" target="_blank" rel="noopener noreferrer">Register for Activity Day</a>
+  </div>
 
   <section id="userProfileSection" class="user-profile-section" hidden aria-label="My account">
     <div class="detail-tabs" role="tablist" aria-label="My information">
@@ -99,6 +103,7 @@
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const siteTitle = document.getElementById("siteTitle");
   const publicLoadsCard = document.getElementById("publicLoadsCard");
+  const registrationAction = document.getElementById("registrationAction");
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
   const openLoginBtn = document.getElementById("openLoginBtn");
@@ -418,6 +423,7 @@
       document.title = "SkyKef Manifest";
       siteTitle.textContent = "SkyKef Manifest";
       publicLoadsCard.hidden = false;
+      registrationAction.hidden = false;
       adminHome.hidden = true;
       jumperLogoutBtn.hidden = false;
       userProfileSection.hidden = false;
@@ -426,6 +432,7 @@
       document.title = "SkyKef Manifest Admin View";
       siteTitle.textContent = "SkyKef Manifest Admin View";
       publicLoadsCard.hidden = true;
+      registrationAction.hidden = true;
       adminHome.hidden = false;
       jumperLogoutBtn.hidden = true;
       userProfileSection.hidden = true;
