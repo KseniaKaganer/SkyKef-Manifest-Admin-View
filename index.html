@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=inline-profile-1">
+  <link rel="stylesheet" href="style.css?v=user-logbook-1">
   <script src="auth.js?v=jumper-login-1"></script>
 </head>
 <body>
@@ -34,10 +34,24 @@
     </div>
   </section>
 
-  <section id="userProfileSection" class="user-profile-section" hidden aria-labelledby="userProfileTitle">
-    <div class="panel-head" id="userProfileTitle">My Profile</div>
-    <div id="userProfileStatus" class="status">Loading profile…</div>
-    <dl id="userProfileDetails" class="profile-details"></dl>
+  <section id="userProfileSection" class="user-profile-section" hidden aria-label="My account">
+    <div class="detail-tabs" role="tablist" aria-label="My information">
+      <button id="userProfileTab" class="detail-tab active" type="button" role="tab" aria-selected="true">My Profile</button>
+      <button id="userLogbookTab" class="detail-tab" type="button" role="tab" aria-selected="false">My Logbook</button>
+    </div>
+    <div id="userProfileView">
+      <div id="userProfileStatus" class="status">Loading profile…</div>
+      <dl id="userProfileDetails" class="profile-details"></dl>
+    </div>
+    <div id="userLogbookView" hidden>
+      <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
+      <div class="load-table-scroll">
+        <table class="load-table user-logbook-table">
+          <thead><tr><th>Date</th><th>Load</th><th>Activity</th><th>Details</th></tr></thead>
+          <tbody id="userLogbookBody"></tbody>
+        </table>
+      </div>
+    </div>
   </section>
 
   <div id="loginOverlay" class="login-overlay" hidden>
@@ -89,6 +103,14 @@
   const userProfileSection = document.getElementById("userProfileSection");
   const userProfileStatus = document.getElementById("userProfileStatus");
   const userProfileDetails = document.getElementById("userProfileDetails");
+  const userProfileTab = document.getElementById("userProfileTab");
+  const userLogbookTab = document.getElementById("userLogbookTab");
+  const userProfileView = document.getElementById("userProfileView");
+  const userLogbookView = document.getElementById("userLogbookView");
+  const userLogbookStatus = document.getElementById("userLogbookStatus");
+  const userLogbookBody = document.getElementById("userLogbookBody");
+  let loggedInJumper = null;
+  let logbookLoaded = false;
   const closeLoginBtn = document.getElementById("closeLoginBtn");
   const adminHome = document.getElementById("adminHome");
   const loginForm = document.getElementById("loginForm");
@@ -219,6 +241,7 @@
       if (!response.ok) throw new Error(`Profile request failed: HTTP ${response.status}`);
       const jumper = await response.json();
       if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
+      loggedInJumper = jumper;
 
       const hiddenFields = new Set(["Id", "ID", "id", "password", "Password"]);
       Object.entries(jumper).forEach(([key, value]) => {
@@ -237,6 +260,105 @@
       console.error(error);
       userProfileStatus.textContent = "Could not load your profile.";
     }
+  }
+
+
+  function safeNumber(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number : 0;
+  }
+
+  function flattenHistoryNode(node, path = [], rows = []) {
+    if (node === null || node === undefined) return rows;
+    if (typeof node !== "object") {
+      if (path.length >= 4) {
+        const [year, month, day, loadKey] = path;
+        rows.push({ year: safeNumber(year), month: safeNumber(month), day: safeNumber(day), loadKey: String(loadKey), value: node });
+      }
+      return rows;
+    }
+    Object.entries(node).forEach(([key, value]) => flattenHistoryNode(value, [...path, key], rows));
+    return rows;
+  }
+
+  function parseLogbookValue(value) {
+    if (value === null || value === undefined) return { activity: "—", details: "—" };
+    if (typeof value === "object") return { activity: "Record", details: JSON.stringify(value) };
+    const parts = String(value).split("|").map(part => part.trim()).filter(Boolean);
+    return {
+      activity: parts[0] || "—",
+      details: parts.slice(1).join(" · ") || "—"
+    };
+  }
+
+  function loadNumber(loadKey) {
+    const match = String(loadKey).match(/(\d+)/);
+    return match ? Number(match[1]) : 0;
+  }
+
+  function renderUserLogbook(data) {
+    const rows = flattenHistoryNode(data).sort((a, b) =>
+      b.year - a.year || b.month - a.month || b.day - a.day || loadNumber(b.loadKey) - loadNumber(a.loadKey)
+    );
+    userLogbookBody.replaceChildren();
+
+    if (!rows.length) {
+      userLogbookStatus.textContent = "No logbook history found.";
+      return;
+    }
+
+    userLogbookStatus.textContent = `${rows.length} logbook entr${rows.length === 1 ? "y" : "ies"} · newest first`;
+    let previousDate = "";
+
+    rows.forEach(row => {
+      const tr = document.createElement("tr");
+      const parsed = parseLogbookValue(row.value);
+      const dateKey = `${row.year}-${row.month}-${row.day}`;
+      const values = [
+        dateKey === previousDate ? "" : `${String(row.day).padStart(2, "0")}/${String(row.month).padStart(2, "0")}/${row.year}`,
+        loadNumber(row.loadKey) ? `Load ${loadNumber(row.loadKey)}` : row.loadKey,
+        parsed.activity,
+        parsed.details
+      ];
+      values.forEach(value => {
+        const td = document.createElement("td");
+        td.textContent = value;
+        tr.appendChild(td);
+      });
+      userLogbookBody.appendChild(tr);
+      previousDate = dateKey;
+    });
+  }
+
+  async function loadUserLogbook() {
+    if (logbookLoaded) return;
+    const uid = loggedInJumper?.Uid ?? loggedInJumper?.uid;
+    if (uid === null || uid === undefined || String(uid).trim() === "") {
+      userLogbookStatus.textContent = "Your profile does not have a UID.";
+      return;
+    }
+
+    userLogbookStatus.textContent = "Loading your logbook…";
+    try {
+      const response = await fetch(`${DB}/jumpers_history/${encodeURIComponent(String(uid))}.json`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Logbook request failed: HTTP ${response.status}`);
+      renderUserLogbook(await response.json());
+      logbookLoaded = true;
+    } catch (error) {
+      console.error(error);
+      userLogbookStatus.textContent = "Could not load your logbook.";
+    }
+  }
+
+  function selectUserTab(tab) {
+    const profileSelected = tab === "profile";
+    userProfileTab.classList.toggle("active", profileSelected);
+    userLogbookTab.classList.toggle("active", !profileSelected);
+    userProfileTab.setAttribute("aria-selected", String(profileSelected));
+    userLogbookTab.setAttribute("aria-selected", String(!profileSelected));
+    userProfileView.hidden = !profileSelected;
+    userLogbookView.hidden = profileSelected;
+    if (!profileSelected) loadUserLogbook();
   }
 
   function showHome(session) {
@@ -329,6 +451,8 @@
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && !loginOverlay.hidden) closeLogin();
   });
+  userProfileTab.addEventListener("click", () => selectUserTab("profile"));
+  userLogbookTab.addEventListener("click", () => selectUserTab("logbook"));
   jumperLogoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
   logoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
   checkPublicLoads();
