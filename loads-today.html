@@ -360,8 +360,7 @@
         return;
       }
 
-      const todayNode = detectTodayLoads(loadsData, currentData);
-      currentLoads = normalizeLoads(todayNode);
+      currentLoads = normalizeLoads(loadsData);
 
       if (!currentLoads.length) {
         todayLoadsLayout.hidden = true;
