@@ -81,14 +81,22 @@
   let jumpersByUid = new Map();
   let currentLoads = [];
 
-  function formatToday() {
-    const d = new Date();
-    return d.toLocaleDateString(undefined, {
-      weekday: "long",
-      day: "2-digit",
-      month: "long",
-      year: "numeric"
-    });
+  function formatCurrentDataDate(currentData) {
+    const raw = currentData?.date;
+    return raw === null || raw === undefined || String(raw).trim() === ""
+      ? "Date unavailable"
+      : `Date: ${String(raw)}`;
+  }
+
+  function datePartsFromCurrentData(currentData) {
+    const raw = currentData?.date;
+    if (raw === null || raw === undefined || String(raw).trim() === "") return null;
+    const value = String(raw).trim();
+    let match = value.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (match) return { y: match[1], m: String(Number(match[2])), d: String(Number(match[3])) };
+    match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+    if (match) return { y: match[3], m: String(Number(match[2])), d: String(Number(match[1])) };
+    return null;
   }
 
   function displayName(j, uid) {
@@ -180,34 +188,21 @@
   // 2) /loads/{day}/{load}/{uid}
   // 3) /loads/{year}/{month}/{day}/{load}/{uid}
   // in case your live node includes a date layer.
-  function detectTodayLoads(data) {
+  function detectTodayLoads(data, currentData) {
     if (!data || typeof data !== "object") return null;
+    const parts = datePartsFromCurrentData(currentData);
+    if (!parts) return data;
+    const { y, m, d } = parts;
+    const mm = m.padStart(2, "0");
+    const dd = d.padStart(2, "0");
 
-    const now = new Date();
-    const y = String(now.getFullYear());
-    const m = String(now.getMonth() + 1);
-    const d = String(now.getDate());
+    const nestedDay = data[y]?.[m]?.[d] ?? data[y]?.[m]?.[dd] ??
+      data[y]?.[mm]?.[d] ?? data[y]?.[mm]?.[dd];
+    if (nestedDay && typeof nestedDay === "object") return nestedDay;
 
-    // Year/month/day nested.
-    if (data[y] && typeof data[y] === "object") {
-      const yearNode = data[y];
-      const monthNode = yearNode[m] ?? yearNode[String(Number(m)).padStart(2, "0")];
-      if (monthNode && typeof monthNode === "object") {
-        const dayNode = monthNode[d] ?? monthNode[String(Number(d)).padStart(2, "0")];
-        if (dayNode && typeof dayNode === "object") return dayNode;
-      }
-    }
+    const dayNode = data[d] ?? data[dd];
+    if (dayNode && typeof dayNode === "object") return dayNode;
 
-    // Day nested.
-    if (data[d] && typeof data[d] === "object") {
-      const maybeDay = data[d];
-      const childKeys = Object.keys(maybeDay);
-      if (childKeys.some(k => /load/i.test(k) || /^\d+$/.test(k))) {
-        return maybeDay;
-      }
-    }
-
-    // Direct load collection.
     return data;
   }
 
@@ -327,17 +322,19 @@
   }
 
   async function loadToday() {
-    todayLabel.textContent = formatToday();
-    loadsStatus.textContent = "Loading today's loads…";
+    todayLabel.textContent = "Loading current date…";
+    loadsStatus.textContent = "Loading current loads…";
     reloadBtn.disabled = true;
 
     try {
-      const [loadsData, jumpersData] = await Promise.all([
+      const [loadsData, jumpersData, currentData] = await Promise.all([
         fetchJson("loads"),
-        fetchJson("jumpers")
+        fetchJson("jumpers"),
+        fetchJson("current_data")
       ]);
 
       jumpersByUid = normalizeJumpers(jumpersData);
+      todayLabel.textContent = formatCurrentDataDate(currentData);
 
       if (loadsData === null || loadsData === undefined) {
         currentLoads = [];
@@ -347,20 +344,20 @@
         return;
       }
 
-      const todayNode = detectTodayLoads(loadsData);
+      const todayNode = detectTodayLoads(loadsData, currentData);
       currentLoads = normalizeLoads(todayNode);
 
       if (!currentLoads.length) {
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
-        loadsStatus.textContent = "The day didn't started yet.";
+        loadsStatus.textContent = "Day has not started yet.";
         return;
       }
 
       renderLoads();
     } catch (err) {
       console.error(err);
-      loadsStatus.textContent = "Could not load today's loads.";
+      loadsStatus.textContent = "Could not load the current loads.";
       todayLoadsLayout.hidden = true;
       notStartedCard.hidden = true;
     } finally {
