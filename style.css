@@ -731,3 +731,35 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .view-only-banner{background:#260b0b;border-bottom:2px solid #e5484d;color:#ffb4b4}
 .view-only-banner strong{font-size:1.3rem;font-weight:900;color:#ff4d4f;letter-spacing:.02em}
 .view-only-banner span{font-size:1rem;font-weight:800;color:#ffb4b4}
+
+
+/* Public home and today's loads */
+.public-loads-card{
+  display:grid;
+  gap:18px;
+  max-width:760px;
+  margin:28px auto 0;
+  padding:26px;
+  border:1px solid #39444f;
+  border-radius:18px;
+  background:#11161c;
+}
+.public-loads-card h2{margin:2px 0 8px;font-size:clamp(1.8rem,4vw,2.6rem)}
+.public-loads-kicker{margin:0;color:var(--accent);font-size:.78rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.public-loads-status{margin:0;color:#aab6c2}
+.public-loads-link{margin:0}
+.public-day-message{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+  padding:16px 18px;
+  border:1px solid #6b7280;
+  border-radius:12px;
+  background:#181d23;
+}
+.public-day-message strong{font-size:1.08rem;color:#fff}
+.public-day-message span{color:#aab6c2}
+.public-loads-card + .login-card{margin-top:24px}
+@media(max-width:600px){
+  .public-loads-card{padding:20px}
+}
