@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest Admin View</title>
-  <link rel="stylesheet" href="style.css?v=login-modal-1">
+  <link rel="stylesheet" href="style.css?v=public-loads-hide-1">
   <script src="auth.js?v=public-loads-1"></script>
 </head>
 <body>
@@ -141,16 +141,19 @@
         const date = currentData?.date;
         publicLoadsStatus.textContent = date ? `Loads for ${date} are available to view.` : "The current manifest is available to view.";
         publicLoadsLink.hidden = false;
+        publicLoadsLink.setAttribute("aria-hidden", "false");
         publicDayNotStarted.hidden = true;
       } else {
         publicLoadsStatus.textContent = "";
         publicLoadsLink.hidden = true;
+        publicLoadsLink.setAttribute("aria-hidden", "true");
         publicDayNotStarted.hidden = false;
       }
     } catch (error) {
       console.error(error);
       publicLoadsStatus.textContent = "Could not check the current loads. Please try again.";
       publicLoadsLink.hidden = true;
+      publicLoadsLink.setAttribute("aria-hidden", "true");
       publicDayNotStarted.hidden = true;
     }
   }
