@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>My Profile | SkyKef Manifest</title>
+  <link rel="stylesheet" href="style.css?v=jumper-login-1">
+  <script src="auth.js?v=jumper-login-1"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner home-header">
+    <h1>My Profile</h1>
+    <div class="header-account-actions">
+      <a class="small-btn header-profile-btn" href="index.html">Home</a>
+      <button id="logoutBtn" class="small-btn" type="button">Logout</button>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <section class="hero">
+    <h2 id="profileName">Loading profile…</h2>
+    <p>Your SkyKef jumper information</p>
+  </section>
+  <div id="profileStatus" class="status">Loading…</div>
+  <section id="profileCard" class="detail-panel profile-card" hidden>
+    <div class="panel-head">Profile Details</div>
+    <dl id="profileDetails" class="profile-details"></dl>
+  </section>
+</main>
+
+<script>
+(() => {
+  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+  const session = SkyKefAdminAuth.getSession();
+  const status = document.getElementById("profileStatus");
+  const card = document.getElementById("profileCard");
+  const details = document.getElementById("profileDetails");
+  const profileName = document.getElementById("profileName");
+
+  function labelFor(key) {
+    return String(key)
+      .replace(/[_-]+/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\b\w/g, letter => letter.toUpperCase());
+  }
+
+  function displayValue(value) {
+    if (typeof value === "boolean") return value ? "Yes" : "No";
+    return String(value);
+  }
+
+  async function loadProfile() {
+    if (!session || session.role !== "jumper" || session.jumperKey === undefined) {
+      location.replace("index.html");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${DB}/jumpers/${encodeURIComponent(session.jumperKey)}.json`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Profile request failed: HTTP ${response.status}`);
+      const jumper = await response.json();
+      if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
+
+      profileName.textContent = `${jumper.Name ?? ""} ${jumper.Surname ?? ""}`.trim() || session.username;
+      details.replaceChildren();
+
+      const hiddenFields = new Set(["Id", "ID", "id", "password", "Password"]);
+      Object.entries(jumper).forEach(([key, value]) => {
+        if (hiddenFields.has(key) || value === null || value === undefined || value === "" || typeof value === "object") return;
+        const row = document.createElement("div");
+        row.className = "profile-detail-row";
+        const term = document.createElement("dt");
+        term.textContent = labelFor(key);
+        const description = document.createElement("dd");
+        description.textContent = displayValue(value);
+        row.append(term, description);
+        details.appendChild(row);
+      });
+
+      status.textContent = "";
+      card.hidden = false;
+    } catch (error) {
+      console.error(error);
+      status.textContent = "Could not load your profile.";
+    }
+  }
+
+  document.getElementById("logoutBtn").addEventListener("click", SkyKefAdminAuth.logout);
+  loadProfile();
+})();
+</script>
+</body>
+</html>
