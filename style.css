@@ -803,3 +803,8 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
   .home-header h1{font-size:1.05rem}
   .header-login-btn{min-height:42px}
 }
+
+.public-loads-link[hidden],
+.public-loads-link[aria-hidden="true"]{
+  display:none !important;
+}
