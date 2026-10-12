@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=jumper-login-1">
+  <link rel="stylesheet" href="style.css?v=inline-profile-1">
   <script src="auth.js?v=jumper-login-1"></script>
 </head>
 <body>
@@ -12,7 +12,7 @@
   <div class="header-inner home-header">
     <h1 id="siteTitle">SkyKef Manifest</h1>
     <div class="header-account-actions">
-      <a id="myProfileLink" class="small-btn header-profile-btn" href="my-profile.html" hidden>My Profile</a>
+      <button id="jumperLogoutBtn" class="small-btn" type="button" hidden>Logout</button>
       <button id="openLoginBtn" class="small-btn header-login-btn" type="button">Login</button>
     </div>
   </div>
@@ -32,6 +32,12 @@
       <strong>Day has not started yet</strong>
       <span>Today's loads will appear here when they are ready.</span>
     </div>
+  </section>
+
+  <section id="userProfileSection" class="user-profile-section" hidden aria-labelledby="userProfileTitle">
+    <div class="panel-head" id="userProfileTitle">My Profile</div>
+    <div id="userProfileStatus" class="status">Loading profile…</div>
+    <dl id="userProfileDetails" class="profile-details"></dl>
   </section>
 
   <div id="loginOverlay" class="login-overlay" hidden>
@@ -79,7 +85,10 @@
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
   const openLoginBtn = document.getElementById("openLoginBtn");
-  const myProfileLink = document.getElementById("myProfileLink");
+  const jumperLogoutBtn = document.getElementById("jumperLogoutBtn");
+  const userProfileSection = document.getElementById("userProfileSection");
+  const userProfileStatus = document.getElementById("userProfileStatus");
+  const userProfileDetails = document.getElementById("userProfileDetails");
   const closeLoginBtn = document.getElementById("closeLoginBtn");
   const adminHome = document.getElementById("adminHome");
   const loginForm = document.getElementById("loginForm");
@@ -195,6 +204,41 @@
     requestAnimationFrame(() => document.getElementById("username").focus());
   }
 
+  function profileLabel(key) {
+    return String(key)
+      .replace(/[_-]+/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2")
+      .replace(/\b\w/g, letter => letter.toUpperCase());
+  }
+
+  async function loadJumperProfile(session) {
+    userProfileStatus.textContent = "Loading profile…";
+    userProfileDetails.replaceChildren();
+    try {
+      const response = await fetch(`${DB}/jumpers/${encodeURIComponent(session.jumperKey)}.json`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Profile request failed: HTTP ${response.status}`);
+      const jumper = await response.json();
+      if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
+
+      const hiddenFields = new Set(["Id", "ID", "id", "password", "Password"]);
+      Object.entries(jumper).forEach(([key, value]) => {
+        if (hiddenFields.has(key) || value === null || value === undefined || value === "" || typeof value === "object") return;
+        const row = document.createElement("div");
+        row.className = "profile-detail-row";
+        const term = document.createElement("dt");
+        term.textContent = profileLabel(key);
+        const description = document.createElement("dd");
+        description.textContent = typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
+        row.append(term, description);
+        userProfileDetails.appendChild(row);
+      });
+      userProfileStatus.textContent = "";
+    } catch (error) {
+      console.error(error);
+      userProfileStatus.textContent = "Could not load your profile.";
+    }
+  }
+
   function showHome(session) {
     closeLogin();
     openLoginBtn.hidden = true;
@@ -204,13 +248,16 @@
       siteTitle.textContent = "SkyKef Manifest";
       publicLoadsCard.hidden = false;
       adminHome.hidden = true;
-      myProfileLink.hidden = false;
+      jumperLogoutBtn.hidden = false;
+      userProfileSection.hidden = false;
+      loadJumperProfile(session);
     } else {
       document.title = "SkyKef Manifest Admin View";
       siteTitle.textContent = "SkyKef Manifest Admin View";
       publicLoadsCard.hidden = true;
       adminHome.hidden = false;
-      myProfileLink.hidden = true;
+      jumperLogoutBtn.hidden = true;
+      userProfileSection.hidden = true;
       welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
     }
     SkyKefAdminAuth.showSessionRole();
@@ -282,6 +329,7 @@
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && !loginOverlay.hidden) closeLogin();
   });
+  jumperLogoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
   logoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
   checkPublicLoads();
 })();
