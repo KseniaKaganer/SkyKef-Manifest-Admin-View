@@ -99,6 +99,22 @@
     return null;
   }
 
+  function isCurrentDataToday(currentData) {
+    const parts = datePartsFromCurrentData(currentData);
+    if (!parts) return false;
+    const today = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric"
+      }).formatToParts(new Date())
+        .filter(part => part.type !== "literal")
+        .map(part => [part.type, String(Number(part.value))])
+    );
+    return parts.y === today.year && parts.m === today.month && parts.d === today.day;
+  }
+
   function displayName(j, uid) {
     if (!j || typeof j !== "object") return `UID ${uid}`;
     const name = `${j.Name ?? ""} ${j.Surname ?? ""}`.trim();
@@ -336,7 +352,7 @@
       jumpersByUid = normalizeJumpers(jumpersData);
       todayLabel.textContent = formatCurrentDataDate(currentData);
 
-      if (loadsData === null || loadsData === undefined) {
+      if (!isCurrentDataToday(currentData) || loadsData === null || loadsData === undefined) {
         currentLoads = [];
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
