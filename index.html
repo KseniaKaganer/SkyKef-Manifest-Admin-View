@@ -3,20 +3,20 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>SkyKef Manifest Admin View</title>
+  <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=public-loads-hide-1">
   <script src="auth.js?v=login-fix-1"></script>
 </head>
 <body>
 <header class="site-header">
   <div class="header-inner home-header">
-    <h1>SkyKef Manifest Admin View</h1>
+    <h1 id="siteTitle">SkyKef Manifest</h1>
     <button id="openLoginBtn" class="small-btn header-login-btn" type="button">Login</button>
   </div>
 </header>
 
 <main class="page">
-  <section class="public-loads-card" aria-labelledby="publicLoadsTitle">
+  <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
     <div>
       <p class="public-loads-kicker">Public manifest</p>
       <h2 id="publicLoadsTitle">Today's Loads</h2>
@@ -71,6 +71,8 @@
 <script>
 (() => {
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+  const siteTitle = document.getElementById("siteTitle");
+  const publicLoadsCard = document.getElementById("publicLoadsCard");
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
   const openLoginBtn = document.getElementById("openLoginBtn");
@@ -170,6 +172,9 @@
 
   function showHome(session) {
     closeLogin();
+    document.title = "SkyKef Manifest Admin View";
+    siteTitle.textContent = "SkyKef Manifest Admin View";
+    publicLoadsCard.hidden = true;
     openLoginBtn.hidden = true;
     adminHome.hidden = false;
     welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
