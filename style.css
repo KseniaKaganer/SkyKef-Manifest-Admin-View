@@ -763,3 +763,43 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 @media(max-width:600px){
   .public-loads-card{padding:20px}
 }
+
+
+/* Compact login button and dialog */
+.home-header{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.header-login-btn{flex:0 0 auto}
+.login-overlay{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(0,0,0,.72);
+}
+.login-overlay[hidden]{display:none}
+.login-overlay .login-card{
+  position:relative;
+  width:min(460px,100%);
+  margin:0;
+}
+.login-close{
+  position:absolute;
+  top:12px;
+  right:14px;
+  width:38px;
+  height:38px;
+  border:0;
+  border-radius:9px;
+  background:#eef1f4;
+  color:#182230;
+  font-size:27px;
+  line-height:1;
+  cursor:pointer;
+}
+.login-close:hover{background:#dfe4e9}
+@media(max-width:600px){
+  .home-header h1{font-size:1.05rem}
+  .header-login-btn{min-height:42px}
+}
