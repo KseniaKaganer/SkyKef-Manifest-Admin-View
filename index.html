@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=public-admin-split-1">
+  <link rel="stylesheet" href="style.css?v=typed-login-1">
   <script src="auth.js?v=login-fix-1"></script>
 </head>
 <body>
@@ -39,7 +39,7 @@
       <form id="loginForm" class="login-form">
         <label>
           <span>Username</span>
-          <select id="username" name="username" autocomplete="username" required disabled><option value="">Loading usernames…</option></select>
+          <input id="username" name="username" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="Username" required>
         </label>
         <label>
           <span>Password</span>
@@ -184,33 +184,22 @@
   const existing = SkyKefAdminAuth.getSession();
   if (existing) showHome(existing);
 
-  const usernameSelect = document.getElementById("username");
+  const usernameInput = document.getElementById("username");
   let loginUsers = [];
   loginBtn.disabled = true;
+
+  usernameInput.addEventListener("input", () => {
+    const start = usernameInput.selectionStart;
+    usernameInput.value = usernameInput.value.toLowerCase();
+    usernameInput.setSelectionRange(start, start);
+  });
+
   SkyKefAdminAuth.getLoginUsers().then(users => {
     loginUsers = users;
-    usernameSelect.replaceChildren();
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Select username";
-    usernameSelect.appendChild(placeholder);
-    ["admin", "manifest"].forEach(role => {
-      const group = document.createElement("optgroup");
-      group.label = role === "admin" ? "Admin" : "Manifest";
-      users.forEach((user, index) => {
-        if (user.role !== role) return;
-        const option = document.createElement("option");
-        option.value = String(index);
-        option.textContent = user.username;
-        group.appendChild(option);
-      });
-      usernameSelect.appendChild(group);
-    });
-    usernameSelect.disabled = users.length === 0;
     loginBtn.disabled = users.length === 0;
-    if (!users.length) loginStatus.textContent = "No login users found.";
+    if (!users.length) loginStatus.textContent = "Incorrect username or password.";
   }).catch(() => {
-    loginStatus.textContent = "Could not load usernames. Reload to retry.";
+    loginStatus.textContent = "Could not load login. Reload to retry.";
   });
 
   loginForm.addEventListener("submit", async event => {
@@ -219,8 +208,9 @@
     loginBtn.disabled = true;
     loginBtn.textContent = "Checking…";
 
-    const user = usernameSelect.value === "" ? null : loginUsers[Number(usernameSelect.value)];
-    const username = user?.username || "";
+    const typedUsername = usernameInput.value.trim().toLowerCase();
+    const user = loginUsers.find(item => item.username.toLowerCase() === typedUsername);
+    const username = user?.username || typedUsername;
     const password = document.getElementById("password").value;
 
     try {
