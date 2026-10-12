@@ -4,7 +4,7 @@
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const SESSION_KEY = "skykef_manifest_admin_session";
   const isLoginPage = /(?:^|\/)index\.html$/.test(location.pathname) || location.pathname.endsWith("/");
-  const isPublicPage = isLoginPage || /(?:^|\\/)loads-today\\.html$/.test(location.pathname);
+  const isPublicPage = isLoginPage || location.pathname.endsWith("/loads-today.html");
 
   function getSession() {
     try {
