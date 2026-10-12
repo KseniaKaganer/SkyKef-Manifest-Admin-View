@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest Admin View</title>
-  <link rel="stylesheet" href="style.css?v=login-contrast-2">
-  <script src="auth.js"></script>
+  <link rel="stylesheet" href="style.css?v=public-loads-1">
+  <script src="auth.js?v=public-loads-1"></script>
 </head>
 <body>
 <header class="site-header">
@@ -13,9 +13,24 @@
 </header>
 
 <main class="page">
+  <section class="public-loads-card" aria-labelledby="publicLoadsTitle">
+    <div>
+      <p class="public-loads-kicker">Public manifest</p>
+      <h2 id="publicLoadsTitle">Today's Loads</h2>
+      <p id="publicLoadsStatus" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
+    </div>
+    <a id="publicLoadsLink" class="big-btn public-loads-link" href="loads-today.html" hidden>
+      <span>View Today's Loads</span><span>→</span>
+    </a>
+    <div id="publicDayNotStarted" class="public-day-message" hidden>
+      <strong>Day has not started yet</strong>
+      <span>Today's loads will appear here when they are ready.</span>
+    </div>
+  </section>
+
   <section id="loginCard" class="login-card">
-    <h2>Login</h2>
-    <p>Select an admin or manifest user and enter your password.</p>
+    <h2>Staff Login</h2>
+    <p>Admin and manifest users can log in here.</p>
     <form id="loginForm" class="login-form">
       <label>
         <span>Username</span>
@@ -49,6 +64,7 @@
 
 <script>
 (() => {
+  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const loginCard = document.getElementById("loginCard");
   const adminHome = document.getElementById("adminHome");
   const loginForm = document.getElementById("loginForm");
@@ -56,6 +72,59 @@
   const loginStatus = document.getElementById("loginStatus");
   const welcomeAdmin = document.getElementById("welcomeAdmin");
   const logoutBtn = document.getElementById("logoutBtn");
+  const publicLoadsStatus = document.getElementById("publicLoadsStatus");
+  const publicLoadsLink = document.getElementById("publicLoadsLink");
+  const publicDayNotStarted = document.getElementById("publicDayNotStarted");
+
+  function findTodayLoads(data) {
+    if (!data || typeof data !== "object") return null;
+    const now = new Date();
+    const y = String(now.getFullYear());
+    const m = String(now.getMonth() + 1);
+    const mm = m.padStart(2, "0");
+    const d = String(now.getDate());
+    const dd = d.padStart(2, "0");
+
+    const nestedDay = data[y]?.[m]?.[d] ?? data[y]?.[m]?.[dd] ??
+      data[y]?.[mm]?.[d] ?? data[y]?.[mm]?.[dd];
+    if (nestedDay && typeof nestedDay === "object") return nestedDay;
+
+    const dayNode = data[d] ?? data[dd];
+    if (dayNode && typeof dayNode === "object") return dayNode;
+
+    return data;
+  }
+
+  function hasLoadRecords(loadsNode) {
+    return Boolean(loadsNode && typeof loadsNode === "object" &&
+      Object.values(loadsNode).some(load =>
+        load && typeof load === "object" &&
+        Object.values(load).some(value => value !== null && value !== undefined)
+      ));
+  }
+
+  async function checkPublicLoads() {
+    try {
+      const response = await fetch(`${DB}/loads.json`, { cache: "no-store" });
+      if (!response.ok) throw new Error(`Loads check failed: HTTP ${response.status}`);
+      const loads = findTodayLoads(await response.json());
+
+      if (hasLoadRecords(loads)) {
+        publicLoadsStatus.textContent = "Today's manifest is available to view.";
+        publicLoadsLink.hidden = false;
+        publicDayNotStarted.hidden = true;
+      } else {
+        publicLoadsStatus.textContent = "";
+        publicLoadsLink.hidden = true;
+        publicDayNotStarted.hidden = false;
+      }
+    } catch (error) {
+      console.error(error);
+      publicLoadsStatus.textContent = "Could not check today's loads. Please try again.";
+      publicLoadsLink.hidden = true;
+      publicDayNotStarted.hidden = true;
+    }
+  }
 
   function showHome(session) {
     loginCard.hidden = true;
@@ -74,14 +143,17 @@
     loginUsers = users;
     usernameSelect.replaceChildren();
     const placeholder = document.createElement("option");
-    placeholder.value = ""; placeholder.textContent = "Select username";
+    placeholder.value = "";
+    placeholder.textContent = "Select username";
     usernameSelect.appendChild(placeholder);
     ["admin", "manifest"].forEach(role => {
-      const group = document.createElement("optgroup"); group.label = role === "admin" ? "Admin" : "Manifest";
+      const group = document.createElement("optgroup");
+      group.label = role === "admin" ? "Admin" : "Manifest";
       users.forEach((user, index) => {
         if (user.role !== role) return;
         const option = document.createElement("option");
-        option.value = String(index); option.textContent = user.username;
+        option.value = String(index);
+        option.textContent = user.username;
         group.appendChild(option);
       });
       usernameSelect.appendChild(group);
@@ -93,7 +165,7 @@
     loginStatus.textContent = "Could not load usernames. Reload to retry.";
   });
 
-  loginForm.addEventListener("submit", async (event) => {
+  loginForm.addEventListener("submit", async event => {
     event.preventDefault();
     loginStatus.textContent = "";
     loginBtn.disabled = true;
@@ -122,6 +194,7 @@
   });
 
   logoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
+  checkPublicLoads();
 })();
 </script>
 </body>
