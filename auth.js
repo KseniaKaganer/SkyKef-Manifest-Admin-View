@@ -17,7 +17,7 @@
   }
 
   function requireLogin() {
-    if (!isLoginPage && !getSession()) {
+    if (!isPublicPage && !getSession()) {
       location.replace("index.html");
       return false;
     }
@@ -68,7 +68,7 @@
   }
 
   async function applyViewOnlyMode() {
-    if (!getSession() || isLoginPage) return false;
+    if (!getSession() || isPublicPage) return false;
     let state;
     try {
       state = await getDayState();
