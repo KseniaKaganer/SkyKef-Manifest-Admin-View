@@ -812,3 +812,7 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .public-loads-card[hidden]{display:none !important}
 
 #username{text-transform:lowercase}
+
+.header-account-actions{display:flex;align-items:center;gap:10px}
+.header-profile-btn{text-decoration:none}
+.header-profile-btn[hidden]{display:none !important}
