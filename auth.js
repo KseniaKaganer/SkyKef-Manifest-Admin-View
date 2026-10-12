@@ -4,6 +4,7 @@
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const SESSION_KEY = "skykef_manifest_admin_session";
   const isLoginPage = /(?:^|\/)index\.html$/.test(location.pathname) || location.pathname.endsWith("/");
+  const isProfilePage = location.pathname.endsWith("/my-profile.html");
   const isPublicPage = isLoginPage || location.pathname.endsWith("/loads-today.html");
 
   function getSession() {
@@ -11,14 +12,23 @@
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const session = JSON.parse(raw);
-      return session && session.username && ["admin", "manifest"].includes(session.role) ? session : null;
+      return session && session.username && ["admin", "manifest", "jumper"].includes(session.role) ? session : null;
     } catch {
       return null;
     }
   }
 
   function requireLogin() {
-    if (!isPublicPage && !getSession()) {
+    const session = getSession();
+    if (isPublicPage) return true;
+    if (isProfilePage) {
+      if (!session || session.role !== "jumper") {
+        location.replace("index.html");
+        return false;
+      }
+      return true;
+    }
+    if (!session || !["admin", "manifest"].includes(session.role)) {
       location.replace("index.html");
       return false;
     }
@@ -58,6 +68,35 @@
     }));
   }
 
+  function createJumperSession(jumper) {
+    const username = `${jumper?.Name ?? ""} ${jumper?.Surname ?? ""}`.trim() || String(jumper?.Name || "Jumper");
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+      username,
+      role: "jumper",
+      jumperKey: String(jumper.key),
+      loggedInAt: Date.now()
+    }));
+  }
+
+  async function verifyJumper(username, password) {
+    const cleanUsername = String(username || "").trim().toLowerCase();
+    if (!cleanUsername || password === null || password === undefined || String(password) === "") return null;
+    const response = await fetch(`${DB}/jumpers.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`Jumper login failed: HTTP ${response.status}`);
+    const data = await response.json();
+    const records = Array.isArray(data)
+      ? data.map((value, key) => value && typeof value === "object" ? { key, ...value } : null).filter(Boolean)
+      : Object.entries(data || {}).filter(([, value]) => value && typeof value === "object").map(([key, value]) => ({ key, ...value }));
+
+    return records.find(jumper => {
+      const firstName = String(jumper.Name ?? "").trim().toLowerCase();
+      const fullName = `${jumper.Name ?? ""} ${jumper.Surname ?? ""}`.trim().toLowerCase();
+      const id = jumper.Id ?? jumper.ID ?? jumper.id;
+      return (cleanUsername === firstName || cleanUsername === fullName) &&
+        id !== undefined && id !== null && String(id).trim() === String(password).trim();
+    }) || null;
+  }
+
   async function getDayState() {
     const response = await fetch(`${DB}/current_data.json`, { cache: "no-store" });
     if (!response.ok) throw new Error(`Day state check failed: HTTP ${response.status}`);
@@ -69,7 +108,7 @@
   }
 
   async function applyViewOnlyMode() {
-    if (!getSession() || isPublicPage) return false;
+    if (!["admin", "manifest"].includes(getSession()?.role) || isPublicPage || isProfilePage) return false;
     let state;
     try {
       state = await getDayState();
@@ -119,12 +158,12 @@
     if (!header || document.getElementById("sessionRole")) return;
     const badge = document.createElement("span");
     badge.id = "sessionRole";
-    badge.textContent = `${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
+    badge.textContent = `${session.username} · ${session.role === "admin" ? "Admin" : session.role === "manifest" ? "Manifest" : "Jumper"}`;
     badge.style.cssText = "display:inline-block;padding:6px 10px;border:1px solid currentColor;border-radius:8px;font-size:14px";
     header.appendChild(badge);
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
-  window.SkyKefAdminAuth = { getSession, verifyUser, getLoginUsers, isAdmin, createSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
+  window.SkyKefAdminAuth = { getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
   if (requireLogin()) {
     applyViewOnlyMode();
   }
