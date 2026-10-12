@@ -4,14 +4,17 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=typed-login-1">
-  <script src="auth.js?v=login-fix-1"></script>
+  <link rel="stylesheet" href="style.css?v=jumper-login-1">
+  <script src="auth.js?v=jumper-login-1"></script>
 </head>
 <body>
 <header class="site-header">
   <div class="header-inner home-header">
     <h1 id="siteTitle">SkyKef Manifest</h1>
-    <button id="openLoginBtn" class="small-btn header-login-btn" type="button">Login</button>
+    <div class="header-account-actions">
+      <a id="myProfileLink" class="small-btn header-profile-btn" href="my-profile.html" hidden>My Profile</a>
+      <button id="openLoginBtn" class="small-btn header-login-btn" type="button">Login</button>
+    </div>
   </div>
 </header>
 
@@ -76,6 +79,7 @@
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
   const openLoginBtn = document.getElementById("openLoginBtn");
+  const myProfileLink = document.getElementById("myProfileLink");
   const closeLoginBtn = document.getElementById("closeLoginBtn");
   const adminHome = document.getElementById("adminHome");
   const loginForm = document.getElementById("loginForm");
@@ -193,12 +197,22 @@
 
   function showHome(session) {
     closeLogin();
-    document.title = "SkyKef Manifest Admin View";
-    siteTitle.textContent = "SkyKef Manifest Admin View";
-    publicLoadsCard.hidden = true;
     openLoginBtn.hidden = true;
-    adminHome.hidden = false;
-    welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
+
+    if (session.role === "jumper") {
+      document.title = "SkyKef Manifest";
+      siteTitle.textContent = "SkyKef Manifest";
+      publicLoadsCard.hidden = false;
+      adminHome.hidden = true;
+      myProfileLink.hidden = false;
+    } else {
+      document.title = "SkyKef Manifest Admin View";
+      siteTitle.textContent = "SkyKef Manifest Admin View";
+      publicLoadsCard.hidden = true;
+      adminHome.hidden = false;
+      myProfileLink.hidden = true;
+      welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
+    }
     SkyKefAdminAuth.showSessionRole();
   }
 
@@ -207,7 +221,7 @@
 
   const usernameInput = document.getElementById("username");
   let loginUsers = [];
-  loginBtn.disabled = true;
+  loginBtn.disabled = false;
 
   usernameInput.addEventListener("input", () => {
     const start = usernameInput.selectionStart;
@@ -217,10 +231,9 @@
 
   SkyKefAdminAuth.getLoginUsers().then(users => {
     loginUsers = users;
-    loginBtn.disabled = users.length === 0;
-    if (!users.length) loginStatus.textContent = "Incorrect username or password.";
-  }).catch(() => {
-    loginStatus.textContent = "Could not load login. Reload to retry.";
+  }).catch(error => {
+    console.error(error);
+    loginUsers = [];
   });
 
   loginForm.addEventListener("submit", async event => {
@@ -235,12 +248,21 @@
     const password = document.getElementById("password").value;
 
     try {
-      const valid = await SkyKefAdminAuth.verifyUser(username, password, user?.role);
-      if (!valid) {
-        loginStatus.textContent = "Incorrect username or password.";
-        return;
+      const validStaff = user
+        ? await SkyKefAdminAuth.verifyUser(username, password, user.role)
+        : false;
+
+      if (validStaff) {
+        SkyKefAdminAuth.createSession(username, user.role);
+      } else {
+        const jumper = await SkyKefAdminAuth.verifyJumper(typedUsername, password);
+        if (!jumper) {
+          loginStatus.textContent = "Incorrect username or password.";
+          return;
+        }
+        SkyKefAdminAuth.createJumperSession(jumper);
       }
-      SkyKefAdminAuth.createSession(username, user.role);
+
       showHome(SkyKefAdminAuth.getSession());
       loginForm.reset();
     } catch (error) {
