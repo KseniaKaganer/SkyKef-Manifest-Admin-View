@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=user-logbook-1">
+  <link rel="stylesheet" href="style.css?v=profile-logbook-export-1">
   <script src="auth.js?v=jumper-login-1"></script>
 </head>
 <body>
@@ -44,7 +44,10 @@
       <dl id="userProfileDetails" class="profile-details"></dl>
     </div>
     <div id="userLogbookView" hidden>
-      <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
+      <div class="user-logbook-toolbar">
+        <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
+        <button id="exportUserLogbookBtn" class="small-btn" type="button" disabled>Export CSV</button>
+      </div>
       <div class="load-table-scroll">
         <table class="load-table user-logbook-table">
           <thead><tr><th>Date</th><th>Load</th><th>Activity</th><th>Details</th></tr></thead>
@@ -109,7 +112,9 @@
   const userLogbookView = document.getElementById("userLogbookView");
   const userLogbookStatus = document.getElementById("userLogbookStatus");
   const userLogbookBody = document.getElementById("userLogbookBody");
+  const exportUserLogbookBtn = document.getElementById("exportUserLogbookBtn");
   let loggedInJumper = null;
+  let loggedInLogbookRows = [];
   let logbookLoaded = false;
   const closeLoginBtn = document.getElementById("closeLoginBtn");
   const adminHome = document.getElementById("adminHome");
@@ -243,7 +248,10 @@
       if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
       loggedInJumper = jumper;
 
-      const hiddenFields = new Set(["Id", "ID", "id", "password", "Password"]);
+      const hiddenFields = new Set([
+        "Id", "ID", "id", "password", "Password",
+        "AffLevel", "Aff Level", "License", "Uid", "uid", "WaiverDate", "Waiver Date"
+      ]);
       Object.entries(jumper).forEach(([key, value]) => {
         if (hiddenFields.has(key) || value === null || value === undefined || value === "" || typeof value === "object") return;
         const row = document.createElement("div");
@@ -301,6 +309,8 @@
       b.year - a.year || b.month - a.month || b.day - a.day || loadNumber(b.loadKey) - loadNumber(a.loadKey)
     );
     userLogbookBody.replaceChildren();
+    loggedInLogbookRows = rows;
+    exportUserLogbookBtn.disabled = rows.length === 0;
 
     if (!rows.length) {
       userLogbookStatus.textContent = "No logbook history found.";
@@ -348,6 +358,34 @@
       console.error(error);
       userLogbookStatus.textContent = "Could not load your logbook.";
     }
+  }
+
+
+  function csvCell(value) {
+    return `"${String(value ?? "").replace(/"/g, '""')}"`;
+  }
+
+  function exportUserLogbook() {
+    if (!loggedInLogbookRows.length) return;
+    const lines = [["Date", "Load", "Activity", "Details"].map(csvCell).join(",")];
+
+    loggedInLogbookRows.forEach(row => {
+      const parsed = parseLogbookValue(row.value);
+      const date = `${String(row.day).padStart(2, "0")}/${String(row.month).padStart(2, "0")}/${row.year}`;
+      const load = loadNumber(row.loadKey) ? `Load ${loadNumber(row.loadKey)}` : row.loadKey;
+      lines.push([date, load, parsed.activity, parsed.details].map(csvCell).join(","));
+    });
+
+    const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const safeName = String(loggedInJumper?.Name || "jumper").trim().replace(/[^a-z0-9_-]+/gi, "-");
+    link.href = url;
+    link.download = `${safeName}-logbook.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   }
 
   function selectUserTab(tab) {
@@ -451,6 +489,7 @@
   document.addEventListener("keydown", event => {
     if (event.key === "Escape" && !loginOverlay.hidden) closeLogin();
   });
+  exportUserLogbookBtn.addEventListener("click", exportUserLogbook);
   userProfileTab.addEventListener("click", () => selectUserTab("profile"));
   userLogbookTab.addEventListener("click", () => selectUserTab("logbook"));
   jumperLogoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
