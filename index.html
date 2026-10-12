@@ -154,7 +154,7 @@
         loadsResponse.json(),
         currentDataResponse.json()
       ]);
-      const loads = findTodayLoads(loadsData, currentData);
+      const loads = loadsData;
       const dateIsToday = isCurrentDataToday(currentData);
 
       if (dateIsToday && hasLoadRecords(loads)) {
