@@ -810,3 +810,5 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 }
 
 .public-loads-card[hidden]{display:none !important}
+
+#username{text-transform:lowercase}
