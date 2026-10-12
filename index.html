@@ -99,6 +99,22 @@
     return null;
   }
 
+  function isCurrentDataToday(currentData) {
+    const parts = datePartsFromCurrentData(currentData);
+    if (!parts) return false;
+    const today = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric"
+      }).formatToParts(new Date())
+        .filter(part => part.type !== "literal")
+        .map(part => [part.type, String(Number(part.value))])
+    );
+    return parts.y === today.year && parts.m === today.month && parts.d === today.day;
+  }
+
   function findTodayLoads(data, currentData) {
     if (!data || typeof data !== "object") return null;
     const parts = datePartsFromCurrentData(currentData);
@@ -139,8 +155,9 @@
         currentDataResponse.json()
       ]);
       const loads = findTodayLoads(loadsData, currentData);
+      const dateIsToday = isCurrentDataToday(currentData);
 
-      if (hasLoadRecords(loads)) {
+      if (dateIsToday && hasLoadRecords(loads)) {
         const date = currentData?.date;
         publicLoadsIntro.hidden = false;
         publicLoadsStatus.textContent = date ? `Loads for ${date} are available to view.` : "The current manifest is available to view.";
