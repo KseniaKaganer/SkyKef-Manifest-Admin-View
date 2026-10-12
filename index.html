@@ -17,7 +17,7 @@
 
 <main class="page">
   <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
-    <div>
+    <div id="publicLoadsIntro">
       <p class="public-loads-kicker">Public manifest</p>
       <h2 id="publicLoadsTitle">Today's Loads</h2>
       <p id="publicLoadsStatus" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
@@ -83,6 +83,7 @@
   const loginStatus = document.getElementById("loginStatus");
   const welcomeAdmin = document.getElementById("welcomeAdmin");
   const logoutBtn = document.getElementById("logoutBtn");
+  const publicLoadsIntro = document.getElementById("publicLoadsIntro");
   const publicLoadsStatus = document.getElementById("publicLoadsStatus");
   const publicLoadsLink = document.getElementById("publicLoadsLink");
   const publicDayNotStarted = document.getElementById("publicDayNotStarted");
@@ -141,11 +142,13 @@
 
       if (hasLoadRecords(loads)) {
         const date = currentData?.date;
+        publicLoadsIntro.hidden = false;
         publicLoadsStatus.textContent = date ? `Loads for ${date} are available to view.` : "The current manifest is available to view.";
         publicLoadsLink.hidden = false;
         publicLoadsLink.setAttribute("aria-hidden", "false");
         publicDayNotStarted.hidden = true;
       } else {
+        publicLoadsIntro.hidden = true;
         publicLoadsStatus.textContent = "";
         publicLoadsLink.hidden = true;
         publicLoadsLink.setAttribute("aria-hidden", "true");
@@ -153,6 +156,7 @@
       }
     } catch (error) {
       console.error(error);
+      publicLoadsIntro.hidden = false;
       publicLoadsStatus.textContent = "Could not check the current loads. Please try again.";
       publicLoadsLink.hidden = true;
       publicLoadsLink.setAttribute("aria-hidden", "true");
