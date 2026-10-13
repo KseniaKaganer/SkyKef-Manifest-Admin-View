@@ -155,12 +155,40 @@
     const session = getSession();
     if (!session) return;
     const header = document.querySelector(".header-inner");
-    if (!header || document.getElementById("sessionRole")) return;
+    if (!header) return;
+
+    // Keep one account control in the same place on every page.
+    document.querySelectorAll("#logoutBtn, #jumperLogoutBtn, #welcomeAdmin").forEach(element => {
+      element.hidden = true;
+      element.style.display = "none";
+    });
+    if (document.getElementById("sessionAccount")) return;
+
+    const account = document.createElement("div");
+    account.id = "sessionAccount";
+    account.style.cssText = "display:flex;align-items:center;gap:10px;max-width:100%;margin-top:12px";
     const badge = document.createElement("span");
     badge.id = "sessionRole";
     badge.textContent = `${session.username} · ${session.role === "admin" ? "Admin" : session.role === "manifest" ? "Manifest" : "Jumper"}`;
-    badge.style.cssText = "display:inline-block;padding:6px 10px;border:1px solid currentColor;border-radius:8px;font-size:14px";
-    header.appendChild(badge);
+    badge.style.cssText = "padding:6px 10px;border:1px solid currentColor;border-radius:8px;font-size:14px;min-width:0;overflow-wrap:anywhere";
+    const button = document.createElement("button");
+    button.id = "sessionLogoutBtn";
+    button.type = "button";
+    button.className = "small-btn";
+    button.textContent = "Logout";
+    button.style.flex = "0 0 auto";
+    button.addEventListener("click", logout);
+    account.append(badge, button);
+
+    const actions = header.querySelector(".header-account-actions");
+    if (actions) {
+      header.style.flexWrap = "wrap";
+      actions.style.flexWrap = "wrap";
+      account.style.marginTop = "0";
+      actions.appendChild(account);
+    } else {
+      header.insertBefore(account, header.querySelector(".nav"));
+    }
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
   window.SkyKefAdminAuth = { getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
