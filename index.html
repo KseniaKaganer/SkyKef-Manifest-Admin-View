@@ -36,6 +36,11 @@
 #publicLoadsCard .load-table th:nth-child(1), #publicLoadsCard .load-table td:nth-child(1) { width:44%; }
 #publicLoadsCard .load-table th:nth-child(2), #publicLoadsCard .load-table td:nth-child(2) { width:20%; }
 #publicLoadsCard .load-table th:nth-child(3), #publicLoadsCard .load-table td:nth-child(3) { width:36%; }
+
+.loads-heading-actions { display:flex;align-items:center;justify-content:space-between;gap:12px; }
+#publicLoadsCard .loads-heading-actions h2 { margin:0 0 8px; }
+#publicLoadsCard .loads-heading-actions #reloadBtn { flex:0 0 auto;min-height:36px;padding:0 12px;border-radius:10px; }
+#publicLoadsCard #loadsStatus:empty { display:none; }
 </style>
 </head>
 <body>
@@ -56,11 +61,11 @@
 
   <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
     <div id="publicLoadsIntro">
-      <h2 id="publicLoadsTitle">Today's Loads</h2>
-      <div class="loads-date-actions">
-        <p id="todayLabel" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
+      <div class="loads-heading-actions">
+        <h2 id="publicLoadsTitle">Today's Loads</h2>
         <button id="reloadBtn" class="small-btn" type="button">Refresh</button>
       </div>
+      <p id="todayLabel" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
     </div>
   <section id="jumperManifestSummary" class="jumper-manifest-summary" hidden aria-live="polite">
     <strong id="jumperManifestLoads"></strong>
@@ -840,7 +845,7 @@
     if (!currentLoads.length) {
       todayLoadsLayout.hidden = true;
       notStartedCard.hidden = false;
-      loadsStatus.textContent = "No loads found.";
+      loadsStatus.textContent = "";
       return;
     }
 
@@ -916,7 +921,7 @@
         renderJumperManifest(jumpersData);
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
-        loadsStatus.textContent = "Day has not started yet.";
+        loadsStatus.textContent = "";
         return;
       }
 
@@ -926,7 +931,7 @@
       if (!currentLoads.length) {
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
-        loadsStatus.textContent = "Day has not started yet.";
+        loadsStatus.textContent = "";
         return;
       }
 
