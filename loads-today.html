@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css?v=public-loads-1">
-  <script src="auth.js?v=account-logout-2"></script>\n<style>
+  <script src="auth.js?v=clean-urls-dates-3"></script>\n<style>
 .load-row.next-load,
 .load-row.next-load:hover,
 .load-row.next-load.active {
@@ -109,7 +109,7 @@
     const raw = currentData?.date;
     return raw === null || raw === undefined || String(raw).trim() === ""
       ? "Date unavailable"
-      : `Date: ${String(raw)}`;
+      : `Date: ${SkyKefAdminAuth.formatDate(raw)}`;
   }
 
   function datePartsFromCurrentData(currentData) {
