@@ -3,9 +3,24 @@
 
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const SESSION_KEY = "skykef_manifest_admin_session";
-  const isLoginPage = /(?:^|\/)index\.html$/.test(location.pathname) || location.pathname.endsWith("/");
-  const isProfilePage = location.pathname.endsWith("/my-profile.html");
-  const isPublicPage = isLoginPage || location.pathname.endsWith("/loads-today.html");
+  const pagePath = location.pathname.replace(/\/$/, "").replace(/\.html$/, "");
+  const isLoginPage = /(?:^|\/)index$/.test(pagePath) || location.pathname.endsWith("/");
+  const isProfilePage = pagePath.endsWith("/my-profile");
+  const isPublicPage = isLoginPage || pagePath.endsWith("/loads-today");
+
+  function formatDate(value) {
+    if (value === null || value === undefined || String(value).trim() === "") return "—";
+    const raw = String(value).trim();
+    let match = raw.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    let year, month, day;
+    if (match) { [, year, month, day] = match; } else {
+      match = raw.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+      if (!match) return raw;
+      const monthFirst = /\b(?:AM|PM)\b/i.test(raw) || Number(match[2]) > 12;
+      year = match[3]; month = match[monthFirst ? 1 : 2]; day = match[monthFirst ? 2 : 1];
+    }
+    return `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+  }
 
   function getSession() {
     try {
@@ -191,7 +206,7 @@
     }
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
-  window.SkyKefAdminAuth = { getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
+  window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
   if (requireLogin()) {
     applyViewOnlyMode();
   }
