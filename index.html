@@ -44,7 +44,7 @@
 </header>
 
 <main class="page">
-  <div id="registrationAction" class="registration-action">
+  <div id="registrationAction" class="registration-action" hidden>
     <a class="small-btn registration-btn" href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform" target="_blank" rel="noopener noreferrer">Register for Jumping</a>
   </div>
 
@@ -442,6 +442,20 @@
     if (!profileSelected) loadUserLogbook();
   }
 
+  function registrationIsOpen(now = new Date()) {
+    const hour = Number(new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jerusalem",
+      hour: "2-digit",
+      hourCycle: "h23"
+    }).format(now));
+    return hour >= 8 && hour < 17;
+  }
+
+  function updateRegistrationAvailability() {
+    const role = SkyKefAdminAuth.getSession()?.role;
+    registrationAction.hidden = !registrationIsOpen() || role === "admin" || role === "manifest";
+  }
+
   function showHome(session) {
     closeLogin();
     openLoginBtn.hidden = true;
@@ -450,7 +464,7 @@
       document.title = "SkyKef Manifest";
       siteTitle.textContent = "SkyKef Manifest";
       publicLoadsCard.hidden = false;
-      registrationAction.hidden = false;
+      updateRegistrationAvailability();
       adminHome.hidden = true;
       jumperLogoutBtn.hidden = false;
       userProfileSection.hidden = false;
@@ -468,6 +482,11 @@
     SkyKefAdminAuth.showSessionRole();
     if (session.role === "jumper") document.getElementById("reloadBtn").click();
   }
+
+  updateRegistrationAvailability();
+  setInterval(updateRegistrationAvailability, 10000);
+  window.addEventListener("focus", updateRegistrationAvailability);
+  document.addEventListener("visibilitychange", updateRegistrationAvailability);
 
   const existing = SkyKefAdminAuth.getSession();
   if (existing) showHome(existing);
