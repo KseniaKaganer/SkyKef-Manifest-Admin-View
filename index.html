@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=registration-button-1">
-  <script src="auth.js?v=account-logout-2"></script>
+  <script src="auth.js?v=clean-urls-dates-3"></script>
 </head>
 <body>
 <header class="site-header">
@@ -211,7 +211,7 @@
       const dateIsToday = isCurrentDataToday(currentData);
 
       if ((dayIsRunning || dateIsToday) && hasLoadRecords(loads)) {
-        const date = currentData?.date;
+        const date = currentData?.date ? SkyKefAdminAuth.formatDate(currentData.date) : null;
         publicLoadsIntro.hidden = false;
         publicLoadsStatus.textContent = date ? `Loads for ${date} are available to view.` : "The current manifest is available to view.";
         publicLoadsLink.hidden = false;
@@ -284,7 +284,7 @@
         const term = document.createElement("dt");
         term.textContent = profileLabel(key);
         const description = document.createElement("dd");
-        description.textContent = typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
+        description.textContent = typeof value === "boolean" ? (value ? "Yes" : "No") : /date/i.test(key) ? SkyKefAdminAuth.formatDate(value) : String(value);
         row.append(term, description);
         userProfileDetails.appendChild(row);
       });
