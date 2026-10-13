@@ -5,7 +5,19 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css?v=public-loads-1">
-  <script src="auth.js?v=account-logout-2"></script>\n</head>
+  <script src="auth.js?v=account-logout-2"></script>\n<style>
+.load-row.next-load,
+.load-row.next-load:hover,
+.load-row.next-load.active {
+  background:#3a300d;
+  box-shadow:inset 4px 0 0 #ffd45a;
+}
+.load-row.next-load .load-row-title,
+.load-row.next-load .load-row-arrow,
+.next-load-title { color:#ffe394; }
+.load-row.next-load .load-row-sub { color:#e4d6a1; }
+</style>
+</head>
 <body>
 <header class="site-header">
   <div class="header-inner">
@@ -80,6 +92,7 @@
 
   let jumpersByUid = new Map();
   let currentLoads = [];
+  let inAirLoad = null;
 
   function formatCurrentDataDate(currentData) {
     const raw = currentData?.date;
@@ -236,8 +249,25 @@
       .sort((a, b) => b.number - a.number);
   }
 
+
+  function loadStatus(load) {
+    if (inAirLoad === null || inAirLoad === undefined || String(inAirLoad).trim() === "") return "";
+    const number = getLoadNumber(inAirLoad);
+    if (number <= 0) return "";
+    if (load.number === number) return "In air";
+    if (load.number === number + 1) return "Next load";
+    return "";
+  }
+
+  function loadLabel(load) {
+    const label = load.number ? `Load ${load.number}` : load.key;
+    const status = loadStatus(load);
+    return status ? `${label} · ${status}` : label;
+  }
+
   function renderLoadDetail(load) {
-    loadTitle.textContent = load.number ? `Load ${load.number}` : load.key;
+    loadTitle.textContent = loadLabel(load);
+    loadTitle.classList.toggle("next-load-title", loadStatus(load) === "Next load");
 
     const count = getJumperCount(load.entries);
     loadSummary.textContent =
@@ -307,12 +337,13 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "load-row" + (index === 0 ? " active" : "");
+      btn.classList.toggle("next-load", loadStatus(load) === "Next load");
 
       const left = document.createElement("div");
 
       const title = document.createElement("div");
       title.className = "load-row-title";
-      title.textContent = load.number ? `Load ${load.number}` : load.key;
+      title.textContent = loadLabel(load);
 
       const sub = document.createElement("div");
       sub.className = "load-row-sub";
@@ -349,6 +380,7 @@
         fetchJson("current_data")
       ]);
 
+      inAirLoad = currentData?.in_air_load ?? null;
       jumpersByUid = normalizeJumpers(jumpersData);
       todayLabel.textContent = formatCurrentDataDate(currentData);
 
