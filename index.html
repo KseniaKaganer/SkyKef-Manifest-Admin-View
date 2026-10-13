@@ -30,6 +30,12 @@
 #todayLoadsLayout[hidden], #notStartedCard[hidden] { display:none; }
 #publicLoadsCard .status { margin-bottom:0; }
 #publicLoadsCard #reloadBtn { justify-self:start; }
+
+.loads-date-actions { display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
+#publicLoadsCard .loads-date-actions #reloadBtn { min-height:36px;padding:0 12px;border-radius:10px; }
+#publicLoadsCard .load-table th:nth-child(1), #publicLoadsCard .load-table td:nth-child(1) { width:44%; }
+#publicLoadsCard .load-table th:nth-child(2), #publicLoadsCard .load-table td:nth-child(2) { width:20%; }
+#publicLoadsCard .load-table th:nth-child(3), #publicLoadsCard .load-table td:nth-child(3) { width:36%; }
 </style>
 </head>
 <body>
@@ -50,15 +56,16 @@
 
   <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
     <div id="publicLoadsIntro">
-      <p class="public-loads-kicker">Public manifest</p>
       <h2 id="publicLoadsTitle">Today's Loads</h2>
-      <p id="todayLabel" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
+      <div class="loads-date-actions">
+        <p id="todayLabel" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
+        <button id="reloadBtn" class="small-btn" type="button">Refresh</button>
+      </div>
     </div>
   <section id="jumperManifestSummary" class="jumper-manifest-summary" hidden aria-live="polite">
     <strong id="jumperManifestLoads"></strong>
     <p id="jumperInAirLoad"></p>
   </section>
-  <button id="reloadBtn" class="small-btn" type="button">Reload Loads</button>
   <div id="loadsStatus" class="status" aria-live="polite"></div>
   <section id="todayLoadsLayout" class="loads-layout" hidden>
     <div class="loads-list-panel">
@@ -77,7 +84,6 @@
             <thead>
               <tr>
                 <th>Jumper</th>
-                <th>UID</th>
                 <th>Activity</th>
                 <th>Details</th>
               </tr>
@@ -584,7 +590,7 @@
     const raw = currentData?.date;
     return raw === null || raw === undefined || String(raw).trim() === ""
       ? "Date unavailable"
-      : `Date: ${SkyKefAdminAuth.formatDate(raw)}`;
+      : SkyKefAdminAuth.formatDate(raw);
   }
 
   function datePartsFromCurrentData(currentData) {
@@ -771,7 +777,7 @@
     if (!load.entries.length) {
       const tr = document.createElement("tr");
       const td = document.createElement("td");
-      td.colSpan = 4;
+      td.colSpan = 3;
       td.className = "report-empty";
       td.textContent = "No jumper records in this load.";
       tr.appendChild(td);
@@ -786,9 +792,6 @@
       name.className = "load-jumper-name";
       name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
 
-      const uid = document.createElement("td");
-      uid.textContent = entry.uid;
-
       const activity = document.createElement("td");
       activity.textContent = entry.activity;
       if (jumperCountForActivity(entry.activity) === 2) {
@@ -798,7 +801,7 @@
       const details = document.createElement("td");
       details.textContent = entry.details;
 
-      tr.append(name, uid, activity, details);
+      tr.append(name, activity, details);
       loadBody.appendChild(tr);
     });
   }
