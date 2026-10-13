@@ -6,6 +6,31 @@
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=registration-button-1">
   <script src="auth.js?v=clean-urls-dates-3"></script>
+<style>
+
+.load-row.next-load,
+.load-row.next-load:hover,
+.load-row.next-load.active {
+  background:#3a300d;
+  box-shadow:inset 4px 0 0 #ffd45a;
+}
+.load-row.next-load .load-row-title,
+.load-row.next-load .load-row-arrow,
+.next-load-title { color:#ffe394; }
+.load-row.next-load .load-row-sub { color:#e4d6a1; }
+.jumper-manifest-summary {
+  margin-bottom:22px;padding:20px 24px;border:2px solid #ffd45a;
+  border-radius:16px;background:#3a300d;color:#fff1b8;line-height:1.5;
+}
+.jumper-manifest-summary[hidden] { display:none; }
+.jumper-manifest-summary strong { display:block;font-size:1.15rem; }
+.jumper-manifest-summary p { margin:8px 0 0;color:#ffe394; }
+
+#publicLoadsCard { max-width:1280px; }
+#todayLoadsLayout[hidden], #notStartedCard[hidden] { display:none; }
+#publicLoadsCard .status { margin-bottom:0; }
+#publicLoadsCard #reloadBtn { justify-self:start; }
+</style>
 </head>
 <body>
 <header class="site-header">
@@ -19,24 +44,58 @@
 </header>
 
 <main class="page">
+  <div id="registrationAction" class="registration-action">
+    <a class="small-btn registration-btn" href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform" target="_blank" rel="noopener noreferrer">Register for Jumping</a>
+  </div>
+
   <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
     <div id="publicLoadsIntro">
       <p class="public-loads-kicker">Public manifest</p>
       <h2 id="publicLoadsTitle">Today's Loads</h2>
-      <p id="publicLoadsStatus" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
+      <p id="todayLabel" class="public-loads-status" aria-live="polite">Checking today's loads…</p>
     </div>
-    <a id="publicLoadsLink" class="big-btn public-loads-link" href="loads-today.html" hidden>
-      <span>View Today's Loads</span><span>→</span>
-    </a>
-    <div id="publicDayNotStarted" class="public-day-message" hidden>
+  <section id="jumperManifestSummary" class="jumper-manifest-summary" hidden aria-live="polite">
+    <strong id="jumperManifestLoads"></strong>
+    <p id="jumperInAirLoad"></p>
+  </section>
+  <button id="reloadBtn" class="small-btn" type="button">Reload Loads</button>
+  <div id="loadsStatus" class="status" aria-live="polite"></div>
+  <section id="todayLoadsLayout" class="loads-layout" hidden>
+    <div class="loads-list-panel">
+      <div class="panel-head">Today's Loads</div>
+      <div id="loadsList" class="loads-list"></div>
+    </div>
+
+    <div class="load-detail-panel">
+      <div class="panel-head" id="loadTitle">Load Details</div>
+
+      <div id="loadDetail">
+        <div class="load-summary" id="loadSummary"></div>
+
+        <div class="load-table-scroll">
+          <table class="load-table">
+            <thead>
+              <tr>
+                <th>Jumper</th>
+                <th>UID</th>
+                <th>Activity</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="loadBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+    <div id="notStartedCard" class="public-day-message" hidden>
       <strong>Day has not started yet</strong>
       <span>Today's loads will appear here when they are ready.</span>
     </div>
   </section>
 
-  <div id="registrationAction" class="registration-action">
-    <a class="small-btn registration-btn" href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform" target="_blank" rel="noopener noreferrer">Register for Activity Day</a>
-  </div>
+
 
   <section id="userProfileSection" class="user-profile-section" hidden aria-label="My account">
     <div class="detail-tabs" role="tablist" aria-label="My information">
@@ -129,9 +188,9 @@
   const welcomeAdmin = document.getElementById("welcomeAdmin");
   const logoutBtn = document.getElementById("logoutBtn");
   const publicLoadsIntro = document.getElementById("publicLoadsIntro");
-  const publicLoadsStatus = document.getElementById("publicLoadsStatus");
+  const publicLoadsStatus = document.getElementById("todayLabel");
   const publicLoadsLink = document.getElementById("publicLoadsLink");
-  const publicDayNotStarted = document.getElementById("publicDayNotStarted");
+  const publicDayNotStarted = document.getElementById("notStartedCard");
 
   function datePartsFromCurrentData(currentData) {
     const raw = currentData?.date;
@@ -191,47 +250,6 @@
         load && typeof load === "object" &&
         Object.values(load).some(value => value !== null && value !== undefined)
       ));
-  }
-
-  async function checkPublicLoads() {
-    try {
-      const [loadsResponse, currentDataResponse] = await Promise.all([
-        fetch(`${DB}/loads.json`, { cache: "no-store" }),
-        fetch(`${DB}/current_data.json`, { cache: "no-store" })
-      ]);
-      if (!loadsResponse.ok) throw new Error(`Loads check failed: HTTP ${loadsResponse.status}`);
-      if (!currentDataResponse.ok) throw new Error(`Current data check failed: HTTP ${currentDataResponse.status}`);
-
-      const [loadsData, currentData] = await Promise.all([
-        loadsResponse.json(),
-        currentDataResponse.json()
-      ]);
-      const loads = loadsData;
-      const dayIsRunning = currentData?.day_start === true && currentData?.end_of_day === false;
-      const dateIsToday = isCurrentDataToday(currentData);
-
-      if ((dayIsRunning || dateIsToday) && hasLoadRecords(loads)) {
-        const date = currentData?.date ? SkyKefAdminAuth.formatDate(currentData.date) : null;
-        publicLoadsIntro.hidden = false;
-        publicLoadsStatus.textContent = date ? `Loads for ${date} are available to view.` : "The current manifest is available to view.";
-        publicLoadsLink.hidden = false;
-        publicLoadsLink.setAttribute("aria-hidden", "false");
-        publicDayNotStarted.hidden = true;
-      } else {
-        publicLoadsIntro.hidden = true;
-        publicLoadsStatus.textContent = "";
-        publicLoadsLink.hidden = true;
-        publicLoadsLink.setAttribute("aria-hidden", "true");
-        publicDayNotStarted.hidden = false;
-      }
-    } catch (error) {
-      console.error(error);
-      publicLoadsIntro.hidden = false;
-      publicLoadsStatus.textContent = "Could not check the current loads. Please try again.";
-      publicLoadsLink.hidden = true;
-      publicLoadsLink.setAttribute("aria-hidden", "true");
-      publicDayNotStarted.hidden = true;
-    }
   }
 
   function closeLogin() {
@@ -448,6 +466,7 @@
       welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
     }
     SkyKefAdminAuth.showSessionRole();
+    if (session.role === "jumper") document.getElementById("reloadBtn").click();
   }
 
   const existing = SkyKefAdminAuth.getSession();
@@ -521,7 +540,387 @@
   userLogbookTab.addEventListener("click", () => selectUserTab("logbook"));
   jumperLogoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
   logoutBtn.addEventListener("click", SkyKefAdminAuth.logout);
-  checkPublicLoads();
+
+})();
+</script>
+<script>
+(() => {
+  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+
+  const reloadBtn = document.getElementById("reloadBtn");
+  const todayLabel = document.getElementById("todayLabel");
+  const loadsStatus = document.getElementById("loadsStatus");
+  const notStartedCard = document.getElementById("notStartedCard");
+  const todayLoadsLayout = document.getElementById("todayLoadsLayout");
+  const loadsList = document.getElementById("loadsList");
+  const loadTitle = document.getElementById("loadTitle");
+  const loadSummary = document.getElementById("loadSummary");
+  const loadBody = document.getElementById("loadBody");
+
+  let jumpersByUid = new Map();
+  let currentLoads = [];
+  let inAirLoad = null;
+
+  function formatCurrentDataDate(currentData) {
+    const raw = currentData?.date;
+    return raw === null || raw === undefined || String(raw).trim() === ""
+      ? "Date unavailable"
+      : `Date: ${SkyKefAdminAuth.formatDate(raw)}`;
+  }
+
+  function datePartsFromCurrentData(currentData) {
+    const raw = currentData?.date;
+    if (raw === null || raw === undefined || String(raw).trim() === "") return null;
+    const value = String(raw).trim();
+    let match = value.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/);
+    if (match) return { y: match[1], m: String(Number(match[2])), d: String(Number(match[3])) };
+    match = value.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/);
+    if (match) {
+      const monthFirst = /\b(?:AM|PM)\b/i.test(value) || Number(match[2]) > 12;
+      return {
+        y: match[3],
+        m: String(Number(match[monthFirst ? 1 : 2])),
+        d: String(Number(match[monthFirst ? 2 : 1]))
+      };
+    }
+    return null;
+  }
+
+  function isCurrentDataToday(currentData) {
+    const parts = datePartsFromCurrentData(currentData);
+    if (!parts) return false;
+    const today = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Jerusalem",
+        year: "numeric",
+        month: "numeric",
+        day: "numeric"
+      }).formatToParts(new Date())
+        .filter(part => part.type !== "literal")
+        .map(part => [part.type, String(Number(part.value))])
+    );
+    return parts.y === today.year && parts.m === today.month && parts.d === today.day;
+  }
+
+  function displayName(j, uid) {
+    if (!j || typeof j !== "object") return `UID ${uid}`;
+    const name = `${j.Name ?? ""} ${j.Surname ?? ""}`.trim();
+    return name || `UID ${uid}`;
+  }
+
+  function normalizeJumpers(data) {
+    const map = new Map();
+    if (!data || typeof data !== "object") return map;
+
+    Object.entries(data).forEach(([key, value]) => {
+      if (!value || typeof value !== "object") return;
+      const uid = value.Uid ?? value.uid ?? key;
+      map.set(String(uid), value);
+    });
+
+    return map;
+  }
+
+  async function fetchJson(path) {
+    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
+    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
+    return response.json();
+  }
+
+  function parseActivityValue(value) {
+    if (value === null || value === undefined) {
+      return { activity: "—", details: "—" };
+    }
+
+    if (typeof value === "object") {
+      return { activity: "Record", details: JSON.stringify(value) };
+    }
+
+    const raw = String(value).trim();
+
+    if (raw.includes("|")) {
+      const parts = raw.split("|");
+      return {
+        activity: parts[0] || "—",
+        details: parts.slice(1).filter(Boolean).join(" · ") || "—"
+      };
+    }
+
+    return { activity: raw || "—", details: "—" };
+  }
+
+  function jumperCountForActivity(activity) {
+    const value = String(activity ?? "").trim().toUpperCase();
+    return value.startsWith("T") ? 2 : 1;
+  }
+
+  function getLoadNumber(loadKey) {
+    const match = String(loadKey).match(/\d+/);
+    return match ? Number(match[0]) : 0;
+  }
+
+  function normalizeLoadEntries(loadValue) {
+    if (!loadValue || typeof loadValue !== "object") return [];
+
+    return Object.entries(loadValue)
+      .filter(([, value]) => value !== null && value !== undefined)
+      .map(([uid, value]) => {
+        const parsed = parseActivityValue(value);
+        return {
+          uid: String(uid),
+          activity: parsed.activity,
+          details: parsed.details
+        };
+      })
+      .sort((a, b) => {
+        const an = displayName(jumpersByUid.get(a.uid), a.uid);
+        const bn = displayName(jumpersByUid.get(b.uid), b.uid);
+        return an.localeCompare(bn, undefined, { sensitivity: "base" });
+      });
+  }
+
+  function getJumperCount(entries) {
+    return entries.reduce(
+      (sum, entry) => sum + jumperCountForActivity(entry.activity),
+      0
+    );
+  }
+
+  // Supports:
+  // 1) /loads/{load}/{uid}
+  // 2) /loads/{day}/{load}/{uid}
+  // 3) /loads/{year}/{month}/{day}/{load}/{uid}
+  // in case your live node includes a date layer.
+  function detectTodayLoads(data, currentData) {
+    if (!data || typeof data !== "object") return null;
+    const parts = datePartsFromCurrentData(currentData);
+    if (!parts) return data;
+    const { y, m, d } = parts;
+    const mm = m.padStart(2, "0");
+    const dd = d.padStart(2, "0");
+
+    const nestedDay = data[y]?.[m]?.[d] ?? data[y]?.[m]?.[dd] ??
+      data[y]?.[mm]?.[d] ?? data[y]?.[mm]?.[dd];
+    if (nestedDay && typeof nestedDay === "object") return nestedDay;
+
+    const dayNode = data[d] ?? data[dd];
+    if (dayNode && typeof dayNode === "object") return dayNode;
+
+    return data;
+  }
+
+  function normalizeLoads(loadsNode) {
+    if (!loadsNode || typeof loadsNode !== "object") return [];
+
+    return Object.entries(loadsNode)
+      .filter(([, value]) => value && typeof value === "object")
+      .map(([key, value]) => ({
+        key,
+        number: getLoadNumber(key),
+        value,
+        entries: normalizeLoadEntries(value)
+      }))
+      .sort((a, b) => b.number - a.number);
+  }
+
+
+  function loadStatus(load) {
+    if (inAirLoad === null || inAirLoad === undefined || String(inAirLoad).trim() === "") return "";
+    const number = getLoadNumber(inAirLoad);
+    if (number <= 0) return "";
+    if (load.number === number) return "In air";
+    if (load.number === number + 1) return "Next load";
+    return "";
+  }
+
+  function loadLabel(load) {
+    const label = load.number ? `Load ${load.number}` : load.key;
+    const status = loadStatus(load);
+    return status ? `${label} · ${status}` : label;
+  }
+
+  function renderLoadDetail(load) {
+    loadTitle.textContent = loadLabel(load);
+    loadTitle.classList.toggle("next-load-title", loadStatus(load) === "Next load");
+
+    const count = getJumperCount(load.entries);
+    loadSummary.textContent =
+      `${count} jumper${count === 1 ? "" : "s"} · ${load.entries.length} record${load.entries.length === 1 ? "" : "s"}`;
+
+    loadBody.innerHTML = "";
+
+    if (!load.entries.length) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4;
+      td.className = "report-empty";
+      td.textContent = "No jumper records in this load.";
+      tr.appendChild(td);
+      loadBody.appendChild(tr);
+      return;
+    }
+
+    load.entries.forEach(entry => {
+      const tr = document.createElement("tr");
+
+      const name = document.createElement("td");
+      name.className = "load-jumper-name";
+      name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
+
+      const uid = document.createElement("td");
+      uid.textContent = entry.uid;
+
+      const activity = document.createElement("td");
+      activity.textContent = entry.activity;
+      if (jumperCountForActivity(entry.activity) === 2) {
+        activity.title = "Counts as 2 jumpers";
+      }
+
+      const details = document.createElement("td");
+      details.textContent = entry.details;
+
+      tr.append(name, uid, activity, details);
+      loadBody.appendChild(tr);
+    });
+  }
+
+  function manifestedLoadNumbers(loads, uid) {
+    if (uid === null || uid === undefined || String(uid).trim() === "") return [];
+    return loads
+      .filter(load => load.entries.some(entry => entry.uid === String(uid)))
+      .sort((a, b) => a.number - b.number)
+      .map(load => load.number || load.key);
+  }
+
+  function renderJumperManifest(jumpersData) {
+    const box = document.getElementById("jumperManifestSummary");
+    const session = SkyKefAdminAuth.getSession();
+    if (session?.role !== "jumper") {
+      box.hidden = true;
+      return;
+    }
+    const jumper = jumpersData?.[session.jumperKey];
+    const uid = jumper?.Uid ?? jumper?.uid ?? session.jumperKey;
+    const loads = manifestedLoadNumbers(currentLoads, uid);
+    document.getElementById("jumperManifestLoads").textContent = loads.length
+      ? `You are manifested to loads: ${loads.join(", ")}`
+      : "You are not manifested to any loads.";
+    const airNumber = getLoadNumber(inAirLoad);
+    document.getElementById("jumperInAirLoad").textContent = airNumber > 0
+      ? `Currently, load ${airNumber} is in air.`
+      : "No load is currently in air.";
+    box.hidden = false;
+  }
+
+  function renderLoads() {
+    loadsList.innerHTML = "";
+
+    if (!currentLoads.length) {
+      todayLoadsLayout.hidden = true;
+      notStartedCard.hidden = false;
+      loadsStatus.textContent = "No loads found.";
+      return;
+    }
+
+    notStartedCard.hidden = true;
+    todayLoadsLayout.hidden = false;
+
+    const totalJumpers = currentLoads.reduce(
+      (sum, load) => sum + getJumperCount(load.entries),
+      0
+    );
+
+    loadsStatus.textContent =
+      `${currentLoads.length} load${currentLoads.length === 1 ? "" : "s"} today · ${totalJumpers} total jumper slot${totalJumpers === 1 ? "" : "s"}`;
+
+    currentLoads.forEach((load, index) => {
+      const count = getJumperCount(load.entries);
+
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "load-row" + (index === 0 ? " active" : "");
+      btn.classList.toggle("next-load", loadStatus(load) === "Next load");
+
+      const left = document.createElement("div");
+
+      const title = document.createElement("div");
+      title.className = "load-row-title";
+      title.textContent = loadLabel(load);
+
+      const sub = document.createElement("div");
+      sub.className = "load-row-sub";
+      sub.textContent = `${count} jumper${count === 1 ? "" : "s"}`;
+
+      const arrow = document.createElement("div");
+      arrow.className = "load-row-arrow";
+      arrow.textContent = "→";
+
+      left.append(title, sub);
+      btn.append(left, arrow);
+
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".load-row").forEach(row => row.classList.remove("active"));
+        btn.classList.add("active");
+        renderLoadDetail(load);
+      });
+
+      loadsList.appendChild(btn);
+    });
+
+    renderLoadDetail(currentLoads[0]);
+  }
+
+  async function loadToday() {
+    todayLabel.textContent = "Loading current date…";
+    loadsStatus.textContent = "Loading current loads…";
+    reloadBtn.disabled = true;
+    document.getElementById("jumperManifestSummary").hidden = true;
+
+    try {
+      const [loadsData, jumpersData, currentData] = await Promise.all([
+        fetchJson("loads"),
+        fetchJson("jumpers"),
+        fetchJson("current_data")
+      ]);
+
+      inAirLoad = currentData?.in_air_load ?? null;
+      jumpersByUid = normalizeJumpers(jumpersData);
+      todayLabel.textContent = formatCurrentDataDate(currentData);
+
+      const dayIsRunning = currentData?.day_start === true && currentData?.end_of_day === false;
+      if ((!dayIsRunning && !isCurrentDataToday(currentData)) || loadsData === null || loadsData === undefined) {
+        currentLoads = [];
+        inAirLoad = null;
+        renderJumperManifest(jumpersData);
+        todayLoadsLayout.hidden = true;
+        notStartedCard.hidden = false;
+        loadsStatus.textContent = "Day has not started yet.";
+        return;
+      }
+
+      currentLoads = normalizeLoads(loadsData);
+      renderJumperManifest(jumpersData);
+
+      if (!currentLoads.length) {
+        todayLoadsLayout.hidden = true;
+        notStartedCard.hidden = false;
+        loadsStatus.textContent = "Day has not started yet.";
+        return;
+      }
+
+      renderLoads();
+    } catch (err) {
+      console.error(err);
+      loadsStatus.textContent = "Could not load the current loads.";
+      todayLoadsLayout.hidden = true;
+      notStartedCard.hidden = true;
+    } finally {
+      reloadBtn.disabled = false;
+    }
+  }
+
+  reloadBtn.addEventListener("click", loadToday);
+  loadToday();
 })();
 </script>
 </body>
