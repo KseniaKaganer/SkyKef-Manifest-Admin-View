@@ -16,6 +16,13 @@
 .load-row.next-load .load-row-arrow,
 .next-load-title { color:#ffe394; }
 .load-row.next-load .load-row-sub { color:#e4d6a1; }
+.jumper-manifest-summary {
+  margin-bottom:22px;padding:20px 24px;border:2px solid #ffd45a;
+  border-radius:16px;background:#3a300d;color:#fff1b8;line-height:1.5;
+}
+.jumper-manifest-summary[hidden] { display:none; }
+.jumper-manifest-summary strong { display:block;font-size:1.15rem; }
+.jumper-manifest-summary p { margin:8px 0 0;color:#ffe394; }
 </style>
 </head>
 <body>
@@ -30,6 +37,10 @@
 </header>
 
 <main class="page">
+  <section id="jumperManifestSummary" class="jumper-manifest-summary" hidden aria-live="polite">
+    <strong id="jumperManifestLoads"></strong>
+    <p id="jumperInAirLoad"></p>
+  </section>
   <section class="today-loads-head">
     <div>
       <h2>Today's Loads</h2>
@@ -310,6 +321,34 @@
     });
   }
 
+  function manifestedLoadNumbers(loads, uid) {
+    if (uid === null || uid === undefined || String(uid).trim() === "") return [];
+    return loads
+      .filter(load => load.entries.some(entry => entry.uid === String(uid)))
+      .sort((a, b) => a.number - b.number)
+      .map(load => load.number || load.key);
+  }
+
+  function renderJumperManifest(jumpersData) {
+    const box = document.getElementById("jumperManifestSummary");
+    const session = SkyKefAdminAuth.getSession();
+    if (session?.role !== "jumper") {
+      box.hidden = true;
+      return;
+    }
+    const jumper = jumpersData?.[session.jumperKey];
+    const uid = jumper?.Uid ?? jumper?.uid ?? session.jumperKey;
+    const loads = manifestedLoadNumbers(currentLoads, uid);
+    document.getElementById("jumperManifestLoads").textContent = loads.length
+      ? `You are manifested to loads: ${loads.join(", ")}`
+      : "You are not manifested to any loads.";
+    const airNumber = getLoadNumber(inAirLoad);
+    document.getElementById("jumperInAirLoad").textContent = airNumber > 0
+      ? `Currently, load ${airNumber} is in air.`
+      : "No load is currently in air.";
+    box.hidden = false;
+  }
+
   function renderLoads() {
     loadsList.innerHTML = "";
 
@@ -372,6 +411,7 @@
     todayLabel.textContent = "Loading current date…";
     loadsStatus.textContent = "Loading current loads…";
     reloadBtn.disabled = true;
+    document.getElementById("jumperManifestSummary").hidden = true;
 
     try {
       const [loadsData, jumpersData, currentData] = await Promise.all([
@@ -386,6 +426,8 @@
 
       if (!isCurrentDataToday(currentData) || loadsData === null || loadsData === undefined) {
         currentLoads = [];
+        inAirLoad = null;
+        renderJumperManifest(jumpersData);
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
         loadsStatus.textContent = "Day has not started yet.";
@@ -393,6 +435,7 @@
       }
 
       currentLoads = normalizeLoads(loadsData);
+      renderJumperManifest(jumpersData);
 
       if (!currentLoads.length) {
         todayLoadsLayout.hidden = true;
