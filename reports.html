@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Reports | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css">
-  <script src="auth.js?v=account-logout-2"></script>\n</head>
+  <script src="auth.js?v=clean-urls-dates-3"></script>\n</head>
 <body>
 <header class="site-header">
   <div class="header-inner">
@@ -288,7 +288,7 @@
 
     days.forEach(day => {
       const th = document.createElement("th");
-      th.textContent = `${day}/${month}/${year}`;
+      th.textContent = `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
       th.className = "date-head";
       headRow.appendChild(th);
     });
