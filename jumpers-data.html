@@ -7,7 +7,8 @@
       <a href="reports.html">Reports</a>
     </nav></div></header>
 <main class="page">
-<div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button><button id="downloadDbBtn" class="small-btn" type="button" hidden>Download DB JSON</button></div>
+<div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button></div>
+<button id="downloadDbBtn" class="small-btn" type="button" hidden>Download DB JSON</button>
 <div id="downloadDbStatus" class="status" role="status" aria-live="polite"></div>
 <div id="status" class="status">Loading jumpers…</div><section class="admin-grid"><div class="list-panel"><div class="panel-head">Jumpers</div><div id="jumpersList" class="jumpers-list"></div></div><div class="detail-panel">
   <div class="detail-tabs" role="tablist" aria-label="Jumper information">
@@ -43,7 +44,20 @@ const FIREBASE_URL=DB + "/jumpers.json";
 
 const downloadDbBtn = document.getElementById("downloadDbBtn");
 const downloadDbStatus = document.getElementById("downloadDbStatus");
-downloadDbBtn.hidden = !SkyKefAdminAuth.isAdmin();
+function placeDatabaseDownload() {
+  if (!SkyKefAdminAuth.isAdmin()) return;
+  SkyKefAdminAuth.showSessionRole();
+  const account = document.getElementById("sessionAccount");
+  if (!account) return;
+  account.style.flexWrap = "wrap";
+  account.appendChild(downloadDbBtn);
+  downloadDbBtn.hidden = false;
+}
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", placeDatabaseDownload, { once: true });
+} else {
+  placeDatabaseDownload();
+}
 async function downloadDatabaseJson() {
   if (!SkyKefAdminAuth.isAdmin() || downloadDbBtn.disabled) return;
   downloadDbBtn.disabled = true;
@@ -59,7 +73,10 @@ async function downloadDatabaseJson() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = "skykef-db-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
+    const exportDate = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric"
+    }).format(new Date()).replace(/\//g, "-");
+    link.download = "skykef-app-db-" + exportDate + ".json";
     document.body.appendChild(link);
     link.click();
     link.remove();
