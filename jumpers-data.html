@@ -7,7 +7,8 @@
       <a href="reports.html">Reports</a>
     </nav></div></header>
 <main class="page">
-<div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button></div>
+<div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button><button id="downloadDbBtn" class="small-btn" type="button" hidden>Download DB JSON</button></div>
+<div id="downloadDbStatus" class="status" role="status" aria-live="polite"></div>
 <div id="status" class="status">Loading jumpers…</div><section class="admin-grid"><div class="list-panel"><div class="panel-head">Jumpers</div><div id="jumpersList" class="jumpers-list"></div></div><div class="detail-panel">
   <div class="detail-tabs" role="tablist" aria-label="Jumper information">
     <button id="detailsTab" class="detail-tab active" type="button" role="tab" aria-selected="true">Jumper Details</button>
@@ -39,6 +40,41 @@
 <script>
 const DB="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
 const FIREBASE_URL=DB + "/jumpers.json";
+
+const downloadDbBtn = document.getElementById("downloadDbBtn");
+const downloadDbStatus = document.getElementById("downloadDbStatus");
+downloadDbBtn.hidden = !SkyKefAdminAuth.isAdmin();
+async function downloadDatabaseJson() {
+  if (!SkyKefAdminAuth.isAdmin() || downloadDbBtn.disabled) return;
+  downloadDbBtn.disabled = true;
+  downloadDbBtn.textContent = "Downloading…";
+  downloadDbStatus.textContent = "Preparing database export…";
+  try {
+    const response = await fetch(DB + "/.json?format=export", { cache: "no-store" });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const text = await response.text();
+    // Validate the response and retain Firebase export metadata such as priorities.
+    const data = JSON.parse(text);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "skykef-db-" + new Date().toISOString().replace(/[:.]/g, "-") + ".json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadDbStatus.textContent = "Database JSON download started.";
+  } catch (error) {
+    console.error("Database export failed:", error);
+    downloadDbStatus.textContent = "Could not download the database JSON. Please try again.";
+  } finally {
+    downloadDbBtn.disabled = false;
+    downloadDbBtn.textContent = "Download DB JSON";
+  }
+}
+downloadDbBtn.addEventListener("click", downloadDatabaseJson);
+
 const listEl=document.getElementById("jumpersList"),
 detailsEl=document.getElementById("details"),
 searchInput=document.getElementById("searchInput"),
