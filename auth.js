@@ -166,6 +166,56 @@
 
   function isAdmin() { return getSession()?.role === "admin"; }
 
+  function addDatabaseDownload(account) {
+    if (!isAdmin()) return;
+    account.style.flexWrap = "wrap";
+    const downloadDbBtn = document.createElement("button");
+    downloadDbBtn.id = "downloadDbBtn";
+    downloadDbBtn.type = "button";
+    downloadDbBtn.className = "small-btn";
+    downloadDbBtn.textContent = "Download DB JSON";
+    const downloadDbStatus = document.createElement("span");
+    downloadDbStatus.id = "downloadDbStatus";
+    downloadDbStatus.setAttribute("role", "status");
+    downloadDbStatus.setAttribute("aria-live", "polite");
+    downloadDbStatus.style.cssText = "font-size:14px;flex-basis:100%";
+async function downloadDatabaseJson() {
+  if (!SkyKefAdminAuth.isAdmin() || downloadDbBtn.disabled) return;
+  downloadDbBtn.disabled = true;
+  downloadDbBtn.textContent = "Downloading…";
+  downloadDbStatus.textContent = "Preparing database export…";
+  try {
+    const response = await fetch(DB + "/.json?format=export", { cache: "no-store" });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    const text = await response.text();
+    // Validate the response and retain Firebase export metadata such as priorities.
+    const data = JSON.parse(text);
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    const exportDate = new Intl.DateTimeFormat("en-GB", {
+      timeZone: "Asia/Jerusalem", day: "2-digit", month: "2-digit", year: "numeric"
+    }).format(new Date()).replace(/\//g, "-");
+    link.download = "skykef-app-db-" + exportDate + ".json";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    downloadDbStatus.textContent = "Database JSON download started.";
+  } catch (error) {
+    console.error("Database export failed:", error);
+    downloadDbStatus.textContent = "Could not download the database JSON. Please try again.";
+  } finally {
+    downloadDbBtn.disabled = false;
+    downloadDbBtn.textContent = "Download DB JSON";
+  }
+}
+
+    downloadDbBtn.addEventListener("click", downloadDatabaseJson);
+    account.append(downloadDbBtn, downloadDbStatus);
+  }
+
   function showSessionRole() {
     const session = getSession();
     if (!session) return;
@@ -194,6 +244,7 @@
     button.style.flex = "0 0 auto";
     button.addEventListener("click", logout);
     account.append(badge, button);
+    addDatabaseDownload(account);
 
     const actions = header.querySelector(".header-account-actions");
     if (actions) {
