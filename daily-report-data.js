@@ -37,6 +37,7 @@ function buildDailyReport(jumpers, loads) {
       row.loads[loadKey]=job;
     }
   }
-  return {jobs:[...DAILY_REPORT_JOBS,...[...extraJobs].sort()],loads:loadEntries.map(([key])=>key),
+  const activeJobs=[...DAILY_REPORT_JOBS,...[...extraJobs].sort()].filter(job=>[...rows.values()].some(row=>(row.counts[job] || 0)>0));
+  return {jobs:activeJobs,loads:loadEntries.map(([key])=>key),
     rows:[...rows.values()].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'})),totals};
 }

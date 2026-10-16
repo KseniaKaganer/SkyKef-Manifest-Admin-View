@@ -18,7 +18,7 @@
       <a href="reports.html">Reports</a>
 </nav></div></header>
 <main class="page daily-report-page">
-<div class="daily-report-toolbar"><h2>Daily Report</h2><button id="reloadReportBtn" class="small-btn" type="button">Reload Data</button></div>
+<div class="daily-report-toolbar"><h2>Daily Report</h2><label class="daily-report-date-control">Date <input id="reportDateInput" type="date" aria-label="Report date"></label><button id="reloadReportBtn" class="small-btn" type="button">Reload Data</button></div>
 <div id="dailyReportStatus" class="status" role="status">Loading daily report…</div>
 <section class="daily-report-card" aria-label="Daily worker report">
 <div class="daily-report-heading"><strong>DAILY REPORT</strong><span id="dailyReportDate">—</span><div id="dailyReportSummary"></div></div>
@@ -26,9 +26,9 @@
 <table class="daily-report-table"><caption class="visually-hidden">Daily worker totals by activity and by load</caption><thead id="dailyReportHead"></thead><tbody id="dailyReportBody"></tbody></table>
 </div>
 </section>
-<p class="status daily-report-note">Activity totals are followed by one column per load. FUN in the top summary includes all fun jumpers. Data is based on the current day’s loads.</p>
+<p class="status daily-report-note">Activity totals are followed by one column per load. FUN in the top summary includes all fun jumpers. Select a date to view the live day or a saved historical day.</p>
 </main>
 <script src="today-jumpers-data.js?v=jump-counts-1"></script>
-<script src="daily-report-data.js"></script>
-<script src="daily-report.js"></script>
+<script src="daily-report-data.js?v=history-1"></script>
+<script src="daily-report.js?v=history-1"></script>
 </body></html>

@@ -2,6 +2,7 @@
   const DB='https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app';
   const status=document.getElementById('dailyReportStatus');
   const reload=document.getElementById('reloadReportBtn');
+  const dateInput=document.getElementById('reportDateInput');
   const head=document.getElementById('dailyReportHead');
   const body=document.getElementById('dailyReportBody');
   function cell(tag,text,className='') {
@@ -28,14 +29,30 @@
     status.textContent=`${report.rows.length} worker${report.rows.length===1?"":"s"} · ${report.loads.length} load${report.loads.length===1?"":"s"}`;
   }
   async function fetchJson(path){const response=await fetch(`${DB}/${path}.json`,{cache:'no-store'});if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.json();}
-  async function load(){
-    reload.disabled=true;status.textContent='Loading daily report…';
-    try {
-      const [jumpers,loads,current]=await Promise.all(['jumpers','loads','current_data'].map(fetchJson));
-      document.getElementById('dailyReportDate').textContent=SkyKefAdminAuth.formatDate(current?.date);
-      render(buildDailyReport(jumpers,loads));
-    }catch(error){console.error(error);head.replaceChildren();body.replaceChildren();document.getElementById('dailyReportSummary').replaceChildren();document.getElementById('dailyReportDate').textContent='—';status.textContent='Could not load the daily report. Please try again.';}
-    finally{reload.disabled=false;}
+  function dateKey(value){
+    const formatted=SkyKefAdminAuth.formatDate(value);
+    const match=formatted.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    return match?`${match[3]}-${match[2]}-${match[1]}`:'';
   }
+  async function load(){
+    reload.disabled=true;dateInput.disabled=true;status.textContent='Loading daily report…';
+    try {
+      const current=await fetchJson('current_data');
+      const currentDate=dateKey(current?.date);
+      if(!dateInput.value) dateInput.value=currentDate || new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      const selected=dateInput.value;
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(selected)) throw new Error('Select a valid date');
+      const [year,month,day]=selected.split('-');
+      const historyPath=`loads_history/${Number(year)}/${Number(month)}/${Number(day)}`;
+      const live=selected===currentDate;
+      const [jumpers,dayLoads]=await Promise.all([fetchJson('jumpers'),fetchJson(live?'loads':historyPath)]);
+      const loads=live && dayLoads==null ? await fetchJson(historyPath) : dayLoads;
+      document.getElementById('dailyReportDate').textContent=`${day}/${month}/${year}`;
+      render(buildDailyReport(jumpers,loads));
+      if(!loads || !Object.values(loads).some(v=>v && typeof v==='object')) status.textContent='No loads found for the selected date.';
+    }catch(error){console.error(error);head.replaceChildren();body.replaceChildren();document.getElementById('dailyReportSummary').replaceChildren();document.getElementById('dailyReportDate').textContent='—';status.textContent='Could not load the daily report. Please try again.';}
+    finally{reload.disabled=false;dateInput.disabled=false;}
+  }
+  dateInput.addEventListener('change',load);
   reload.addEventListener('click',load);load();
 })();
