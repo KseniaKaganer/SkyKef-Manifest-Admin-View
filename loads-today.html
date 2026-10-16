@@ -39,7 +39,9 @@
 
 <main class="page">
   <section id="jumperManifestSummary" class="jumper-manifest-summary" hidden aria-live="polite">
-    <strong id="jumperManifestLoads"></strong>
+    <strong id="jumperJumpTotals"></strong>
+    <p id="jumperManifestLoads"></p>
+    <p id="jumperPastLoads" class="manifest-past-loads"></p>
     <p id="jumperInAirLoad"></p>
   </section>
   <section class="today-loads-head">
@@ -88,6 +90,7 @@
   </section>
 </main>
 
+<script src="jumper-manifest-progress.js"></script>
 <script>
 (() => {
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
@@ -379,11 +382,16 @@
     }
     const jumper = jumpersData?.[session.jumperKey];
     const uid = jumper?.Uid ?? jumper?.uid ?? session.jumperKey;
-    const loads = manifestedLoadNumbers(currentLoads, uid, SkyKefAdminAuth.hasWorkerRoles(jumper));
-    document.getElementById("jumperManifestLoads").textContent = loads.length
-      ? `You are manifested to loads: ${loads.join(", ")}`
-      : "You are not manifested to any loads.";
-    const airNumber = getLoadNumber(inAirLoad);
+    const worker=SkyKefAdminAuth.hasWorkerRoles(jumper);
+    const airNumber=getLoadNumber(inAirLoad);
+    const progress=jumperManifestProgress(currentLoads,uid,airNumber);
+    document.getElementById("jumperJumpTotals").textContent=worker
+      ? `Jumps so far — WORK: ${progress.counts.work} · FUN: ${progress.counts.fun}`
+      : `Jumps so far — FUN: ${progress.counts.total}`;
+    const current=manifestedLoadNumbers(progress.current,uid,worker);
+    const past=manifestedLoadNumbers(progress.past,uid,worker);
+    document.getElementById("jumperManifestLoads").textContent=`CURRENT: ${current.length?current.join(", "):"No current loads"}`;
+    document.getElementById("jumperPastLoads").textContent=`PAST: ${past.length?past.join(", "):"No past loads"}`;
     document.getElementById("jumperInAirLoad").textContent = airNumber > 0
       ? `Currently, load ${airNumber} is in air.`
       : "No load is currently in air.";
