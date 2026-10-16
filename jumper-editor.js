@@ -72,7 +72,7 @@ function renderJumperEditor(j){
   const inputs=new Map();
   let affLevelLabel=null;
   for(const [field,value] of Object.entries(j)){
-    if(field==='key')continue;
+    if(field==='key' || ['numberofjumpestoday','numberofjumpstoday'].includes(field.toLowerCase()))continue;
     const label=document.createElement('label');label.className='data-item';
     const title=document.createElement('span');title.className='data-key';title.textContent=field;
     let input;
