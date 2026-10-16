@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=profile-navigation-1">
-  <script src="auth.js?v=profile-navigation-1"></script>
+  <script src="auth.js?v=header-registration-1"></script>
 <style>
 
 .load-row.next-load,
@@ -253,7 +253,7 @@
 
   function updateRegistrationAvailability() {
     const role = SkyKefAdminAuth.getSession()?.role;
-    registrationAction.hidden = !registrationIsOpen() || role === "admin" || role === "manifest";
+    registrationAction.hidden = !registrationIsOpen() || Boolean(role);
   }
 
   function showHome(session) {
@@ -655,7 +655,7 @@
     document.getElementById("jumperManifestLoads").textContent=`CURRENT: ${current.length?current.join(", "):"No current loads"}`;
     document.getElementById("jumperPastLoads").textContent=`PAST: ${past.length?past.join(", "):"No past loads"}`;
     document.getElementById("jumperInAirLoad").textContent = airNumber > 0
-      ? `Currently, load ${airNumber} is in air.`
+      ? `Load ${airNumber} is in air.`
       : "No load is currently in air.";
     box.hidden = false;
   }

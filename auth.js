@@ -279,6 +279,19 @@ async function downloadDatabaseJson() {
     }else{
       link("index.html","Loads");
       link("my-profile.html","My Profile");
+      const register=document.createElement("a");register.id="headerRegistrationLink";
+      register.href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform";
+      register.className="small-btn";register.textContent="Register for Jumping";
+      register.target="_blank";register.rel="noopener noreferrer";
+      nav.appendChild(register);
+      function updateRegistration(){
+        const hour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
+        register.hidden=hour<8 || hour>=17;
+      }
+      updateRegistration();
+      window.setInterval(updateRegistration,10000);
+      window.addEventListener("focus",updateRegistration);
+      document.addEventListener("visibilitychange",updateRegistration);
       if(await canViewDailyReport())link("daily-report.html","Daily Report");
     }
   }
