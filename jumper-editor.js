@@ -6,9 +6,52 @@ function parseJumperLicense(value,original){
   if(!Object.prototype.hasOwnProperty.call(jumperLicenseLabels,number) && number!==Number(original))throw new Error('Select a valid license.');
   return number;
 }
+const jumperIntFields=new Set(['balance','weight','afflevel','numberofjumpestoday','numberofjumpstoday']);
+const jumperWorkerRoles=new Set(['V','VS','S','AFF','T','TF','TFF','TFFF','TH','TFH','TFFH','TFFFF','TFFFFH','OTHER']);
+function jumperDateParts(value){
+  const text=String(value??'').trim();
+  let match=text.match(/^(\d{4})-(\d{2})-(\d{2})$/),year,month,day;
+  if(match){year=Number(match[1]);month=Number(match[2]);day=Number(match[3]);}
+  else{match=text.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);if(!match)throw new Error('Choose a valid date.');day=Number(match[1]);month=Number(match[2]);year=Number(match[3]);}
+  const leap=year%4===0 && (year%100!==0 || year%400===0);
+  const days=[31,leap?29:28,31,30,31,30,31,31,30,31,30,31];
+  if(year<1 || year>9999 || month<1 || month>12 || day<1 || day>days[month-1])throw new Error('Choose a real calendar date.');
+  return {year,month,day};
+}
+function jumperDateInput(value){try{const {year,month,day}=jumperDateParts(value);return `${String(year).padStart(4,'0')}-${String(month).padStart(2,'0')}-${String(day).padStart(2,'0')}`;}catch{return '';}}
+function validateJumperField(field,value){
+  const key=field.toLowerCase();
+  if(jumperIntFields.has(key)){
+    if(typeof value!=='number' || !Number.isInteger(value) || value< -2147483648 || value>2147483647)throw new Error('Enter a whole number within the supported range.');
+    if(key!=='balance' && value<0)throw new Error('Enter zero or a positive whole number.');
+  }else if(key==='license'){
+    if(typeof value!=='number' || !Number.isInteger(value) || value<0 || value>5)throw new Error('Select a valid license.');
+  }else if(/date$/i.test(field)){
+    if(typeof value!=='string')throw new Error('Choose a valid date.');jumperDateParts(value);
+  }else if(key==='isrental'){
+    if(typeof value!=='boolean')throw new Error('Use the checkbox.');
+  }else if(key==='worker'){
+    if(!Array.isArray(value) || value.some(role=>typeof role!=='string' || !jumperWorkerRoles.has(role)) || new Set(value).size!==value.length)throw new Error('Worker must be a list of valid, unique roles: '+[...jumperWorkerRoles].join(', '));
+  }else if(['id','phone','emergency'].includes(key)){
+    if(typeof value!=='string' || /[\u0000-\u001f\u007f]/.test(value))throw new Error('Enter plain text without control characters.');
+  }
+  return value;
+}
+function parseJumperField(field,original,input){
+  const key=field.toLowerCase();let value;
+  if(key==='license')value=parseJumperLicense(input,original);
+  else if(jumperIntFields.has(key)){
+    if(!/^-?\d+$/.test(String(input).trim()))throw new Error('Enter a whole number using digits only.');
+    value=Number(input);
+  }else if(/date$/i.test(field)){
+    const {year,month,day}=jumperDateParts(input);value=`${day}/${month}/${String(year).padStart(4,'0')}`;
+  }else value=parseJumperEditValue(original,input);
+  return validateJumperField(field,value);
+}
+
 const jumperIdentityFields=new Set(['name','surname','uid','key']);
 function parseJumperEditValue(original,input){
-  if(typeof original==='boolean')return Boolean(input);
+  if(typeof original==='boolean'){if(typeof input!=='boolean')throw new Error('Use the checkbox.');return input;}
   if(typeof original==='number'){
     if(String(input).trim()==='' || !Number.isFinite(Number(input)))throw new Error('Enter a valid number.');
     if(Number.isInteger(original) && !Number.isInteger(Number(input)))throw new Error("Enter a whole number.");
@@ -39,6 +82,7 @@ function buildJumperEditPatch(original,fresh,changes,byName){
     if(jumperIdentityFields.has(field.toLowerCase()))throw new Error('Name, surname and UID cannot be edited.');
     if(!Object.prototype.hasOwnProperty.call(original,field))throw new Error('Unknown field. Reload the data.');
     if(JSON.stringify(value)===JSON.stringify(original[field]))continue;
+    try{validateJumperField(field,value);}catch(error){throw new Error(`${field}: ${error.message}`);}
     if(JSON.stringify(fresh[field])!==JSON.stringify(original[field]))throw new Error(`${field} was changed on the server. Reload before editing.`);
     patch[`jumpers/${uid}/${field}`]=value;
     patch[`jumpers_by_name/${nameKey}/${field}`]=value;
@@ -70,6 +114,7 @@ function renderJumperEditor(j){
   const form=document.createElement('form');form.className='jumper-edit-form';
   const grid=document.createElement('div');grid.className='data-grid';
   const inputs=new Map();
+  const initialInputs=new Map();
   let affLevelLabel=null;
   for(const [field,value] of Object.entries(j)){
     if(field==='key' || ['numberofjumpestoday','numberofjumpstoday'].includes(field.toLowerCase()))continue;
@@ -85,18 +130,20 @@ function renderJumperEditor(j){
         const option=document.createElement('option');option.value=String(value);option.textContent=jumperLicenseText(value);input.appendChild(option);
       }
       input.value=value===null || value===''?'0':String(value);
+    }else if(/date$/i.test(field)){
+      input=document.createElement('input');input.type='date';input.min='0001-01-01';input.max='9999-12-31';input.value=jumperDateInput(value);
     }else if(value!==null && typeof value==='object'){
       input=document.createElement('textarea');input.rows=4;input.value=JSON.stringify(value,null,2);
     }else{
-      input=document.createElement('input');input.type=typeof value==='boolean'?'checkbox':typeof value==='number'?'number':'text';
+      input=document.createElement('input');input.type=field.toLowerCase()==='isrental' || typeof value==='boolean'?'checkbox':jumperIntFields.has(field.toLowerCase()) || typeof value==='number'?'number':'text';
       if(input.type==='checkbox')input.checked=value;
-      else{input.value=value??'';if(input.type==='number')input.step=Number.isInteger(value)?'1':'any';}
+      else{input.value=value??'';if(input.type==='number'){input.step=jumperIntFields.has(field.toLowerCase()) || Number.isInteger(value)?'1':'any';input.min=field.toLowerCase()==='balance'?'-2147483648':'0';input.max='2147483647';}}
     }
     input.className='jumper-edit-input';input.disabled=jumperIdentityFields.has(field.toLowerCase());
     label.append(title,input);
     if(value!==null && typeof value==='object'){const hint=document.createElement('small');hint.textContent=Array.isArray(value)?'JSON list, e.g. ["T", "V"]. Use [] to clear.':'JSON object';label.appendChild(hint);}
     if(field.toLowerCase()==="afflevel")affLevelLabel=label;
-    grid.appendChild(label);if(!input.disabled)inputs.set(field,input);
+    grid.appendChild(label);if(!input.disabled){inputs.set(field,input);initialInputs.set(field,input.type==='checkbox'?input.checked:input.value);}
   }
   const licenseEntry=[...inputs].find(([field])=>field.toLowerCase()==='license');
   function updateAffLevelVisibility(){if(affLevelLabel)affLevelLabel.hidden=Number(licenseEntry?.[1].value ?? j.License)!==1;}
@@ -112,7 +159,13 @@ function renderJumperEditor(j){
     try{
       if(!SkyKefAdminAuth.isDeveloper())throw new Error('DEV login required.');
       const changes={};
-      for(const [field,input] of inputs){try{changes[field]=field.toLowerCase()==='license'?parseJumperLicense(input.value,j[field]):parseJumperEditValue(j[field],input.type==='checkbox'?input.checked:input.value);}catch(error){throw new Error(`${field}: ${error.message}`);}}
+      for(const [field,input] of inputs){
+        const raw=input.type==='checkbox'?input.checked:input.value;
+        if(raw===initialInputs.get(field))continue;
+        try{changes[field]=parseJumperField(field,j[field],raw);}catch(error){input.setAttribute('aria-invalid','true');input.focus();throw new Error(`${field}: ${error.message}`);}
+        input.removeAttribute('aria-invalid');
+      }
+      for(const input of inputs.values())input.disabled=true;
       const [state,fresh,byName]=await Promise.all([SkyKefAdminAuth.getDayState(),fetchDb(`jumpers/${encodeURIComponent(String(j.Uid??j.uid))}`),fetchDb('jumpers_by_name')]);
       if(state.active)throw new Error('Editing is disabled while a jumping day is running.');
       const patch=buildJumperEditPatch(j,fresh,changes,byName);
@@ -126,6 +179,6 @@ function renderJumperEditor(j){
       jumpers=jumpers.map(record=>record.key===j.key?updated:record);
       if(selectedKey===j.key){selectedJumper=updated;renderList();renderDetails(updated);const success=document.createElement('div');success.className='jumper-edit-status saved';success.setAttribute('role','status');success.textContent='Changes saved to both jumper records.';detailsEl.appendChild(success);}
     }catch(error){console.error(error);status.textContent=error.message;}
-    finally{save.disabled=false;cancel.disabled=false;listEl.inert=false;reloadBtn.disabled=false;}
+    finally{for(const input of inputs.values())input.disabled=false;save.disabled=false;cancel.disabled=false;listEl.inert=false;reloadBtn.disabled=false;}
   };
 }
