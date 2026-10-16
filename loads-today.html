@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads | SkyKef Manifest Admin View</title>
-  <link rel="stylesheet" href="style.css?v=public-loads-1">
-  <script src="auth.js?v=worker-report-1"></script>
+  <link rel="stylesheet" href="style.css?v=header-buttons-1">
+  <script src="auth.js?v=single-account-1"></script>
 <style>
 .load-row.next-load,
 .load-row.next-load:hover,
@@ -329,12 +329,20 @@
     });
   }
 
-  function manifestedLoadNumbers(loads, uid) {
+  function manifestedLoadNumbers(loads, uid, showActivity=false) {
     if (uid === null || uid === undefined || String(uid).trim() === "") return [];
     return loads
       .filter(load => load.entries.some(entry => entry.uid === String(uid)))
       .sort((a, b) => a.number - b.number)
-      .map(load => load.number || load.key);
+      .map(load => {
+        const number=load.number || load.key;
+        if(!showActivity)return number;
+        const entry=load.entries.find(entry=>entry.uid===String(uid));
+        let activity=String(entry?.activity || "—").trim().toUpperCase();
+        if(activity==="INSTRUCTOR")activity="AFF";
+        if(activity==="FUN" && String(entry?.details || "").toLowerCase().includes("coaching_0"))activity="C";
+        return `${number} (${activity})`;
+      });
   }
 
   function renderJumperManifest(jumpersData) {
@@ -346,7 +354,7 @@
     }
     const jumper = jumpersData?.[session.jumperKey];
     const uid = jumper?.Uid ?? jumper?.uid ?? session.jumperKey;
-    const loads = manifestedLoadNumbers(currentLoads, uid);
+    const loads = manifestedLoadNumbers(currentLoads, uid, SkyKefAdminAuth.hasWorkerRoles(jumper));
     document.getElementById("jumperManifestLoads").textContent = loads.length
       ? `You are manifested to loads: ${loads.join(", ")}`
       : "You are not manifested to any loads.";

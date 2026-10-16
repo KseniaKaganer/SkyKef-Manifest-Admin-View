@@ -260,7 +260,7 @@ async function downloadDatabaseJson() {
     const badge = document.createElement("span");
     badge.id = "sessionRole";
     badge.textContent = `${session.username} · ${session.role === "admin" ? "Admin" : session.role === "manifest" ? "Manifest" : "Jumper"}`;
-    badge.style.cssText = "padding:6px 10px;border:1px solid currentColor;border-radius:8px;font-size:14px;min-width:0;overflow-wrap:anywhere";
+    badge.className = "session-role-badge";
     const button = document.createElement("button");
     button.id = "sessionLogoutBtn";
     button.type = "button";
@@ -270,6 +270,17 @@ async function downloadDatabaseJson() {
     button.addEventListener("click", logout);
     account.append(badge, button);
     addDatabaseDownload(account);
+
+    // Attach before awaiting worker verification so concurrent calls see the account.
+    const actions = header.querySelector(".header-account-actions");
+    if (actions) {
+      header.style.flexWrap = "wrap";
+      actions.style.flexWrap = "wrap";
+      account.style.marginTop = "0";
+      actions.appendChild(account);
+    } else {
+      header.insertBefore(account, header.querySelector(".nav"));
+    }
     if(session.role==="jumper" && await canViewDailyReport()){
       const reportLink=document.createElement("a");
       reportLink.href="daily-report.html";reportLink.className="small-btn";
@@ -288,15 +299,7 @@ async function downloadDatabaseJson() {
     }
 
 
-    const actions = header.querySelector(".header-account-actions");
-    if (actions) {
-      header.style.flexWrap = "wrap";
-      actions.style.flexWrap = "wrap";
-      account.style.marginTop = "0";
-      actions.appendChild(account);
-    } else {
-      header.insertBefore(account, header.querySelector(".nav"));
-    }
+
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
   window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
