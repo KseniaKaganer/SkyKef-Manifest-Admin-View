@@ -34,9 +34,9 @@
       const hiddenFields = new Set([
         "Id", "ID", "id", "password", "Password",
         "AffLevel", "Aff Level", "License", "Uid", "uid", "WaiverDate", "Waiver Date",
-        "Balance", "balance"
+        "Balance", "balance", "NumberOfJumpesToday", "NumberOfJumpsToday"
       ]);
-      const preferredOrder = ["Name", "Surname", "NumberOfJumpsToday"];
+      const preferredOrder = ["Name", "Surname"];
       Object.entries(jumper)
         .sort(([keyA], [keyB]) => {
           const indexA = preferredOrder.indexOf(keyA);
