@@ -4,6 +4,8 @@ function buildLogbookAnnualStats(rows){
     const year=Number(row.year);
     if(!Number.isInteger(year) || year<1 || typeof row.value!=='string')continue;
     const parts=row.value.split('|').map(part=>part.trim());
+    // Balance adjustments have no activity details and are not jumps.
+    if(!parts.slice(1).some(part=>part && part!=='—'))continue;
     let type=parts[0].toUpperCase();
     if(!type || type==='—')continue;
     if(type==='INSTRUCTOR')type='AFF';
