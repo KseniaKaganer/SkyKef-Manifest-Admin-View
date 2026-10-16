@@ -27,11 +27,13 @@
 <main class="page registration-page">
   <div class="registration-page-heading">
     <div><h2>Jumping Day Registration</h2><p lang="he" dir="rtl">סקיכיף — טופס הרשמה ליום פעילות</p></div>
-    <a class="small-btn registration-original-link" href="https://docs.google.com/forms/d/e/1FAIpQLSeFem8JsrpMqbjNy95eaZVijdfKK-ptlyiDPB2LPLJefuomBg/viewform" target="_blank" rel="noopener noreferrer">Open in Google Forms ↗</a>
+    <a id="registrationOriginalLink" class="small-btn registration-original-link" href="https://docs.google.com/forms/d/e/1FAIpQLSeFem8JsrpMqbjNy95eaZVijdfKK-ptlyiDPB2LPLJefuomBg/viewform" target="_blank" rel="noopener noreferrer">Open in Google Forms ↗</a>
   </div>
+  <p id="registrationFormStatus" class="status" role="status">Loading form…</p>
   <section class="registration-embed" aria-label="Registration form">
-    <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeFem8JsrpMqbjNy95eaZVijdfKK-ptlyiDPB2LPLJefuomBg/viewform?embedded=true" title="SkyKef jumping day registration form" referrerpolicy="strict-origin-when-cross-origin">Loading registration form…</iframe>
+    <iframe id="registrationFrame" hidden title="SkyKef jumping day registration form" referrerpolicy="strict-origin-when-cross-origin">Loading registration form…</iframe>
   </section>
 </main>
+<script src="registration.js?v=profile-prefill-1"></script>
 </body>
 </html>
