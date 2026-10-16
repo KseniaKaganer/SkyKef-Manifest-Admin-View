@@ -106,7 +106,7 @@ function showDeleteModal({title,name,uid,reasons=[],confirmMode=false,status=""}
 }
 async function attemptDeleteJumper(j,button){
  const uid=String(j.Uid??"").trim(),name=displayName(j);
- if(!SkyKefAdminAuth.isAdmin())return;
+ if(!SkyKefAdminAuth.canEdit())return;
  if(!uid){await showDeleteModal({title:"Failed to delete jumper",name,uid:"Missing UID",status:"failure",reasons:["This jumper does not have a UID."]});return}
  try{
   const currentData=await fetchDb("current_data");
@@ -140,23 +140,23 @@ async function attemptDeleteJumper(j,button){
   if(treeContainsUid(flh,uid))freshBlockers.push("Jumper exists in loads_history.");
   if(treeContainsUid(frp,uid))freshBlockers.push("Jumper exists in report.");
   if(freshBlockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:freshBlockers});return}
-  if(!SkyKefAdminAuth.isAdmin())throw new Error("Admin login required");
+  if(!SkyKefAdminAuth.canEdit())throw new Error("Developer login required");
   const finalDay=await fetchDb("current_data");
   if(finalDay?.day_start===true && finalDay?.end_of_day===false)throw new Error("Jumping day is running");
   for(const key of nameKeys)await deletePath(`jumpers_by_name/${encodeURIComponent(key)}`);
   await deletePath(`jumpers/${encodeURIComponent(j.key)}`);
   await showDeleteModal({title:"Jumper was deleted successfully",name,uid,status:"success"});await load();
  }catch(e){console.error(e);await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:["Firebase request failed. Check write permissions and database structure."]})}
- finally{button.disabled=!SkyKefAdminAuth.isAdmin()||document.documentElement.classList.contains("manifest-view-only");button.setAttribute("aria-disabled",String(button.disabled));button.textContent="Delete Jumper"}
+ finally{button.disabled=!SkyKefAdminAuth.canEdit()||document.documentElement.classList.contains("manifest-view-only");button.setAttribute("aria-disabled",String(button.disabled));button.textContent="Delete Jumper"}
 }
 function addDeleteButton(j){
  const box=document.createElement("div");box.className="jumper-danger-zone";
  const b=document.createElement("button");b.type="button";b.className="delete-jumper-btn";b.textContent="Delete Jumper";
  const viewOnly=document.documentElement.classList.contains("manifest-view-only");
- const admin=SkyKefAdminAuth.isAdmin();
+ const admin=SkyKefAdminAuth.canEdit();
  b.disabled=viewOnly||!admin;
  b.setAttribute("aria-disabled",String(viewOnly||!admin));
- b.title=!admin?"Only admin users can delete jumpers":viewOnly?"Delete is disabled while a jumping day is running":"";
+ b.title=!admin?"Only DEV can delete jumpers":viewOnly?"Delete is disabled while a jumping day is running":"";
  if(!viewOnly&&admin)b.onclick=()=>attemptDeleteJumper(j,b);
  box.appendChild(b);detailsEl.appendChild(box);
 }

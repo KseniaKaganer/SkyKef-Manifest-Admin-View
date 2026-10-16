@@ -887,3 +887,6 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .unified-header .header-top h1{text-align:left}
 .unified-header .session-account{justify-content:flex-end;margin-left:auto}
 @media(max-width:700px){.unified-header .session-account{justify-content:flex-end;align-self:flex-end}.unified-header .header-top h1{align-self:flex-start}}
+
+.site-header .developer-title{color:#ff7373}
+.site-header .session-role-badge.developer-badge,.site-header .nav a.developer-db-link{color:#ff8a8a;border-color:#c34c4c;background:#30181d;font-weight:800}

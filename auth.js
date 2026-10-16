@@ -190,6 +190,11 @@
   }
 
   function isAdmin() { return getSession()?.role === "admin"; }
+  function isDeveloper() {
+    const session=getSession();
+    return session?.role==="admin" && String(session.username).trim().toLowerCase()==="dev";
+  }
+  function canEdit() { return isDeveloper(); }
 
   function addDatabaseDownload(account) {
     if (!isAdmin()) return;
@@ -246,7 +251,8 @@ async function downloadDatabaseJson() {
     const header=document.querySelector(".header-inner");
     if(!header)return;
     const title=header.querySelector("h1") || document.createElement("h1");
-    title.textContent=session?.role==="admin"?"SkyKef Manifest Admin":"SkyKef Manifest";
+    title.textContent=isDeveloper()?"SkyKef Manifest DEVELOPER":session?.role==="admin"?"SkyKef Manifest Admin":"SkyKef Manifest";
+    if(isDeveloper())title.classList.add("developer-title");
     if(!session)return;
     document.querySelectorAll("#logoutBtn, #jumperLogoutBtn, #welcomeAdmin").forEach(element=>{
       element.hidden=true;element.style.display="none";
@@ -256,7 +262,8 @@ async function downloadDatabaseJson() {
     const top=document.createElement("div");top.className="header-top";
     const account=document.createElement("div");account.id="sessionAccount";account.className="session-account";
     const badge=document.createElement("span");badge.id="sessionRole";badge.className="session-role-badge";
-    badge.textContent=`${session.username} · ${session.role==="admin"?"Admin":session.role==="manifest"?"Manifest":"Jumper"}`;
+    badge.textContent=`${session.username} · ${isDeveloper()?"DEVELOPER":session.role==="admin"?"Admin":session.role==="manifest"?"Manifest":"Jumper"}`;
+    if(isDeveloper())badge.classList.add("developer-badge");
     const logoutButton=document.createElement("button");logoutButton.id="sessionLogoutBtn";
     logoutButton.type="button";logoutButton.className="small-btn";logoutButton.textContent="Logout";
     logoutButton.addEventListener("click",logout);
@@ -276,6 +283,12 @@ async function downloadDatabaseJson() {
     if(["admin","manifest"].includes(session.role)){
       for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"]])link(href,label);
       addDatabaseDownload(nav);
+      if(isDeveloper()){
+        const database=document.createElement("a");database.id="developerDbLink";
+        database.href=DB+"/";database.textContent="DB";database.className="developer-db-link";
+        database.target="_blank";database.rel="noopener noreferrer";
+        nav.appendChild(database);
+      }
     }else{
       link("index.html","Loads");
       link("my-profile.html","My Profile");
@@ -296,7 +309,7 @@ async function downloadDatabaseJson() {
     }
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
-  window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
+  window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, isDeveloper, canEdit, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
   window.SkyKefAdminAuth.hasWorkerRoles=hasWorkerRoles;
   window.SkyKefAdminAuth.canViewDailyReport=canViewDailyReport;
   window.SkyKefAdminAuth.ready=requireLogin().then(allowed=>{
