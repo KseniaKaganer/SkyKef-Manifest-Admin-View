@@ -1,3 +1,11 @@
+const jumperLicenseLabels={0:'None',1:'AFF',2:'A',3:'B',4:'C',5:'D'};
+function jumperLicenseText(value){return value===null || value===undefined || value===''?'—':jumperLicenseLabels[Number(value)] ?? `Unknown (${value})`;}
+function parseJumperLicense(value,original){
+  if(String(value).trim()==='' || !Number.isInteger(Number(value)))throw new Error('Select a license.');
+  const number=Number(value);
+  if(!Object.prototype.hasOwnProperty.call(jumperLicenseLabels,number) && number!==Number(original))throw new Error('Select a valid license.');
+  return number;
+}
 const jumperIdentityFields=new Set(['name','surname','uid','key']);
 function parseJumperEditValue(original,input){
   if(typeof original==='boolean')return Boolean(input);
@@ -62,12 +70,22 @@ function renderJumperEditor(j){
   const form=document.createElement('form');form.className='jumper-edit-form';
   const grid=document.createElement('div');grid.className='data-grid';
   const inputs=new Map();
+  let affLevelLabel=null;
   for(const [field,value] of Object.entries(j)){
     if(field==='key')continue;
     const label=document.createElement('label');label.className='data-item';
     const title=document.createElement('span');title.className='data-key';title.textContent=field;
     let input;
-    if(value!==null && typeof value==='object'){
+    if(field.toLowerCase()==='license'){
+      input=document.createElement('select');
+      for(const [code,name] of Object.entries(jumperLicenseLabels)){
+        const option=document.createElement('option');option.value=code;option.textContent=name;input.appendChild(option);
+      }
+      if(value!==null && value!=='' && !Object.prototype.hasOwnProperty.call(jumperLicenseLabels,Number(value))){
+        const option=document.createElement('option');option.value=String(value);option.textContent=jumperLicenseText(value);input.appendChild(option);
+      }
+      input.value=value===null || value===''?'0':String(value);
+    }else if(value!==null && typeof value==='object'){
       input=document.createElement('textarea');input.rows=4;input.value=JSON.stringify(value,null,2);
     }else{
       input=document.createElement('input');input.type=typeof value==='boolean'?'checkbox':typeof value==='number'?'number':'text';
@@ -77,8 +95,13 @@ function renderJumperEditor(j){
     input.className='jumper-edit-input';input.disabled=jumperIdentityFields.has(field.toLowerCase());
     label.append(title,input);
     if(value!==null && typeof value==='object'){const hint=document.createElement('small');hint.textContent=Array.isArray(value)?'JSON list, e.g. ["T", "V"]. Use [] to clear.':'JSON object';label.appendChild(hint);}
+    if(field.toLowerCase()==="afflevel")affLevelLabel=label;
     grid.appendChild(label);if(!input.disabled)inputs.set(field,input);
   }
+  const licenseEntry=[...inputs].find(([field])=>field.toLowerCase()==='license');
+  function updateAffLevelVisibility(){if(affLevelLabel)affLevelLabel.hidden=Number(licenseEntry?.[1].value ?? j.License)!==1;}
+  if(licenseEntry)licenseEntry[1].addEventListener('change',updateAffLevelVisibility);
+  updateAffLevelVisibility();
   const actions=document.createElement('div');actions.className='jumper-edit-actions';
   const save=document.createElement('button');save.type='submit';save.className='small-btn';save.textContent='Save Changes';
   const cancel=document.createElement('button');cancel.type='button';cancel.className='small-btn';cancel.textContent='Cancel';cancel.onclick=()=>renderDetails(j);
@@ -89,7 +112,7 @@ function renderJumperEditor(j){
     try{
       if(!SkyKefAdminAuth.isDeveloper())throw new Error('DEV login required.');
       const changes={};
-      for(const [field,input] of inputs){try{changes[field]=parseJumperEditValue(j[field],input.type==='checkbox'?input.checked:input.value);}catch(error){throw new Error(`${field}: ${error.message}`);}}
+      for(const [field,input] of inputs){try{changes[field]=field.toLowerCase()==='license'?parseJumperLicense(input.value,j[field]):parseJumperEditValue(j[field],input.type==='checkbox'?input.checked:input.value);}catch(error){throw new Error(`${field}: ${error.message}`);}}
       const [state,fresh,byName]=await Promise.all([SkyKefAdminAuth.getDayState(),fetchDb(`jumpers/${encodeURIComponent(String(j.Uid??j.uid))}`),fetchDb('jumpers_by_name')]);
       if(state.active)throw new Error('Editing is disabled while a jumping day is running.');
       const patch=buildJumperEditPatch(j,fresh,changes,byName);
