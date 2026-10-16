@@ -2,8 +2,10 @@
 <style>
 .today-jumper-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
 .today-jumper-count{font-size:13px;font-weight:600;white-space:nowrap}
-.today-jumper-group-title{margin:0;padding:12px 18px;background:#151c23;font-size:14px;border-bottom:1px solid #20262d}
-.today-jumper-group + .today-jumper-group{border-top:2px solid #303a46}
+#jumpersList{display:flex;flex-direction:column;gap:16px;padding:12px;max-height:none;overflow:visible}
+.today-jumper-group{max-height:32vh;min-height:140px;overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable;border:1px solid var(--border);border-radius:12px}
+.today-jumper-group-title{position:sticky;top:0;z-index:1;margin:0;padding:12px 18px;background:#151c23;font-size:14px;border-bottom:1px solid #20262d}
+@media(max-width:800px){.today-jumper-group{max-height:30vh}}
 </style>
 </head><body data-jumpers-scope="today">
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav">
