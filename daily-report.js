@@ -38,6 +38,7 @@
   async function load(refreshDates=false){
     reload.disabled=true;calendar.setBusy(true);status.textContent='Loading daily report…';
     try {
+      if(!await SkyKefAdminAuth.ready)return;
       const current=await fetchJson('current_data');
       const currentDate=dateKey(current?.date);
       if(refreshDates || !dateInput.value){

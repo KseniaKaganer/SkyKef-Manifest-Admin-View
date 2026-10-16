@@ -33,9 +33,34 @@
     }
   }
 
-  function requireLogin() {
+  function hasWorkerRoles(jumper) {
+    const value=Object.entries(jumper || {}).find(([key])=>key.toLowerCase()==="worker")?.[1];
+    return value!==null && typeof value==="object" && Object.values(value).some(role=>role!==null && role!==undefined && String(role).trim()!=="");
+  }
+
+  let reportAccess;
+  function canViewDailyReport() {
+    const session=getSession();
+    if(["admin","manifest"].includes(session?.role))return Promise.resolve(true);
+    if(session?.role!=="jumper" || session.jumperKey===undefined || session.jumperKey===null)return Promise.resolve(false);
+    if(!reportAccess)reportAccess=(async()=>{
+      try {
+        const response=await fetch(`${DB}/jumpers/${encodeURIComponent(session.jumperKey)}.json`,{cache:"no-store"});
+        if(!response.ok)return false;
+        return hasWorkerRoles(await response.json());
+      }catch(error){console.error(error);return false;}
+    })();
+    return reportAccess;
+  }
+
+  async function requireLogin() {
     const session = getSession();
     if (isPublicPage) return true;
+    if (pagePath.endsWith("/daily-report")) {
+      const allowed=await canViewDailyReport();
+      if(!allowed)location.replace("index.html");
+      return allowed;
+    }
     if (isProfilePage) {
       if (!session || session.role !== "jumper") {
         location.replace("index.html");
@@ -216,7 +241,7 @@ async function downloadDatabaseJson() {
     account.append(downloadDbBtn, downloadDbStatus);
   }
 
-  function showSessionRole() {
+  async function showSessionRole() {
     const session = getSession();
     if (!session) return;
     const header = document.querySelector(".header-inner");
@@ -245,6 +270,23 @@ async function downloadDatabaseJson() {
     button.addEventListener("click", logout);
     account.append(badge, button);
     addDatabaseDownload(account);
+    if(session.role==="jumper" && await canViewDailyReport()){
+      const reportLink=document.createElement("a");
+      reportLink.href="daily-report.html";reportLink.className="small-btn";
+      reportLink.textContent="Daily Report";
+      reportLink.style.cssText="display:inline-flex;align-items:center";
+      account.appendChild(reportLink);
+    }
+    if(session.role==="jumper" && pagePath.endsWith("/daily-report")){
+      const nav=header.querySelector(".nav");
+      if(nav){
+        nav.replaceChildren();
+        const home=document.createElement("a");home.href="index.html";home.textContent="Home";
+        const report=document.createElement("a");report.href="daily-report.html";report.textContent="Daily Report";report.className="active";
+        nav.append(home,report);
+      }
+    }
+
 
     const actions = header.querySelector(".header-account-actions");
     if (actions) {
@@ -258,7 +300,10 @@ async function downloadDatabaseJson() {
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
   window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
-  if (requireLogin()) {
-    applyViewOnlyMode();
-  }
+  window.SkyKefAdminAuth.hasWorkerRoles=hasWorkerRoles;
+  window.SkyKefAdminAuth.canViewDailyReport=canViewDailyReport;
+  window.SkyKefAdminAuth.ready=requireLogin().then(allowed=>{
+    if(allowed)applyViewOnlyMode();
+    return allowed;
+  });
 })();
