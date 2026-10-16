@@ -101,7 +101,7 @@
 
   function renderUserLogbook(data) {
     const allRows=flattenHistoryNode(data);
-    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),allRows);
+    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),allRows,{showTypes:SkyKefAdminAuth.hasWorkerRoles(loggedInJumper)});
     const rows = allRows
       .filter(row => parseLogbookValue(row.value).details !== "—")
       .sort((a, b) =>
