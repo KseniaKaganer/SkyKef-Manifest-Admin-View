@@ -158,7 +158,16 @@ function addDeleteButton(j){
  b.setAttribute("aria-disabled",String(viewOnly||!admin));
  b.title=!admin?"Only DEV can delete jumpers":viewOnly?"Delete is disabled while a jumping day is running":"";
  if(!viewOnly&&admin)b.onclick=()=>attemptDeleteJumper(j,b);
- box.appendChild(b);detailsEl.appendChild(box);
+ const info=document.createElement("button");info.type="button";info.className="delete-info-btn";info.textContent="ⓘ";
+ info.setAttribute("aria-label","Jumper deletion conditions");info.setAttribute("aria-expanded","false");info.setAttribute("aria-controls","jumperDeleteConditions");
+ const help=document.createElement("div");help.id="jumperDeleteConditions";help.className="delete-conditions";help.hidden=true;
+ const heading=document.createElement("strong");heading.textContent="Deletion conditions";
+ const list=document.createElement("ul");
+ for(const text of ["Logged in as DEV with the Admin role.","No jumping day is currently running (day_start = true and end_of_day = false blocks deletion).","The jumper has a UID and an empty Worker field.","No records in jumpers_history, loads_history or report.","A matching jumpers_by_name record can be identified.","All database checks must succeed and deletion must be confirmed."]){const item=document.createElement("li");item.textContent=text;list.appendChild(item);}
+ const note=document.createElement("p");note.textContent="Deletes the jumper from jumpers and jumpers_by_name. This cannot be undone.";
+ help.append(heading,list,note);
+ info.onclick=()=>{help.hidden=!help.hidden;info.setAttribute("aria-expanded",String(!help.hidden));};
+ box.append(b,info,help);detailsEl.appendChild(box);
 }
 
 function setDetailTab(tab){
