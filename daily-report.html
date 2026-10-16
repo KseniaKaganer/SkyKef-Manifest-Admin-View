@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily Report | SkyKef Manifest Admin View</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="daily-report.css">
+<script src="auth.js?v=admin-db-export-4"></script>
+</head>
+<body>
+<header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav">
+      <a href="jumpers-data.html">Jumpers Data</a>
+      <a href="today-jumpers.html">Today Jumpers</a>
+      <a href="loads.html">Loads</a>
+      <a href="loads-history.html">Loads History</a>
+      <a class="active" href="daily-report.html">Daily Report</a>
+      <a href="reports.html">Reports</a>
+</nav></div></header>
+<main class="page daily-report-page">
+<div class="daily-report-toolbar"><h2>Daily Report</h2><button id="reloadReportBtn" class="small-btn" type="button">Reload Data</button></div>
+<div id="dailyReportStatus" class="status" role="status">Loading daily report…</div>
+<section class="daily-report-card" aria-label="Daily worker report">
+<div class="daily-report-heading"><strong>DAILY REPORT</strong><span id="dailyReportDate">—</span><div id="dailyReportSummary"></div></div>
+<div class="daily-report-scroll" tabindex="0" role="region" aria-label="Daily report table, scroll to see all workers and loads">
+<table class="daily-report-table"><caption class="visually-hidden">Daily worker totals by activity and by load</caption><thead id="dailyReportHead"></thead><tbody id="dailyReportBody"></tbody></table>
+</div>
+</section>
+<p class="status daily-report-note">Activity totals are followed by one column per load. FUN in the top summary includes all fun jumpers. Data is based on the current day’s loads.</p>
+</main>
+<script src="today-jumpers-data.js?v=jump-counts-1"></script>
+<script src="daily-report-data.js"></script>
+<script src="daily-report.js"></script>
+</body></html>
