@@ -38,7 +38,12 @@ if(todayOnly){
 };target.appendChild(b)};
 if(todayOnly){
   for(const [label,isWorker] of [["Workers",true],["Fun Jumpers",false]]){
-    const members=filtered.filter(j=>todayJumperHasWorker(j)===isWorker);
+    const members=filtered.filter(j=>todayJumperHasWorker(j)===isWorker).sort((a,b)=>{
+      const aCounts=todayJumpCounts.get(String(a.Uid??a.uid??a.key));
+      const bCounts=todayJumpCounts.get(String(b.Uid??b.uid??b.key));
+      const field=isWorker?"work":"total";
+      return (bCounts?.[field]??0)-(aCounts?.[field]??0)||displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"});
+    });
     const section=document.createElement("section");section.className="today-jumper-group";
     section.setAttribute("aria-label",label);
     const heading=document.createElement("h3");heading.className="today-jumper-group-title";
