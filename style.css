@@ -931,3 +931,7 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .annual-stats-table thead th{background:#10253a;color:var(--text)}
 .annual-stats-table tbody th{color:var(--accent)}
 .annual-stats-table td:nth-child(2){font-weight:800;background:#10253a}
+
+.public-form-action{display:flex;justify-content:flex-start;margin:0 0 20px}
+.public-form-action .small-btn{display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:700;text-decoration:none}
+.public-form-action .small-btn:hover{border-color:var(--accent);background:#10253a}

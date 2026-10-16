@@ -6,7 +6,7 @@
   const pagePath = location.pathname.replace(/\/$/, "").replace(/\.html$/, "");
   const isLoginPage = /(?:^|\/)index$/.test(pagePath) || location.pathname.endsWith("/");
   const isProfilePage = pagePath.endsWith("/my-profile");
-  const isPublicPage = isLoginPage || pagePath.endsWith("/loads-today");
+  const isPublicPage = isLoginPage || pagePath.endsWith("/loads-today") || pagePath.endsWith("/registration");
 
   function formatDate(value) {
     if (value === null || value === undefined || String(value).trim() === "") return "—";
