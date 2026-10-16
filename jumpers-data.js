@@ -1,0 +1,323 @@
+const todayOnly = document.body.dataset.jumpersScope === "today";
+
+const DB="https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
+const FIREBASE_URL=DB + "/jumpers.json";
+
+const listEl=document.getElementById("jumpersList"),
+detailsEl=document.getElementById("details"),
+searchInput=document.getElementById("searchInput"),
+statusEl=document.getElementById("status"),
+reloadBtn=document.getElementById("reloadBtn"),
+detailsTab=document.getElementById("detailsTab"),
+logbookTab=document.getElementById("logbookTab"),
+detailsView=document.getElementById("detailsView"),
+logbookView=document.getElementById("logbookView"),
+logbookStatus=document.getElementById("logbookStatus"),
+logbookBody=document.getElementById("logbookBody");
+let jumpers=[],selectedKey=null,selectedJumper=null;
+const logbookCache=new Map();
+const displayName=j=>`${j.Name??""} ${j.Surname??""}`.trim()||"Unnamed jumper";
+function normalize(data){if(!data)return[];if(Array.isArray(data))return data.map((v,i)=>v?({key:String(i),...v}):null).filter(Boolean);if(typeof data==="object")return Object.entries(data).filter(([,v])=>v&&typeof v==="object").map(([k,v])=>({key:k,...v}));return[]}
+function renderList(){const q=searchInput.value.trim().toLowerCase();const filtered=jumpers.filter(j=>[j.Name,j.Surname,j.Phone,j.Id,j.Uid].filter(v=>v!==undefined&&v!==null).join(" ").toLowerCase().includes(q));listEl.innerHTML="";
+if(!filtered.length){const e=document.createElement("div");e.className="detail-empty";e.textContent=q?"No jumpers match your search.":todayOnly?"No jumpers are manifested on today’s loads.":"No jumpers found.";listEl.appendChild(e)}
+else filtered.forEach(j=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;b.append(n,s);b.onclick=()=>{
+  selectedKey=j.key;
+  selectedJumper=j;
+  renderList();
+  renderDetails(j);
+  if(!logbookView.hidden) loadLogbook(j);
+};listEl.appendChild(b)});
+statusEl.textContent=`${filtered.length} of ${jumpers.length} jumper${jumpers.length===1?"":"s"}`;}
+function renderDetails(j){detailsEl.className="detail-content";detailsEl.innerHTML="";const t=document.createElement("div");t.className="detail-title";t.textContent=displayName(j);detailsEl.appendChild(t);const g=document.createElement("div");g.className="data-grid";
+const pref=["Name","Surname","Id","Uid","Phone","Emergency","License","AffLevel","Balance","Weight","IsRental","NumberOfJumpsToday","ReserveDate","WaiverDate"];
+Object.keys(j).filter(k=>k!=="key").sort((a,b)=>{const ai=pref.indexOf(a),bi=pref.indexOf(b);if(ai!==-1||bi!==-1)return(ai===-1?999:ai)-(bi===-1?999:bi);return a.localeCompare(b)}).forEach(k=>{const i=document.createElement("div");i.className="data-item";const kk=document.createElement("div");kk.className="data-key";kk.textContent=k;const vv=document.createElement("div");vv.className="data-val";const v=j[k];vv.textContent=v===null||v===undefined||v===""?"—":typeof v==="object"?JSON.stringify(v):/date/i.test(k)?SkyKefAdminAuth.formatDate(v):String(v);i.append(kk,vv);g.appendChild(i)});detailsEl.appendChild(g);addDeleteButton(j)}
+
+
+function hasData(value){return value!==null&&value!==undefined&&(typeof value!=="object"||Object.keys(value).length>0)}
+function hasWorkerArray(j){return Object.keys(j||{}).some(k=>k.toLowerCase()==="worker"&&hasData(j[k]))}
+async function fetchDb(path){const r=await fetch(`${DB}/${path}.json`,{cache:"no-store"});if(!r.ok)throw new Error(`${path}: HTTP ${r.status}`);return r.json()}
+function treeContainsUid(node,uid){if(!node||typeof node!=="object")return false;if(Object.prototype.hasOwnProperty.call(node,String(uid)))return true;return Object.values(node).some(v=>treeContainsUid(v,uid))}
+function collectNameKeys(node,j){
+ if(!node||typeof node!=="object")return[];
+ const first=String(j.Name??"").trim().toLowerCase(),last=String(j.Surname??"").trim().toLowerCase();
+ const full=`${first} ${last}`.trim(),compact=`${first}${last}`,underscore=`${first}_${last}`,uid=String(j.Uid??j.key??"");
+ return [...new Set(Object.entries(node).filter(([key,v])=>{
+   const k=String(key).trim().toLowerCase();
+   const vn=v&&typeof v==="object"?`${String(v.Name??"").trim().toLowerCase()} ${String(v.Surname??"").trim().toLowerCase()}`.trim():"";
+   const vu=v&&typeof v==="object"?String(v.Uid??v.uid??""):"";
+   return vu===uid||(full&&vn===full)||k===full||k===compact||k===underscore;
+ }).map(([key])=>key))];
+}
+async function deletePath(path){const r=await fetch(`${DB}/${path}.json`,{method:"DELETE"});if(!r.ok)throw new Error(`DELETE ${path}: HTTP ${r.status}`)}
+function showDeleteModal({title,name,uid,reasons=[],confirmMode=false,status=""}){
+ return new Promise(resolve=>{
+  const overlay=document.createElement("div");overlay.className="delete-modal-overlay";
+  const modal=document.createElement("div");modal.className="delete-modal";
+  const h=document.createElement("div");h.className="delete-modal-heading"+(status?` ${status}`:"");h.textContent=title;
+  const n=document.createElement("div");n.className="delete-modal-name";n.textContent=name;
+  const u=document.createElement("div");u.className="delete-modal-uid";u.textContent=`UID: ${uid}`;
+  modal.append(h,n,u);
+  if(reasons.length){
+   const label=document.createElement("div");label.className="delete-modal-reasons-title";label.textContent="Reasons";
+   const ul=document.createElement("ul");ul.className="delete-modal-reasons";
+   reasons.forEach(reason=>{const li=document.createElement("li");li.textContent=reason;ul.appendChild(li)});
+   modal.append(label,ul);
+  }else if(confirmMode){
+   const warning=document.createElement("div");warning.className="delete-modal-warning";warning.textContent="This action cannot be undone.";
+   modal.appendChild(warning);
+  }
+  const actions=document.createElement("div");actions.className="delete-modal-actions";
+  const close=value=>{overlay.remove();resolve(value)};
+  if(confirmMode){
+   const cancel=document.createElement("button");cancel.type="button";cancel.className="small-btn";cancel.textContent="Cancel";cancel.onclick=()=>close(false);
+   const confirmBtn=document.createElement("button");confirmBtn.type="button";confirmBtn.className="delete-confirm-btn";confirmBtn.textContent="Delete Permanently";confirmBtn.onclick=()=>close(true);
+   actions.append(cancel,confirmBtn);
+  }else{
+   const ok=document.createElement("button");ok.type="button";ok.className="small-btn";ok.textContent="OK";ok.onclick=()=>close(false);actions.appendChild(ok);
+  }
+  modal.appendChild(actions);overlay.appendChild(modal);document.body.appendChild(overlay);
+ });
+}
+async function attemptDeleteJumper(j,button){
+ const uid=String(j.Uid??"").trim(),name=displayName(j);
+ if(!SkyKefAdminAuth.isAdmin())return;
+ if(!uid){await showDeleteModal({title:"Failed to delete jumper",name,uid:"Missing UID",status:"failure",reasons:["This jumper does not have a UID."]});return}
+ try{
+  const currentData=await fetchDb("current_data");
+  if(currentData?.day_start===true && currentData?.end_of_day===false){
+   await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:["A manifest day is currently running. Jumper deletion is disabled until the day is ended."]});
+   return;
+  }
+ }catch(e){
+  console.error(e);
+  await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:["Could not verify whether the manifest day is running. Jumper deletion was blocked for safety."]});
+  return;
+ }
+ const confirmed=await showDeleteModal({title:"Are you sure you want to permanently delete this jumper?",name,uid,confirmMode:true});
+ if(!confirmed)return;
+ button.disabled=true;button.textContent="Checking…";
+ try{
+  const blockers=[];
+  if(hasWorkerArray(j))blockers.push("Jumper is a worker.");
+  const [jh,lh,rp,jbn]=await Promise.all([fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report"),fetchDb("jumpers_by_name")]);
+  if(hasData(jh))blockers.push("Jumper has history in jumpers_history.");
+  if(treeContainsUid(lh,uid))blockers.push("Jumper exists in loads_history.");
+  if(treeContainsUid(rp,uid))blockers.push("Jumper exists in report.");
+  const nameKeys=collectNameKeys(jbn,j);
+  if(!nameKeys.length)blockers.push("Matching jumpers_by_name record could not be identified safely.");
+  if(blockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:blockers});return}
+  const [fresh,fjh,flh,frp]=await Promise.all([fetchDb(`jumpers/${encodeURIComponent(j.key)}`),fetchDb(`jumpers_history/${encodeURIComponent(uid)}`),fetchDb("loads_history"),fetchDb("report")]);
+  const freshBlockers=[];
+  if(!fresh)freshBlockers.push("Jumper record no longer exists.");
+  else if(hasWorkerArray(fresh))freshBlockers.push("Jumper is a worker.");
+  if(hasData(fjh))freshBlockers.push("Jumper has history in jumpers_history.");
+  if(treeContainsUid(flh,uid))freshBlockers.push("Jumper exists in loads_history.");
+  if(treeContainsUid(frp,uid))freshBlockers.push("Jumper exists in report.");
+  if(freshBlockers.length){await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:freshBlockers});return}
+  if(!SkyKefAdminAuth.isAdmin())throw new Error("Admin login required");
+  const finalDay=await fetchDb("current_data");
+  if(finalDay?.day_start===true && finalDay?.end_of_day===false)throw new Error("Jumping day is running");
+  for(const key of nameKeys)await deletePath(`jumpers_by_name/${encodeURIComponent(key)}`);
+  await deletePath(`jumpers/${encodeURIComponent(j.key)}`);
+  await showDeleteModal({title:"Jumper was deleted successfully",name,uid,status:"success"});await load();
+ }catch(e){console.error(e);await showDeleteModal({title:"Failed to delete jumper",name,uid,status:"failure",reasons:["Firebase request failed. Check write permissions and database structure."]})}
+ finally{button.disabled=!SkyKefAdminAuth.isAdmin()||document.documentElement.classList.contains("manifest-view-only");button.setAttribute("aria-disabled",String(button.disabled));button.textContent="Delete Jumper"}
+}
+function addDeleteButton(j){
+ const box=document.createElement("div");box.className="jumper-danger-zone";
+ const b=document.createElement("button");b.type="button";b.className="delete-jumper-btn";b.textContent="Delete Jumper";
+ const viewOnly=document.documentElement.classList.contains("manifest-view-only");
+ const admin=SkyKefAdminAuth.isAdmin();
+ b.disabled=viewOnly||!admin;
+ b.setAttribute("aria-disabled",String(viewOnly||!admin));
+ b.title=!admin?"Only admin users can delete jumpers":viewOnly?"Delete is disabled while a jumping day is running":"";
+ if(!viewOnly&&admin)b.onclick=()=>attemptDeleteJumper(j,b);
+ box.appendChild(b);detailsEl.appendChild(box);
+}
+
+function setDetailTab(tab){
+  const showDetails=tab==="details";
+  detailsTab.classList.toggle("active",showDetails);
+  logbookTab.classList.toggle("active",!showDetails);
+  detailsTab.setAttribute("aria-selected",String(showDetails));
+  logbookTab.setAttribute("aria-selected",String(!showDetails));
+  detailsView.hidden=!showDetails;
+  logbookView.hidden=showDetails;
+
+  if(!showDetails){
+    if(selectedJumper) loadLogbook(selectedJumper);
+    else {
+      logbookStatus.textContent="Select a jumper to view the logbook.";
+      logbookBody.innerHTML="";
+    }
+  }
+}
+
+function safeNumber(value){
+  const n=Number(value);
+  return Number.isFinite(n)?n:0;
+}
+
+function flattenHistoryNode(node, path=[], rows=[]){
+  if(node===null || node===undefined) return rows;
+
+  if(typeof node!=="object"){
+    if(path.length>=4){
+      const [year,month,day,loadKey]=path;
+      rows.push({
+        year:safeNumber(year),
+        month:safeNumber(month),
+        day:safeNumber(day),
+        loadKey:String(loadKey),
+        value:node
+      });
+    }
+    return rows;
+  }
+
+  Object.entries(node).forEach(([key,value])=>{
+    flattenHistoryNode(value,[...path,key],rows);
+  });
+  return rows;
+}
+
+function parseLoadNumber(loadKey){
+  const match=String(loadKey).match(/(\d+)/);
+  return match?Number(match[1]):0;
+}
+
+function parseLoadValue(value){
+  if(value===null || value===undefined) return {activity:"—",details:"—"};
+  if(typeof value==="object"){
+    return {activity:"Record",details:JSON.stringify(value)};
+  }
+
+  const raw=String(value);
+  const parts=raw.split("|").map(s=>s.trim()).filter(Boolean);
+
+  if(parts.length===0) return {activity:"—",details:"—"};
+  if(parts.length===1) return {activity:parts[0],details:"—"};
+
+  return {
+    activity:parts[0],
+    details:parts.slice(1).join(" · ")
+  };
+}
+
+function renderLogbookRows(rawData){
+  const rows=flattenHistoryNode(rawData);
+
+  rows.sort((a,b)=>{
+    if(b.year!==a.year) return b.year-a.year;
+    if(b.month!==a.month) return b.month-a.month;
+    if(b.day!==a.day) return b.day-a.day;
+    return parseLoadNumber(b.loadKey)-parseLoadNumber(a.loadKey);
+  });
+
+  logbookBody.innerHTML="";
+
+  if(!rows.length){
+    logbookStatus.textContent="No logbook history found for this jumper.";
+    return;
+  }
+
+  logbookStatus.textContent=`${rows.length} logbook entr${rows.length===1?"y":"ies"} · newest first`;
+
+  let previousDayKey=null;
+  let previousYear=null;
+
+  rows.forEach(row=>{
+    const tr=document.createElement("tr");
+    const parsed=parseLoadValue(row.value);
+
+    const dayKey=`${row.year}-${row.month}-${row.day}`;
+    const isNewDay=dayKey!==previousDayKey;
+    const isNewYear=row.year!==previousYear;
+
+    if(isNewYear && previousYear!==null){
+      tr.classList.add("year-separator");
+    } else if(isNewDay && previousDayKey!==null){
+      tr.classList.add("day-separator");
+    }
+
+    const date=document.createElement("td");
+    date.className="date-cell";
+    date.textContent=isNewDay
+      ? `${String(row.day).padStart(2,"0")}/${String(row.month).padStart(2,"0")}/${row.year}`
+      : "";
+
+    const load=document.createElement("td");
+    const loadNo=parseLoadNumber(row.loadKey);
+    load.textContent=loadNo?`Load ${loadNo}`:row.loadKey;
+
+    const activity=document.createElement("td");
+    activity.textContent=parsed.activity;
+
+    const details=document.createElement("td");
+    details.textContent=parsed.details;
+
+    tr.append(date,load,activity,details);
+    logbookBody.appendChild(tr);
+
+    previousDayKey=dayKey;
+    previousYear=row.year;
+  });
+}
+
+async function loadLogbook(jumper){
+  if(!jumper){
+    logbookStatus.textContent="Select a jumper to view the logbook.";
+    logbookBody.innerHTML="";
+    return;
+  }
+
+  const uid=jumper.Uid;
+  if(uid===undefined || uid===null || uid===""){
+    logbookStatus.textContent="This jumper does not have a UID.";
+    logbookBody.innerHTML="";
+    return;
+  }
+
+  const cacheKey=String(uid);
+  logbookStatus.textContent=`Loading logbook for ${displayName(jumper)}…`;
+  logbookBody.innerHTML="";
+
+  if(logbookCache.has(cacheKey)){
+    renderLogbookRows(logbookCache.get(cacheKey));
+    return;
+  }
+
+  try{
+    const url=`https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app/jumpers_history/${encodeURIComponent(cacheKey)}.json`;
+    const response=await fetch(url,{cache:"no-store"});
+    if(!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    const data=await response.json();
+    logbookCache.set(cacheKey,data);
+    renderLogbookRows(data);
+  }catch(err){
+    console.error(err);
+    logbookStatus.textContent="Could not load this jumper's logbook.";
+  }
+}
+
+detailsTab.addEventListener("click",()=>setDetailTab("details"));
+logbookTab.addEventListener("click",()=>setDetailTab("logbook"));
+
+async function load(){statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;try{const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const allJumpers=normalize(await r.json());
+if(todayOnly){
+  const [loads,currentData]=await Promise.all([fetchDb("loads"),fetchDb("current_data")]);
+  const date=SkyKefAdminAuth.formatDate(currentData?.date);
+  document.getElementById("todayDate").textContent=`Date: ${date}`;
+  const today=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date());
+  jumpers=date===today?filterTodayJumpers(allJumpers,loads):[];
+}else jumpers=allJumpers;
+jumpers.sort((a,b)=>displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"}));
+selectedKey=null;
+selectedJumper=null;
+detailsEl.className="detail-empty";
+detailsEl.textContent="Select a jumper to view all data.";
+logbookStatus.textContent="Select a jumper to view the logbook.";
+logbookBody.innerHTML="";
+renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
+searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",load);load();
