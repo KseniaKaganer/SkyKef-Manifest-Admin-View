@@ -100,7 +100,9 @@
   }
 
   function renderUserLogbook(data) {
-    const rows = flattenHistoryNode(data)
+    const allRows=flattenHistoryNode(data);
+    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),allRows);
+    const rows = allRows
       .filter(row => parseLogbookValue(row.value).details !== "—")
       .sort((a, b) =>
       b.year - a.year || b.month - a.month || b.day - a.day || loadNumber(b.loadKey) - loadNumber(a.loadKey)

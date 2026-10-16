@@ -183,7 +183,7 @@ function setDetailTab(tab){
     if(selectedJumper) loadLogbook(selectedJumper);
     else {
       logbookStatus.textContent="Select a jumper to view the logbook.";
-      logbookBody.innerHTML="";
+      logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
     }
   }
 }
@@ -249,7 +249,7 @@ function renderLogbookRows(rawData){
     return parseLoadNumber(b.loadKey)-parseLoadNumber(a.loadKey);
   });
 
-  logbookBody.innerHTML="";
+  logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),rows);
 
   if(!rows.length){
     logbookStatus.textContent="No logbook history found for this jumper.";
@@ -302,20 +302,20 @@ function renderLogbookRows(rawData){
 async function loadLogbook(jumper){
   if(!jumper){
     logbookStatus.textContent="Select a jumper to view the logbook.";
-    logbookBody.innerHTML="";
+    logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
     return;
   }
 
   const uid=jumper.Uid;
   if(uid===undefined || uid===null || uid===""){
     logbookStatus.textContent="This jumper does not have a UID.";
-    logbookBody.innerHTML="";
+    logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
     return;
   }
 
   const cacheKey=String(uid);
   logbookStatus.textContent=`Loading logbook for ${displayName(jumper)}…`;
-  logbookBody.innerHTML="";
+  logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
 
   if(logbookCache.has(cacheKey)){
     renderLogbookRows(logbookCache.get(cacheKey));
@@ -329,10 +329,11 @@ async function loadLogbook(jumper){
 
     const data=await response.json();
     logbookCache.set(cacheKey,data);
+    if(String(selectedJumper?.Uid)!==cacheKey)return;
     renderLogbookRows(data);
   }catch(err){
     console.error(err);
-    logbookStatus.textContent="Could not load this jumper's logbook.";
+    if(String(selectedJumper?.Uid)===cacheKey)logbookStatus.textContent="Could not load this jumper's logbook.";
   }
 }
 
@@ -354,6 +355,6 @@ selectedJumper=null;
 detailsEl.className="detail-empty";
 detailsEl.textContent="Select a jumper to view all data.";
 logbookStatus.textContent="Select a jumper to view the logbook.";
-logbookBody.innerHTML="";
+logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
 renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
 searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",load);load();

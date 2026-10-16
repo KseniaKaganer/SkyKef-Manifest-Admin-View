@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Profile | SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=editor-rows-1">
+  <link rel="stylesheet" href="style.css?v=annual-stats-1">
   <script src="auth.js?v=delete-info-1"></script>
 </head>
 <body>
@@ -30,6 +30,7 @@
       <dl id="userProfileDetails" class="profile-details"></dl>
     </div>
     <div id="userLogbookView" hidden>
+      <section id="userLogbookAnnualStats" class="logbook-annual-stats" hidden></section>
       <div class="user-logbook-toolbar">
         <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
         <button id="exportUserLogbookBtn" class="small-btn" type="button" disabled>Export CSV</button>
@@ -44,5 +45,6 @@
   </section>
 
 </main>
-<script src="jumper-profile.js?v=hide-today-count-1"></script>
+<script src="logbook-annual-stats.js"></script>
+<script src="jumper-profile.js?v=annual-stats-1"></script>
 </body></html>
