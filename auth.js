@@ -242,64 +242,44 @@ async function downloadDatabaseJson() {
   }
 
   async function showSessionRole() {
-    const session = getSession();
-    if (!session) return;
-    const header = document.querySelector(".header-inner");
-    if (!header) return;
-
-    // Keep one account control in the same place on every page.
-    document.querySelectorAll("#logoutBtn, #jumperLogoutBtn, #welcomeAdmin").forEach(element => {
-      element.hidden = true;
-      element.style.display = "none";
+    const session=getSession();
+    const header=document.querySelector(".header-inner");
+    if(!header)return;
+    const title=header.querySelector("h1") || document.createElement("h1");
+    title.textContent=session?.role==="admin"?"SkyKef Manifest Admin":"SkyKef Manifest";
+    if(!session)return;
+    document.querySelectorAll("#logoutBtn, #jumperLogoutBtn, #welcomeAdmin").forEach(element=>{
+      element.hidden=true;element.style.display="none";
     });
-    if (document.getElementById("sessionAccount")) return;
-
-    const account = document.createElement("div");
-    account.id = "sessionAccount";
-    account.style.cssText = "display:flex;align-items:center;gap:10px;max-width:100%;margin-top:12px";
-    const badge = document.createElement("span");
-    badge.id = "sessionRole";
-    badge.textContent = `${session.username} · ${session.role === "admin" ? "Admin" : session.role === "manifest" ? "Manifest" : "Jumper"}`;
-    badge.className = "session-role-badge";
-    const button = document.createElement("button");
-    button.id = "sessionLogoutBtn";
-    button.type = "button";
-    button.className = "small-btn";
-    button.textContent = "Logout";
-    button.style.flex = "0 0 auto";
-    button.addEventListener("click", logout);
-    account.append(badge, button);
-    addDatabaseDownload(account);
-
-    // Attach before awaiting worker verification so concurrent calls see the account.
-    const actions = header.querySelector(".header-account-actions");
-    if (actions) {
-      header.style.flexWrap = "wrap";
-      actions.style.flexWrap = "wrap";
-      account.style.marginTop = "0";
-      actions.appendChild(account);
-    } else {
-      header.insertBefore(account, header.querySelector(".nav"));
+    if(document.getElementById("sessionAccount"))return;
+    header.classList.add("unified-header");
+    const top=document.createElement("div");top.className="header-top";
+    const account=document.createElement("div");account.id="sessionAccount";account.className="session-account";
+    const badge=document.createElement("span");badge.id="sessionRole";badge.className="session-role-badge";
+    badge.textContent=`${session.username} · ${session.role==="admin"?"Admin":session.role==="manifest"?"Manifest":"Jumper"}`;
+    const logoutButton=document.createElement("button");logoutButton.id="sessionLogoutBtn";
+    logoutButton.type="button";logoutButton.className="small-btn";logoutButton.textContent="Logout";
+    logoutButton.addEventListener("click",logout);
+    const home=document.createElement("a");home.href="index.html";home.className="small-btn header-home-button";
+    home.setAttribute("aria-label","Home");home.title="Home";
+    home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';
+    account.append(badge,logoutButton,home);top.append(account,title);
+    const nav=document.createElement("nav");nav.className="nav header-navigation";nav.setAttribute("aria-label","Main navigation");
+    // Attach synchronously: repeated calls during worker verification must see one header.
+    header.replaceChildren(top,nav);
+    function link(href,label){
+      const item=document.createElement("a");item.href=href;item.textContent=label;
+      const target=href.split("#")[0].replace(/\.html$/,"");
+      if(pagePath.endsWith("/"+target) || (isLoginPage && href.includes("#")))item.classList.add("active");
+      nav.appendChild(item);
     }
-    if(session.role==="jumper" && await canViewDailyReport()){
-      const reportLink=document.createElement("a");
-      reportLink.href="daily-report.html";reportLink.className="small-btn";
-      reportLink.textContent="Daily Report";
-      reportLink.style.cssText="display:inline-flex;align-items:center";
-      account.appendChild(reportLink);
+    if(["admin","manifest"].includes(session.role)){
+      for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"]])link(href,label);
+      addDatabaseDownload(nav);
+    }else{
+      link("index.html#userProfileSection","My Profile");
+      if(await canViewDailyReport())link("daily-report.html","Daily Report");
     }
-    if(session.role==="jumper" && pagePath.endsWith("/daily-report")){
-      const nav=header.querySelector(".nav");
-      if(nav){
-        nav.replaceChildren();
-        const home=document.createElement("a");home.href="index.html";home.textContent="Home";
-        const report=document.createElement("a");report.href="daily-report.html";report.textContent="Daily Report";report.className="active";
-        nav.append(home,report);
-      }
-    }
-
-
-
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
   window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };

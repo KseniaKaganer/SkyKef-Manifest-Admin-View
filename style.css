@@ -864,3 +864,21 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .site-header .small-btn:focus-visible,.site-header .nav a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
 .site-header .small-btn[hidden]{display:none}
 .site-header .session-role-badge{display:inline-flex;align-items:center;min-height:48px;padding:10px 14px;border:1px solid var(--border);border-radius:14px;font-size:14px;line-height:1.2;min-width:0;overflow-wrap:anywhere}
+
+/* Shared signed-in header: account left, title right, navigation below. */
+.header-inner.unified-header{display:block;max-width:1280px;margin:0 auto;padding:16px 24px}
+.unified-header .header-top{display:flex;align-items:center;justify-content:space-between;gap:20px}
+.unified-header .session-account{display:flex;align-items:center;gap:10px;min-width:0;flex-wrap:wrap}
+.unified-header .header-top h1{font-size:clamp(1.25rem,2.3vw,1.8rem);text-align:right;line-height:1.2}
+.unified-header .header-home-button{width:48px;padding:10px;flex:0 0 48px}
+.unified-header .header-navigation{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:14px}
+.unified-header .header-navigation:empty{display:none}
+@media(max-width:700px){
+ .header-inner.unified-header{padding:12px}
+ .unified-header .header-top{align-items:flex-start;flex-direction:column;gap:12px}
+ .unified-header .header-top h1{text-align:left;font-size:1.25rem}
+ .unified-header .session-account{gap:8px;width:100%}
+ .unified-header .session-role-badge{max-width:calc(100% - 144px);font-size:12px;padding:8px 10px}
+ .unified-header .header-navigation{gap:8px;margin-top:12px}
+ .unified-header .header-navigation a{padding:10px 12px}
+}
