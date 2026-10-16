@@ -21,12 +21,13 @@ const displayName=j=>`${j.Name??""} ${j.Surname??""}`.trim()||"Unnamed jumper";
 function normalize(data){if(!data)return[];if(Array.isArray(data))return data.map((v,i)=>v?({key:String(i),...v}):null).filter(Boolean);if(typeof data==="object")return Object.entries(data).filter(([,v])=>v&&typeof v==="object").map(([k,v])=>({key:k,...v}));return[]}
 function renderList(){const q=searchInput.value.trim().toLowerCase();const filtered=jumpers.filter(j=>[j.Name,j.Surname,j.Phone,j.Id,j.Uid].filter(v=>v!==undefined&&v!==null).join(" ").toLowerCase().includes(q));listEl.innerHTML="";
 if(!filtered.length){const e=document.createElement("div");e.className="detail-empty";e.textContent=q?"No jumpers match your search.":todayOnly?"No jumpers are manifested on today’s loads.":"No jumpers found.";listEl.appendChild(e)}
-else filtered.forEach(j=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=todayOnly?`UID: ${j.Uid??j.uid??j.key}`:j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;
+else {
+const appendRow=(j,target)=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=todayOnly?`UID: ${j.Uid??j.uid??j.key}`:j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;
 if(todayOnly){
   const head=document.createElement("div");head.className="today-jumper-heading";
   const count=document.createElement("span");count.className="today-jumper-count";
   const jumps=todayJumpCounts.get(String(j.Uid??j.uid??j.key))||{total:0,work:0,fun:0};
-  count.textContent=todayJumperHasWorker(j)?`Work: ${jumps.work} · FUN: ${jumps.fun}`:`Jumps: ${jumps.total}`;
+  count.textContent=todayJumperHasWorker(j)?`Work: ${jumps.work} · FUN: ${jumps.fun}`:`FUN: ${jumps.total}`;
   head.append(n,count);b.append(head,s);
 }else b.append(n,s);b.onclick=()=>{
   selectedKey=j.key;
@@ -34,7 +35,19 @@ if(todayOnly){
   renderList();
   renderDetails(j);
   if(!logbookView.hidden) loadLogbook(j);
-};listEl.appendChild(b)});
+};target.appendChild(b)};
+if(todayOnly){
+  for(const [label,isWorker] of [["Workers",true],["Fun Jumpers",false]]){
+    const members=filtered.filter(j=>todayJumperHasWorker(j)===isWorker);
+    const section=document.createElement("section");section.className="today-jumper-group";
+    section.setAttribute("aria-label",label);
+    const heading=document.createElement("h3");heading.className="today-jumper-group-title";
+    heading.textContent=`${label} (${members.length})`;section.appendChild(heading);
+    if(!members.length){const empty=document.createElement("div");empty.className="detail-empty";empty.textContent=q?"No matching jumpers in this group.":"No jumpers in this group.";section.appendChild(empty);}
+    members.forEach(j=>appendRow(j,section));listEl.appendChild(section);
+  }
+}else filtered.forEach(j=>appendRow(j,listEl));
+}
 statusEl.textContent=`${filtered.length} of ${jumpers.length} jumper${jumpers.length===1?"":"s"}`;}
 function renderDetails(j){detailsEl.className="detail-content";detailsEl.innerHTML="";const t=document.createElement("div");t.className="detail-title";t.textContent=displayName(j);detailsEl.appendChild(t);const g=document.createElement("div");g.className="data-grid";
 const pref=["Name","Surname","Id","Uid","Phone","Emergency","License","AffLevel","Balance","Weight","IsRental","NumberOfJumpsToday","ReserveDate","WaiverDate"];
