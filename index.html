@@ -693,6 +693,29 @@
     return match ? Number(match[0]) : 0;
   }
 
+  function manifestAltitude(value) {
+    const altitude=String(value ?? "").trim();
+    return {"10":"10","12":"12","10000":"10","12000":"12"}[altitude] || "";
+  }
+
+  function loadEntryAltitude(value,loadValue) {
+    if(typeof value!=="string")return "";
+    const parts=value.split("|");
+    const activity=parts[0].trim().toUpperCase();
+    if(!activity.startsWith("T") && !["V","VS"].includes(activity))return "";
+    const direct=manifestAltitude(parts[1]);
+    if(direct || activity.startsWith("T"))return direct;
+    // Video records store the paired tandem's name; use that tandem's altitude.
+    const clean=name=>String(name ?? "").trim().toLowerCase().replace(/[_\s]+/g," ");
+    const pair=clean(parts[1]);
+    if(!pair)return "";
+    const tandem=Object.entries(loadValue).find(([uid,raw])=>{
+      if(typeof raw!=="string" || !raw.split("|")[0].trim().toUpperCase().startsWith("T"))return false;
+      return clean(uid)===pair || clean(displayName(jumpersByUid.get(String(uid)),uid))===pair;
+    });
+    return tandem?manifestAltitude(tandem[1].split("|")[1]):"";
+  }
+
   function normalizeLoadEntries(loadValue) {
     if (!loadValue || typeof loadValue !== "object") return [];
 
@@ -703,7 +726,8 @@
         return {
           uid: String(uid),
           activity: parsed.activity,
-          details: parsed.details
+          details: parsed.details,
+          altitude: loadEntryAltitude(value,loadValue)
         };
       })
       .sort((a, b) => {
@@ -827,7 +851,8 @@
         let activity=String(entry?.activity || "—").trim().toUpperCase();
         if(activity==="INSTRUCTOR")activity="AFF";
         if(activity==="FUN" && String(entry?.details || "").toLowerCase().includes("coaching_0"))activity="C";
-        return `${number} (${activity})`;
+        const altitude=(activity.startsWith("T") || ["V","VS"].includes(activity))?entry?.altitude:"";
+        return `${number} (${activity}${altitude?` · ${altitude}`:""})`;
       });
   }
 
