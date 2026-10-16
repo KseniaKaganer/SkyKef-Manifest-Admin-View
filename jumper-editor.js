@@ -50,6 +50,7 @@ function parseJumperField(field,original,input){
 }
 
 const jumperIdentityFields=new Set(['name','surname','uid','key']);
+const jumperReadOnlyFields=new Set([...jumperIdentityFields,'worker','workers']);
 function parseJumperEditValue(original,input){
   if(typeof original==='boolean'){if(typeof input!=='boolean')throw new Error('Use the checkbox.');return input;}
   if(typeof original==='number'){
@@ -79,6 +80,7 @@ function buildJumperEditPatch(original,fresh,changes,byName){
   if(nameRecord.Name!==fresh.Name || nameRecord.Surname!==fresh.Surname)throw new Error('The two jumper records have different names. No changes saved.');
   const patch={};
   for(const [field,value] of Object.entries(changes)){
+    if(['worker','workers'].includes(field.toLowerCase()))throw new Error('Worker is read only.');
     if(jumperIdentityFields.has(field.toLowerCase()))throw new Error('Name, surname and UID cannot be edited.');
     if(!Object.prototype.hasOwnProperty.call(original,field))throw new Error('Unknown field. Reload the data.');
     if(JSON.stringify(value)===JSON.stringify(original[field]))continue;
@@ -117,7 +119,8 @@ function renderJumperEditor(j){
   const inputs=new Map();
   const initialInputs=new Map();
   let affLevelLabel=null;
-  const order=['name','surname','uid','id','balance'];
+  const order=['name','surname','uid','id','balance','phone','emergency','license','afflevel','isrental','reservedate'];
+  const pairRows=new Map();
   const fields=Object.entries(j).sort(([a],[b])=>{
     const ai=order.indexOf(a.toLowerCase()),bi=order.indexOf(b.toLowerCase());
     return (ai<0?99:ai)-(bi<0?99:bi);
@@ -145,7 +148,7 @@ function renderJumperEditor(j){
       if(input.type==='checkbox')input.checked=value;
       else{input.value=value??'';if(input.type==='number'){input.step=jumperIntFields.has(field.toLowerCase()) || Number.isInteger(value)?'1':'any';input.min=field.toLowerCase()==='balance'?'-2147483648':'0';input.max='2147483647';}}
     }
-    input.className='jumper-edit-input';input.disabled=jumperIdentityFields.has(field.toLowerCase());
+    input.className='jumper-edit-input';input.disabled=jumperReadOnlyFields.has(field.toLowerCase());
     label.appendChild(title);
     if(input.type==='date'){
       const dateControl=document.createElement('div');dateControl.className='jumper-edit-date-control';
@@ -156,10 +159,17 @@ function renderJumperEditor(j){
       picker.onclick=event=>{event.preventDefault();openPicker();};input.addEventListener('click',openPicker);
       dateControl.append(input,picker);label.appendChild(dateControl);
     }else label.appendChild(input);
-    if(value!==null && typeof value==='object'){const hint=document.createElement('small');hint.textContent=Array.isArray(value)?'JSON list, e.g. ["T", "V"]. Use [] to clear.':'JSON object';label.appendChild(hint);}
+    if(!input.disabled && value!==null && typeof value==='object'){const hint=document.createElement('small');hint.textContent=Array.isArray(value)?'JSON list, e.g. ["T", "V"]. Use [] to clear.':'JSON object';label.appendChild(hint);}
     if(field.toLowerCase()==="afflevel")affLevelLabel=label;
     if(['name','surname','uid','id'].includes(field.toLowerCase()))identityRow.appendChild(label);
-    else{if(field.toLowerCase()==='balance')label.className+=' jumper-edit-balance';grid.appendChild(label);}
+    else{
+      const key=field.toLowerCase();
+      const group=['phone','emergency'].includes(key)?'contact':['license','afflevel'].includes(key)?'license':['isrental','reservedate'].includes(key)?'rental':null;
+      if(group){
+        if(!pairRows.has(group)){const row=document.createElement('div');row.className=`jumper-edit-pair jumper-edit-${group}-row`;pairRows.set(group,row);grid.appendChild(row);}
+        pairRows.get(group).appendChild(label);
+      }else{if(key==='balance')label.className+=' jumper-edit-balance';grid.appendChild(label);}
+    }
     if(!input.disabled){inputs.set(field,input);initialInputs.set(field,input.type==='checkbox'?input.checked:input.value);}
   }
   const licenseEntry=[...inputs].find(([field])=>field.toLowerCase()==='license');

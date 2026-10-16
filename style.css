@@ -917,3 +917,7 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .jumper-date-picker{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;min-height:44px;padding:8px}
 @media(max-width:1000px){.jumper-edit-identity{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:480px){.jumper-edit-identity{grid-template-columns:1fr}}
+
+.jumper-edit-pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;grid-column:1/-1}
+.jumper-edit-pair [hidden]{display:none}
+@media(max-width:480px){.jumper-edit-pair{grid-template-columns:1fr}}
