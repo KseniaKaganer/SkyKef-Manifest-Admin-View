@@ -5,6 +5,7 @@
   const dateInput=document.getElementById('reportDateInput');
   const head=document.getElementById('dailyReportHead');
   const body=document.getElementById('dailyReportBody');
+  const calendar=createReportCalendar(dateInput,fetchJson);
   function cell(tag,text,className='') {
     const el=document.createElement(tag);el.textContent=text;el.className=className;
     if(tag==='th') el.scope='col';
@@ -28,20 +29,23 @@
     for(const [label,key] of [['T','T'],['H','H'],['V/S','video'],['AFF','AFF'],['FUN','FUN']]) summary.appendChild(cell('span',`${label}: ${report.totals[key]}`));
     status.textContent=`${report.rows.length} worker${report.rows.length===1?"":"s"} · ${report.loads.length} load${report.loads.length===1?"":"s"}`;
   }
-  async function fetchJson(path){const response=await fetch(`${DB}/${path}.json`,{cache:'no-store'});if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.json();}
+  async function fetchJson(path,shallow=false){const response=await fetch(`${DB}/${path}.json${shallow?"?shallow=true":""}`,{cache:'no-store'});if(!response.ok)throw new Error(`${path}: HTTP ${response.status}`);return response.json();}
   function dateKey(value){
     const formatted=SkyKefAdminAuth.formatDate(value);
     const match=formatted.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
     return match?`${match[3]}-${match[2]}-${match[1]}`:'';
   }
-  async function load(){
-    reload.disabled=true;dateInput.disabled=true;status.textContent='Loading daily report…';
+  async function load(refreshDates=false){
+    reload.disabled=true;calendar.setBusy(true);status.textContent='Loading daily report…';
     try {
       const current=await fetchJson('current_data');
       const currentDate=dateKey(current?.date);
-      if(!dateInput.value) dateInput.value=currentDate || new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Jerusalem',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
+      if(refreshDates || !dateInput.value){
+        const hasDates=await calendar.refresh(currentDate);
+        if(!hasDates){head.replaceChildren();body.replaceChildren();document.getElementById('dailyReportSummary').replaceChildren();document.getElementById('dailyReportDate').textContent='—';status.textContent='No work days available in history.';return;}
+      }
       const selected=dateInput.value;
-      if(!/^\d{4}-\d{2}-\d{2}$/.test(selected)) throw new Error('Select a valid date');
+      if(!calendar.has(selected)) throw new Error('Select a valid date');
       const [year,month,day]=selected.split('-');
       const historyPath=`loads_history/${Number(year)}/${Number(month)}/${Number(day)}`;
       const live=selected===currentDate;
@@ -51,8 +55,8 @@
       render(buildDailyReport(jumpers,loads));
       if(!loads || !Object.values(loads).some(v=>v && typeof v==='object')) status.textContent='No loads found for the selected date.';
     }catch(error){console.error(error);head.replaceChildren();body.replaceChildren();document.getElementById('dailyReportSummary').replaceChildren();document.getElementById('dailyReportDate').textContent='—';status.textContent='Could not load the daily report. Please try again.';}
-    finally{reload.disabled=false;dateInput.disabled=false;}
+    finally{reload.disabled=false;calendar.setBusy(false);}
   }
-  dateInput.addEventListener('change',load);
-  reload.addEventListener('click',load);load();
+  dateInput.addEventListener('change',()=>load());
+  reload.addEventListener('click',()=>load(true));load(true);
 })();

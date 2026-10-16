@@ -18,7 +18,13 @@
       <a href="reports.html">Reports</a>
 </nav></div></header>
 <main class="page daily-report-page">
-<div class="daily-report-toolbar"><h2>Daily Report</h2><label class="daily-report-date-control">Date <input id="reportDateInput" type="date" aria-label="Report date"></label><button id="reloadReportBtn" class="small-btn" type="button">Reload Data</button></div>
+<div class="daily-report-toolbar"><h2>Daily Report</h2><div class="daily-report-date-control"><span>Date</span><input id="reportDateInput" type="hidden">
+<button id="reportCalendarButton" class="small-btn" type="button" aria-expanded="false" aria-controls="reportCalendarPopup" disabled>Loading dates…</button>
+<div id="reportCalendarPopup" class="report-calendar" hidden role="dialog" aria-label="Choose work day">
+<div class="report-calendar-nav"><button id="reportCalendarPrev" type="button" aria-label="Previous month">‹</button><select id="reportCalendarMonth" aria-label="Month"></select><select id="reportCalendarYear" aria-label="Year"></select><button id="reportCalendarNext" type="button" aria-label="Next month">›</button></div>
+<div class="report-calendar-weekdays" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+<div id="reportCalendarDays" class="report-calendar-days"></div><p id="reportCalendarMessage" role="status"></p>
+</div></div><button id="reloadReportBtn" class="small-btn" type="button">Reload Data</button></div>
 <div id="dailyReportStatus" class="status" role="status">Loading daily report…</div>
 <section class="daily-report-card" aria-label="Daily worker report">
 <div class="daily-report-heading"><strong>DAILY REPORT</strong><span id="dailyReportDate">—</span><div id="dailyReportSummary"></div></div>
@@ -30,5 +36,6 @@
 </main>
 <script src="today-jumpers-data.js?v=jump-counts-1"></script>
 <script src="daily-report-data.js?v=history-1"></script>
-<script src="daily-report.js?v=history-1"></script>
+<script src="report-calendar.js"></script>
+<script src="daily-report.js?v=workday-calendar-1"></script>
 </body></html>
