@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads History | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="report-calendar.css?v=sunday-1">
   <script src="auth.js?v=worker-report-1"></script>
 </head>
 <body>
@@ -30,34 +31,13 @@
     </div>
 
     <div class="loads-controls">
-      <label>
-        <span>Year</span>
-        <select id="yearSelect"></select>
-      </label>
-
-      <label>
-        <span>Month</span>
-        <select id="monthSelect">
-          <option value="1">January</option>
-          <option value="2">February</option>
-          <option value="3">March</option>
-          <option value="4">April</option>
-          <option value="5">May</option>
-          <option value="6">June</option>
-          <option value="7">July</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
-      </label>
-
-      <label>
-        <span>Day</span>
-        <select id="daySelect"></select>
-      </label>
-
+<div class="daily-report-date-control"><span>Date</span><input id="reportDateInput" type="hidden">
+<button id="reportCalendarButton" class="small-btn" type="button" aria-expanded="false" aria-controls="reportCalendarPopup" disabled>Loading dates…</button>
+<div id="reportCalendarPopup" class="report-calendar" hidden role="dialog" aria-label="Choose work day">
+<div class="report-calendar-nav"><button id="reportCalendarPrev" type="button" aria-label="Previous month">‹</button><select id="reportCalendarMonth" aria-label="Month"></select><select id="reportCalendarYear" aria-label="Year"></select><button id="reportCalendarNext" type="button" aria-label="Next month">›</button></div>
+<div class="report-calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+<div id="reportCalendarDays" class="report-calendar-days"></div><p id="reportCalendarMessage" role="status"></p>
+</div></div>
       <button id="reloadBtn" class="small-btn" type="button">Load</button>
     </div>
   </section>
@@ -94,13 +74,13 @@
   </section>
 </main>
 
+<script src="report-calendar.js?v=sunday-1"></script>
 <script>
 (() => {
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
 
-  const yearSelect = document.getElementById("yearSelect");
-  const monthSelect = document.getElementById("monthSelect");
-  const daySelect = document.getElementById("daySelect");
+  const reportDateInput = document.getElementById("reportDateInput");
+  const calendar = createReportCalendar(reportDateInput, fetchJson, {historyRoot:"loads_history"});
   const reloadBtn = document.getElementById("reloadBtn");
   const loadsStatus = document.getElementById("loadsStatus");
   const loadsList = document.getElementById("loadsList");
@@ -138,8 +118,8 @@
     return map;
   }
 
-  async function fetchJson(path) {
-    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
+  async function fetchJson(path, shallow=false) {
+    const response = await fetch(`${DB}/${path}.json${shallow?"?shallow=true":""}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
     return response.json();
   }
@@ -293,9 +273,7 @@
   }
 
   function renderLoadDetail(loadKey, loadValue) {
-    const year = yearSelect.value;
-    const month = monthSelect.value;
-    const day = daySelect.value;
+    const [year, month, day] = reportDateInput.value.split("-").map(Number);
     const entries = normalizeLoadEntries(loadValue);
 
     const loadNo = getLoadNumber(loadKey);
@@ -343,49 +321,8 @@
     loadDetail.hidden = false;
   }
 
-  async function populateDays() {
-    const year = yearSelect.value;
-    const month = monthSelect.value;
-
-    daySelect.innerHTML = "";
-    loadsStatus.textContent = "Loading days…";
-
-    try {
-      const monthData = await fetchJson(`loads_history/${year}/${month}`);
-
-      const days = monthData && typeof monthData === "object"
-        ? Object.keys(monthData)
-            .map(Number)
-            .filter(Number.isFinite)
-            .sort((a, b) => b - a)
-        : [];
-
-      if (!days.length) {
-        daySelect.innerHTML = '<option value="">No days</option>';
-        currentDayData = null;
-        renderLoads();
-        return;
-      }
-
-      days.forEach(day => {
-        const option = document.createElement("option");
-        option.value = day;
-        option.textContent = day;
-        daySelect.appendChild(option);
-      });
-
-      daySelect.value = String(days[0]);
-      await loadDay();
-    } catch (err) {
-      console.error(err);
-      loadsStatus.textContent = "Could not load available days.";
-    }
-  }
-
   async function loadDay() {
-    const year = yearSelect.value;
-    const month = monthSelect.value;
-    const day = daySelect.value;
+    const [year, month, day] = reportDateInput.value.split("-").map(Number);
 
     if (!day) {
       currentDayData = null;
@@ -395,6 +332,7 @@
 
     loadsStatus.textContent = "Loading loads…";
     reloadBtn.disabled = true;
+    calendar.setBusy(true);
 
     try {
       const [dayData, jumpersData] = await Promise.all([
@@ -413,60 +351,24 @@
       loadDetail.hidden = true;
     } finally {
       reloadBtn.disabled = false;
+      calendar.setBusy(false);
     }
   }
 
-  async function setupYears() {
-    loadsStatus.textContent = "Loading years…";
-    yearSelect.innerHTML = "";
-
+  async function refreshCalendar() {
+    reloadBtn.disabled=true;calendar.setBusy(true);
+    loadsStatus.textContent="Loading available dates…";
     try {
-      const data = await fetchJson("loads_history");
-
-      const years = data && typeof data === "object"
-        ? Object.keys(data)
-            .map(Number)
-            .filter(Number.isFinite)
-            .sort((a, b) => b - a)
-        : [];
-
-      years.forEach(year => {
-        const option = document.createElement("option");
-        option.value = year;
-        option.textContent = year;
-        yearSelect.appendChild(option);
-      });
-
-      if (!years.length) {
-        loadsStatus.textContent = "No loads history found.";
-        return;
+      if(!await calendar.refresh()){
+        currentDayData=null;renderLoads();loadsStatus.textContent="No loads history found.";return;
       }
-
-      const latestYear = years[0];
-      yearSelect.value = String(latestYear);
-
-      const months = Object.keys(data[String(latestYear)] || {})
-        .map(Number)
-        .filter(Number.isFinite)
-        .sort((a, b) => b - a);
-
-      if (months.length) {
-        monthSelect.value = String(months[0]);
-      }
-
-      await populateDays();
-    } catch (err) {
-      console.error(err);
-      loadsStatus.textContent = "Could not load loads history.";
-    }
+      await loadDay();
+    }catch(error){console.error(error);loadsStatus.textContent="Could not load available dates.";}
+    finally{reloadBtn.disabled=false;calendar.setBusy(false);}
   }
-
-  yearSelect.addEventListener("change", populateDays);
-  monthSelect.addEventListener("change", populateDays);
-  daySelect.addEventListener("change", loadDay);
-  reloadBtn.addEventListener("click", loadDay);
-
-  setupYears();
+  reportDateInput.addEventListener("change",loadDay);
+  reloadBtn.addEventListener("click",refreshCalendar);
+  refreshCalendar();
 })();
 </script>
 </body>

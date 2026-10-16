@@ -23,17 +23,3 @@
 .daily-report-date-control{display:flex;align-items:center;gap:10px;font-weight:700}
 .daily-report-date-control input{color-scheme:dark;min-height:48px;padding:8px 12px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:12px;font:inherit}
 
-.daily-report-date-control{position:relative}
-.report-calendar{position:absolute;right:0;top:calc(100% + 8px);z-index:20;width:320px;max-width:calc(100vw - 24px);padding:14px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 32px #0009}
-.report-calendar[hidden]{display:none}
-.report-calendar-nav{display:flex;align-items:center;gap:6px;margin-bottom:12px}
-.report-calendar-nav select{min-width:0;flex:1}
-.report-calendar button,.report-calendar select{background:var(--panel2);color:var(--text);border:1px solid var(--border);border-radius:8px;min-height:36px;padding:5px;font:inherit;cursor:pointer}
-.report-calendar-weekdays,.report-calendar-days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}
-.report-calendar-weekdays{font-size:12px;color:var(--muted);margin-bottom:6px}
-.report-calendar-days button:disabled{opacity:.25;cursor:default}
-.report-calendar-days button:not(:disabled){border-color:var(--accent)}
-.report-calendar-days button[aria-pressed="true"]{background:#164975}
-.report-calendar-days button:not(:disabled):hover{background:#164975}
-.report-calendar p{font-size:12px;line-height:1.4;font-weight:400;color:var(--muted);margin:12px 0 0}
-@media(max-width:420px){.report-calendar{right:auto;left:-40px}}

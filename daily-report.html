@@ -6,6 +6,7 @@
 <title>Daily Report | SkyKef Manifest Admin View</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="daily-report.css">
+<link rel="stylesheet" href="report-calendar.css?v=sunday-1">
 <script src="auth.js?v=worker-report-1"></script>
 </head>
 <body>
@@ -22,7 +23,7 @@
 <button id="reportCalendarButton" class="small-btn" type="button" aria-expanded="false" aria-controls="reportCalendarPopup" disabled>Loading dates…</button>
 <div id="reportCalendarPopup" class="report-calendar" hidden role="dialog" aria-label="Choose work day">
 <div class="report-calendar-nav"><button id="reportCalendarPrev" type="button" aria-label="Previous month">‹</button><select id="reportCalendarMonth" aria-label="Month"></select><select id="reportCalendarYear" aria-label="Year"></select><button id="reportCalendarNext" type="button" aria-label="Next month">›</button></div>
-<div class="report-calendar-weekdays" aria-hidden="true"><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span><span>Su</span></div>
+<div class="report-calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
 <div id="reportCalendarDays" class="report-calendar-days"></div><p id="reportCalendarMessage" role="status"></p>
 </div></div><button id="reloadReportBtn" class="small-btn" type="button">Reload Data</button></div>
 <div id="dailyReportStatus" class="status" role="status">Loading daily report…</div>
@@ -36,6 +37,6 @@
 </main>
 <script src="today-jumpers-data.js?v=jump-counts-1"></script>
 <script src="daily-report-data.js?v=history-1"></script>
-<script src="report-calendar.js"></script>
+<script src="report-calendar.js?v=sunday-1"></script>
 <script src="daily-report.js?v=worker-access-1"></script>
 </body></html>

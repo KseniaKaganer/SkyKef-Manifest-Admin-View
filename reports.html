@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Reports | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="report-calendar.css?v=sunday-1">
   <script src="auth.js?v=worker-report-1"></script>
 </head>
 <body>
@@ -26,33 +27,17 @@
   <section class="report-head">
     <div>
       <h2>Monthly Report</h2>
-      <p>Jobs performed by each jumper, organized by day, with monthly totals and calculated balance.</p>
+      <p>Select a work day in the calendar to view its monthly report, with daily activity, totals and calculated balance.</p>
     </div>
 
     <div class="report-controls">
-      <label>
-        <span>Year</span>
-        <select id="yearSelect"></select>
-      </label>
-
-      <label>
-        <span>Month</span>
-        <select id="monthSelect">
-          <option value="1">January</option>
-          <option value="2">February</option>
-          <option value="3">March</option>
-          <option value="4">April</option>
-          <option value="5">May</option>
-          <option value="6">June</option>
-          <option value="7">July</option>
-          <option value="8">August</option>
-          <option value="9">September</option>
-          <option value="10">October</option>
-          <option value="11">November</option>
-          <option value="12">December</option>
-        </select>
-      </label>
-
+<div class="daily-report-date-control"><span>Date</span><input id="reportDateInput" type="hidden">
+<button id="reportCalendarButton" class="small-btn" type="button" aria-expanded="false" aria-controls="reportCalendarPopup" disabled>Loading dates…</button>
+<div id="reportCalendarPopup" class="report-calendar" hidden role="dialog" aria-label="Choose work day">
+<div class="report-calendar-nav"><button id="reportCalendarPrev" type="button" aria-label="Previous month">‹</button><select id="reportCalendarMonth" aria-label="Month"></select><select id="reportCalendarYear" aria-label="Year"></select><button id="reportCalendarNext" type="button" aria-label="Next month">›</button></div>
+<div class="report-calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+<div id="reportCalendarDays" class="report-calendar-days"></div><p id="reportCalendarMessage" role="status"></p>
+</div></div>
       <button id="loadReportBtn" class="small-btn" type="button">Load Report</button>
       <button id="exportReportBtn" class="small-btn export-btn" type="button">Export Spreadsheet</button>
     </div>
@@ -72,12 +57,13 @@
   <div id="pricingInfo" class="pricing-info"></div>
 </main>
 
+<script src="report-calendar.js?v=sunday-1"></script>
 <script>
 (() => {
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
 
-  const yearSelect = document.getElementById("yearSelect");
-  const monthSelect = document.getElementById("monthSelect");
+  const reportDateInput = document.getElementById("reportDateInput");
+  const calendar = createReportCalendar(reportDateInput, fetchJson, {historyRoot:"report"});
   const loadReportBtn = document.getElementById("loadReportBtn");
   const exportReportBtn = document.getElementById("exportReportBtn");
   const reportStatus = document.getElementById("reportStatus");
@@ -366,18 +352,18 @@
     }
   }
 
-  async function fetchJson(path) {
-    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
+  async function fetchJson(path, shallow=false) {
+    const response = await fetch(`${DB}/${path}.json${shallow?"?shallow=true":""}`, { cache: "no-store" });
     if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
     return response.json();
   }
 
   async function loadReport() {
-    const year = Number(yearSelect.value);
-    const month = Number(monthSelect.value);
+    const [year, month] = reportDateInput.value.split("-").map(Number);
 
     reportStatus.textContent = "Loading report…";
     loadReportBtn.disabled = true;
+    calendar.setBusy(true);
     pricingInfo.textContent = "";
 
     try {
@@ -398,6 +384,7 @@
       reportBody.innerHTML = `<tr><td class="report-empty">Check Firebase rules, network access, and the report/tickets_worker paths.</td></tr>`;
     } finally {
       loadReportBtn.disabled = false;
+      calendar.setBusy(false);
     }
   }
 
@@ -426,8 +413,7 @@
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
-    const year = yearSelect.value;
-    const month = String(monthSelect.value).padStart(2, "0");
+    const [year, month] = reportDateInput.value.split("-");
 
     const a = document.createElement("a");
     a.href = url;
@@ -439,28 +425,22 @@
     setTimeout(() => URL.revokeObjectURL(url), 500);
   }
 
-  function setupDateSelectors() {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-
-    for (let y = currentYear; y >= 2021; y--) {
-      const option = document.createElement("option");
-      option.value = y;
-      option.textContent = y;
-      yearSelect.appendChild(option);
-    }
-
-    yearSelect.value = String(currentYear);
-    monthSelect.value = String(now.getMonth() + 1);
+  async function refreshCalendar() {
+    loadReportBtn.disabled=true;calendar.setBusy(true);
+    reportStatus.textContent="Loading available dates…";
+    try {
+      if(!await calendar.refresh()){
+        reportHead.innerHTML="";reportBody.innerHTML="";pricingInfo.textContent="";
+        reportStatus.textContent="No saved reports found.";return;
+      }
+      await loadReport();
+    }catch(error){console.error(error);reportStatus.textContent="Could not load available dates.";}
+    finally{loadReportBtn.disabled=false;calendar.setBusy(false);}
   }
-
-  loadReportBtn.addEventListener("click", loadReport);
-  exportReportBtn.addEventListener("click", exportReportCsv);
-  yearSelect.addEventListener("change", loadReport);
-  monthSelect.addEventListener("change", loadReport);
-
-  setupDateSelectors();
-  loadReport();
+  reportDateInput.addEventListener("change",loadReport);
+  loadReportBtn.addEventListener("click",refreshCalendar);
+  exportReportBtn.addEventListener("click",exportReportCsv);
+  refreshCalendar();
 })();
 </script>
 </body>

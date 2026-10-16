@@ -1,4 +1,5 @@
-function createReportCalendar(input, fetchJson) {
+function createReportCalendar(input, fetchJson, options={}) {
+  const historyRoot=options.historyRoot || "loads_history";
   const trigger=document.getElementById('reportCalendarButton');
   const popup=document.getElementById('reportCalendarPopup');
   const monthSelect=document.getElementById('reportCalendarMonth');
@@ -13,7 +14,7 @@ function createReportCalendar(input, fetchJson) {
   const close=()=>{popup.hidden=true;trigger.setAttribute('aria-expanded','false');};
   function draw(){
     monthSelect.value=String(month);yearSelect.value=String(year);grid.replaceChildren();
-    const offset=(new Date(year,month-1,1).getDay()+6)%7;
+    const offset=new Date(year,month-1,1).getDay();
     for(let i=0;i<offset;i++)grid.appendChild(document.createElement('span'));
     const days=new Date(year,month,0).getDate();
     let active=0;
@@ -26,7 +27,7 @@ function createReportCalendar(input, fetchJson) {
       button.onclick=()=>{if(!available.has(value))return;input.value=value;updateLabel();close();trigger.focus();input.dispatchEvent(new Event('change'));};
       grid.appendChild(button);
     }
-    message.textContent=active?'Only work days with saved loads can be selected.':'No work days available in this month.';
+    message.textContent=active?'Only days with saved data can be selected.':'No work days available in this month.';
     const years=[...yearSelect.options].map(o=>Number(o.value));
     previous.disabled=year===Math.min(...years) && month===1;
     next.disabled=year===Math.max(...years) && month===12;
@@ -43,11 +44,11 @@ function createReportCalendar(input, fetchJson) {
   return {
     async refresh(currentDate){
       close();
-      const historyYears=await fetchJson('loads_history',true);
+      const historyYears=await fetchJson(historyRoot,true);
       const yearKeys=numericKeys(historyYears,1900,9999);
-      const months=await Promise.all(yearKeys.map(async y=>({year:y,months:await fetchJson(`loads_history/${y}`,true)})));
+      const months=await Promise.all(yearKeys.map(async y=>({year:y,months:await fetchJson(`${historyRoot}/${y}`,true)})));
       const dateGroups=await Promise.all(months.flatMap(({year:y,months:ms})=>numericKeys(ms,1,12).map(async m=>{
-        const days=await fetchJson(`loads_history/${y}/${m}`,true);
+        const days=await fetchJson(`${historyRoot}/${y}/${m}`,true);
         return numericKeys(days,1,new Date(Number(y),Number(m),0).getDate()).map(d=>key(Number(y),Number(m),Number(d)));
       })));
       available=new Set(dateGroups.flat());
