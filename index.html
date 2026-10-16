@@ -149,7 +149,7 @@
   </section>
 </main>
 
-<script src="jumper-manifest-progress.js"></script>
+<script src="jumper-manifest-progress.js?v=ended-day-1"></script>
 <script>
 (() => {
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
@@ -373,6 +373,7 @@
   let jumpersByUid = new Map();
   let currentLoads = [];
   let inAirLoad = null;
+  let dayEnded = false;
 
   function formatCurrentDataDate(currentData) {
     const raw = currentData?.date;
@@ -562,6 +563,7 @@
 
 
   function loadStatus(load) {
+    if(dayEnded)return "";
     if (inAirLoad === null || inAirLoad === undefined || String(inAirLoad).trim() === "") return "";
     const number = getLoadNumber(inAirLoad);
     if (number <= 0) return "";
@@ -646,17 +648,22 @@
     const uid = jumper?.Uid ?? jumper?.uid ?? session.jumperKey;
     const worker=SkyKefAdminAuth.hasWorkerRoles(jumper);
     const airNumber=getLoadNumber(inAirLoad);
-    const progress=jumperManifestProgress(currentLoads,uid,airNumber);
+    const progress=jumperManifestProgress(currentLoads,uid,airNumber,dayEnded);
+    const heading=dayEnded?"Jumps Today":"Jumps so far";
     document.getElementById("jumperJumpTotals").textContent=worker
-      ? `Jumps so far — WORK: ${progress.counts.work} · FUN: ${progress.counts.fun}`
-      : `Jumps so far — FUN: ${progress.counts.total}`;
+      ? `${heading} — WORK: ${progress.counts.work} · FUN: ${progress.counts.fun}`
+      : `${heading} — FUN: ${progress.counts.total}`;
     const current=manifestedLoadNumbers(progress.current,uid,worker);
     const past=manifestedLoadNumbers(progress.past,uid,worker);
-    document.getElementById("jumperManifestLoads").textContent=`CURRENT: ${current.length?current.join(", "):"No current loads"}`;
-    document.getElementById("jumperPastLoads").textContent=`PAST: ${past.length?past.join(", "):"No past loads"}`;
-    document.getElementById("jumperInAirLoad").textContent = airNumber > 0
-      ? `Load ${airNumber} is in air.`
-      : "No load is currently in air.";
+    document.getElementById("jumperManifestLoads").textContent=dayEnded
+      ? `Loads: ${past.length?past.join(", "):"No jumps today"}`
+      : `CURRENT: ${current.length?current.join(", "):"No current loads"}`;
+    const pastLine=document.getElementById("jumperPastLoads");
+    pastLine.hidden=dayEnded;
+    pastLine.textContent=dayEnded?"":`PAST: ${past.length?past.join(", "):"No past loads"}`;
+    document.getElementById("jumperInAirLoad").textContent = dayEnded
+      ? `Day ended · ${currentLoads.length} load${currentLoads.length===1?"":"s"} today`
+      : airNumber > 0 ? `Load ${airNumber} is in air.` : "No load is currently in air.";
     box.hidden = false;
   }
 
@@ -732,6 +739,7 @@
       ]);
 
       inAirLoad = currentData?.in_air_load ?? null;
+      dayEnded = currentData?.end_of_day === true;
       jumpersByUid = normalizeJumpers(jumpersData);
       todayLabel.textContent = formatCurrentDataDate(currentData);
 
@@ -739,6 +747,7 @@
       if ((!dayIsRunning && !isCurrentDataToday(currentData)) || loadsData === null || loadsData === undefined) {
         currentLoads = [];
         inAirLoad = null;
+        dayEnded = false;
         renderJumperManifest(jumpersData);
         todayLoadsLayout.hidden = true;
         notStartedCard.hidden = false;
