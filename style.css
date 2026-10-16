@@ -909,3 +909,11 @@ a{color:inherit;text-decoration:none}.site-header{position:sticky;top:0;backgrou
 .jumper-edit-input:disabled{opacity:.65;cursor:not-allowed}
 .jumper-edit-form small{display:block;margin-top:6px;color:var(--muted);font-size:12px}
 .jumper-edit-form textarea{resize:vertical;font-family:monospace}
+
+.jumper-edit-identity{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;grid-column:1/-1}
+.jumper-edit-balance{grid-column:1/-1}
+.jumper-edit-date-control{display:flex;align-items:center;gap:8px;margin-top:8px}
+.jumper-edit-date-control .jumper-edit-input{margin-top:0;min-width:0;color-scheme:dark}
+.jumper-date-picker{display:inline-flex;align-items:center;justify-content:center;flex:0 0 44px;min-height:44px;padding:8px}
+@media(max-width:1000px){.jumper-edit-identity{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.jumper-edit-identity{grid-template-columns:1fr}}

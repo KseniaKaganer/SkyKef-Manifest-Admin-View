@@ -113,10 +113,16 @@ function renderJumperEditor(j){
   const heading=document.createElement('div');heading.className='detail-title';heading.textContent=`Edit ${displayName(j)}`;detailsEl.appendChild(heading);
   const form=document.createElement('form');form.className='jumper-edit-form';
   const grid=document.createElement('div');grid.className='data-grid';
+  const identityRow=document.createElement('div');identityRow.className='jumper-edit-identity';grid.appendChild(identityRow);
   const inputs=new Map();
   const initialInputs=new Map();
   let affLevelLabel=null;
-  for(const [field,value] of Object.entries(j)){
+  const order=['name','surname','uid','id','balance'];
+  const fields=Object.entries(j).sort(([a],[b])=>{
+    const ai=order.indexOf(a.toLowerCase()),bi=order.indexOf(b.toLowerCase());
+    return (ai<0?99:ai)-(bi<0?99:bi);
+  });
+  for(const [field,value] of fields){
     if(field==='key' || ['numberofjumpestoday','numberofjumpstoday'].includes(field.toLowerCase()))continue;
     const label=document.createElement('label');label.className='data-item';
     const title=document.createElement('span');title.className='data-key';title.textContent=field;
@@ -140,10 +146,21 @@ function renderJumperEditor(j){
       else{input.value=value??'';if(input.type==='number'){input.step=jumperIntFields.has(field.toLowerCase()) || Number.isInteger(value)?'1':'any';input.min=field.toLowerCase()==='balance'?'-2147483648':'0';input.max='2147483647';}}
     }
     input.className='jumper-edit-input';input.disabled=jumperIdentityFields.has(field.toLowerCase());
-    label.append(title,input);
+    label.appendChild(title);
+    if(input.type==='date'){
+      const dateControl=document.createElement('div');dateControl.className='jumper-edit-date-control';
+      const picker=document.createElement('button');picker.type='button';picker.className='small-btn jumper-date-picker';
+      picker.setAttribute('aria-label',`Choose ${field} date`);picker.title='Choose date';
+      picker.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4m10-4v4M3 11h18m-13 4h2m4 0h2"/></svg>';
+      const openPicker=()=>{if(input.disabled)return;try{if(typeof input.showPicker==='function')input.showPicker();else input.focus();}catch{input.focus();}};
+      picker.onclick=event=>{event.preventDefault();openPicker();};input.addEventListener('click',openPicker);
+      dateControl.append(input,picker);label.appendChild(dateControl);
+    }else label.appendChild(input);
     if(value!==null && typeof value==='object'){const hint=document.createElement('small');hint.textContent=Array.isArray(value)?'JSON list, e.g. ["T", "V"]. Use [] to clear.':'JSON object';label.appendChild(hint);}
     if(field.toLowerCase()==="afflevel")affLevelLabel=label;
-    grid.appendChild(label);if(!input.disabled){inputs.set(field,input);initialInputs.set(field,input.type==='checkbox'?input.checked:input.value);}
+    if(['name','surname','uid','id'].includes(field.toLowerCase()))identityRow.appendChild(label);
+    else{if(field.toLowerCase()==='balance')label.className+=' jumper-edit-balance';grid.appendChild(label);}
+    if(!input.disabled){inputs.set(field,input);initialInputs.set(field,input.type==='checkbox'?input.checked:input.value);}
   }
   const licenseEntry=[...inputs].find(([field])=>field.toLowerCase()==='license');
   function updateAffLevelVisibility(){if(affLevelLabel)affLevelLabel.hidden=Number(licenseEntry?.[1].value ?? j.License)!==1;}
