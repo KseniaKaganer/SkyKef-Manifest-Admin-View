@@ -16,11 +16,19 @@ logbookStatus=document.getElementById("logbookStatus"),
 logbookBody=document.getElementById("logbookBody");
 let jumpers=[],selectedKey=null,selectedJumper=null;
 const logbookCache=new Map();
+let todayJumpCounts=new Map();
 const displayName=j=>`${j.Name??""} ${j.Surname??""}`.trim()||"Unnamed jumper";
 function normalize(data){if(!data)return[];if(Array.isArray(data))return data.map((v,i)=>v?({key:String(i),...v}):null).filter(Boolean);if(typeof data==="object")return Object.entries(data).filter(([,v])=>v&&typeof v==="object").map(([k,v])=>({key:k,...v}));return[]}
 function renderList(){const q=searchInput.value.trim().toLowerCase();const filtered=jumpers.filter(j=>[j.Name,j.Surname,j.Phone,j.Id,j.Uid].filter(v=>v!==undefined&&v!==null).join(" ").toLowerCase().includes(q));listEl.innerHTML="";
 if(!filtered.length){const e=document.createElement("div");e.className="detail-empty";e.textContent=q?"No jumpers match your search.":todayOnly?"No jumpers are manifested on today’s loads.":"No jumpers found.";listEl.appendChild(e)}
-else filtered.forEach(j=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;b.append(n,s);b.onclick=()=>{
+else filtered.forEach(j=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=todayOnly?`UID: ${j.Uid??j.uid??j.key}`:j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;
+if(todayOnly){
+  const head=document.createElement("div");head.className="today-jumper-heading";
+  const count=document.createElement("span");count.className="today-jumper-count";
+  const jumps=todayJumpCounts.get(String(j.Uid??j.uid??j.key))||{total:0,work:0,fun:0};
+  count.textContent=todayJumperHasWorker(j)?`Work: ${jumps.work} · FUN: ${jumps.fun}`:`Jumps: ${jumps.total}`;
+  head.append(n,count);b.append(head,s);
+}else b.append(n,s);b.onclick=()=>{
   selectedKey=j.key;
   selectedJumper=j;
   renderList();
@@ -310,6 +318,7 @@ if(todayOnly){
   const date=SkyKefAdminAuth.formatDate(currentData?.date);
   document.getElementById("todayDate").textContent=`Date: ${date}`;
   const today=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date());
+  todayJumpCounts=date===today?countTodayJumps(loads):new Map();
   jumpers=date===today?filterTodayJumpers(allJumpers,loads):[];
 }else jumpers=allJumpers;
 jumpers.sort((a,b)=>displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"}));
