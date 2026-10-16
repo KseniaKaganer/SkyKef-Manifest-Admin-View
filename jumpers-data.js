@@ -42,7 +42,7 @@ if(todayOnly){
       const aCounts=todayJumpCounts.get(String(a.Uid??a.uid??a.key));
       const bCounts=todayJumpCounts.get(String(b.Uid??b.uid??b.key));
       const field=isWorker?"work":"total";
-      return (bCounts?.[field]??0)-(aCounts?.[field]??0)||displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"});
+      return (aCounts?.[field]??0)-(bCounts?.[field]??0)||displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"});
     });
     const section=document.createElement("section");section.className="today-jumper-group";
     section.setAttribute("aria-label",label);
