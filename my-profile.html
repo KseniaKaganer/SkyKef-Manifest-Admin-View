@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Profile | SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=unified-header-1">
-  <script src="auth.js?v=unified-header-1"></script>
+  <link rel="stylesheet" href="style.css?v=profile-navigation-1">
+  <script src="auth.js?v=profile-navigation-1"></script>
 </head>
 <body>
 <header class="site-header">
@@ -19,77 +19,30 @@
 </header>
 
 <main class="page">
-  <section class="hero">
-    <h2 id="profileName">Loading profile…</h2>
-    <p>Your SkyKef jumper information</p>
+  <section class="hero"><h2 id="profileName">My Profile</h2><p>Your personal details and logbook</p></section>
+  <section id="userProfileSection" class="user-profile-section" hidden aria-label="My account">
+    <div class="detail-tabs" role="tablist" aria-label="My information">
+      <button id="userProfileTab" class="detail-tab active" type="button" role="tab" aria-selected="true">My Profile</button>
+      <button id="userLogbookTab" class="detail-tab" type="button" role="tab" aria-selected="false">My Logbook</button>
+    </div>
+    <div id="userProfileView">
+      <div id="userProfileStatus" class="status">Loading profile…</div>
+      <dl id="userProfileDetails" class="profile-details"></dl>
+    </div>
+    <div id="userLogbookView" hidden>
+      <div class="user-logbook-toolbar">
+        <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
+        <button id="exportUserLogbookBtn" class="small-btn" type="button" disabled>Export CSV</button>
+      </div>
+      <div class="load-table-scroll">
+        <table class="load-table user-logbook-table">
+          <thead><tr><th>Date</th><th>Load</th><th>Activity</th><th>Details</th></tr></thead>
+          <tbody id="userLogbookBody"></tbody>
+        </table>
+      </div>
+    </div>
   </section>
-  <div id="profileStatus" class="status">Loading…</div>
-  <section id="profileCard" class="detail-panel profile-card" hidden>
-    <div class="panel-head">Profile Details</div>
-    <dl id="profileDetails" class="profile-details"></dl>
-  </section>
+
 </main>
-
-<script>
-(() => {
-  const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
-  const session = SkyKefAdminAuth.getSession();
-  const status = document.getElementById("profileStatus");
-  const card = document.getElementById("profileCard");
-  const details = document.getElementById("profileDetails");
-  const profileName = document.getElementById("profileName");
-
-  function labelFor(key) {
-    return String(key)
-      .replace(/[_-]+/g, " ")
-      .replace(/([a-z])([A-Z])/g, "$1 $2")
-      .replace(/\b\w/g, letter => letter.toUpperCase());
-  }
-
-  function displayValue(value) {
-    if (typeof value === "boolean") return value ? "Yes" : "No";
-    return String(value);
-  }
-
-  async function loadProfile() {
-    if (!session || session.role !== "jumper" || session.jumperKey === undefined) {
-      location.replace("index.html");
-      return;
-    }
-
-    try {
-      const response = await fetch(`${DB}/jumpers/${encodeURIComponent(session.jumperKey)}.json`, { cache: "no-store" });
-      if (!response.ok) throw new Error(`Profile request failed: HTTP ${response.status}`);
-      const jumper = await response.json();
-      if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
-
-      profileName.textContent = `${jumper.Name ?? ""} ${jumper.Surname ?? ""}`.trim() || session.username;
-      details.replaceChildren();
-
-      const hiddenFields = new Set(["Id", "ID", "id", "password", "Password"]);
-      Object.entries(jumper).forEach(([key, value]) => {
-        if (hiddenFields.has(key) || value === null || value === undefined || value === "" || typeof value === "object") return;
-        const row = document.createElement("div");
-        row.className = "profile-detail-row";
-        const term = document.createElement("dt");
-        term.textContent = labelFor(key);
-        const description = document.createElement("dd");
-        description.textContent = displayValue(value);
-        row.append(term, description);
-        details.appendChild(row);
-      });
-
-      status.textContent = "";
-      card.hidden = false;
-    } catch (error) {
-      console.error(error);
-      status.textContent = "Could not load your profile.";
-    }
-  }
-
-  document.getElementById("logoutBtn").addEventListener("click", SkyKefAdminAuth.logout);
-  loadProfile();
-})();
-</script>
-</body>
-</html>
+<script src="jumper-profile.js"></script>
+</body></html>

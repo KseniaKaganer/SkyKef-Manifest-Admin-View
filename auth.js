@@ -263,21 +263,22 @@ async function downloadDatabaseJson() {
     const home=document.createElement("a");home.href="index.html";home.className="small-btn header-home-button";
     home.setAttribute("aria-label","Home");home.title="Home";
     home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';
-    account.append(badge,logoutButton,home);top.append(account,title);
+    account.append(badge,logoutButton,home);top.append(title,account);
     const nav=document.createElement("nav");nav.className="nav header-navigation";nav.setAttribute("aria-label","Main navigation");
     // Attach synchronously: repeated calls during worker verification must see one header.
     header.replaceChildren(top,nav);
     function link(href,label){
       const item=document.createElement("a");item.href=href;item.textContent=label;
       const target=href.split("#")[0].replace(/\.html$/,"");
-      if(pagePath.endsWith("/"+target) || (isLoginPage && href.includes("#")))item.classList.add("active");
+      if(pagePath.endsWith("/"+target) || (isLoginPage && href==="index.html") || (pagePath.endsWith("/loads-today") && href==="index.html"))item.classList.add("active");
       nav.appendChild(item);
     }
     if(["admin","manifest"].includes(session.role)){
       for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"]])link(href,label);
       addDatabaseDownload(nav);
     }else{
-      link("index.html#userProfileSection","My Profile");
+      link("index.html","Loads");
+      link("my-profile.html","My Profile");
       if(await canViewDailyReport())link("daily-report.html","Daily Report");
     }
   }
