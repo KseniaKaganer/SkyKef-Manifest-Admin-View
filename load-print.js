@@ -15,8 +15,9 @@
     const summary=document.createElement('p');summary.textContent=document.getElementById('loadSummary').textContent;
     const table=document.querySelector('#loadDetail table').cloneNode(true);
     table.removeAttribute('class');
-    // The live table may contain a UID cell; print only the three visible headings.
-    for(const row of table.tBodies[0].rows)if(row.cells.length===4)row.deleteCell(1);
+    // Remove the UID heading and cells from the cloned print table only.
+    table.querySelectorAll('.load-uid-column').forEach(cell=>cell.remove());
+    table.querySelectorAll('td[colspan]').forEach(cell=>cell.colSpan=3);
     table.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
     if(table.tBodies[0].rows.length>28)printArea.classList.add('compact-load-print');
     printArea.append(title,load,date,summary,table);document.body.appendChild(printArea);

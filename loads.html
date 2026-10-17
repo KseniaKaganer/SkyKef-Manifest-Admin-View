@@ -18,6 +18,11 @@
 .load-row.next-load .load-row-arrow,
 .next-load-title { color:var(--theme-warning-text, #ffe394); }
 .load-row.next-load .load-row-sub { color:var(--theme-warning-text, #e4d6a1); }
+
+.admin-load-table th:nth-child(1),.admin-load-table td:nth-child(1){width:9%;min-width:52px;padding-inline:8px;white-space:nowrap}
+.admin-load-table th:nth-child(2),.admin-load-table td:nth-child(2){width:35%}
+.admin-load-table th:nth-child(3),.admin-load-table td:nth-child(3){width:16%}
+.admin-load-table th:nth-child(4),.admin-load-table td:nth-child(4){width:40%}
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
 </head>
@@ -66,9 +71,10 @@
         <div class="load-summary" id="loadSummary"></div>
 
         <div class="load-table-scroll">
-          <table class="load-table">
+          <table class="load-table admin-load-table">
             <thead>
               <tr>
+                <th class="load-uid-column">UID</th>
                 <th>Jumper</th>
                 <th>Activity</th>
                 <th>Details</th>
@@ -82,7 +88,7 @@
   </section>
 </main>
 <link rel="stylesheet" href="load-print.css?v=a4-1">
-<script src="load-print.js?v=a4-1"></script>
+<script src="load-print.js?v=uid-column-2"></script>
 
 <script>
 (() => {
@@ -295,6 +301,7 @@
 
       const uid = document.createElement("td");
       uid.textContent = entry.uid;
+      uid.className = "load-uid-column";
 
       const activity = document.createElement("td");
       activity.textContent = entry.activity;
@@ -305,7 +312,7 @@
       const details = document.createElement("td");
       details.textContent = entry.details;
 
-      tr.append(name, uid, activity, details);
+      tr.append(uid, name, activity, details);
       loadBody.appendChild(tr);
     });
   }
