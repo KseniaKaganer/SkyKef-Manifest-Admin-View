@@ -66,8 +66,8 @@
             <thead>
               <tr>
                 <th class="load-uid-column">UID</th>
-                <th class="load-type-column">Type</th>
                 <th>Jumper</th>
+                <th class="load-type-column">Type</th>
                 <th>Altitude</th>
               </tr>
             </thead>
@@ -325,7 +325,7 @@
       details.className="load-details-column";
       decorateLoadConnection(tr,name,entry);
 
-        tr.append(uid, activity, name, details);
+        tr.append(uid, name, activity, details);
         loadBody.appendChild(tr);
       });
     }

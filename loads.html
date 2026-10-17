@@ -74,8 +74,8 @@
             <thead>
               <tr>
                 <th class="load-uid-column">UID</th>
-                <th class="load-type-column">Type</th>
                 <th>Jumper</th>
+                <th class="load-type-column">Type</th>
                 <th>Altitude</th>
               </tr>
             </thead>
@@ -87,7 +87,7 @@
   </section>
 </main>
 <link rel="stylesheet" href="load-print.css?v=balanced-6">
-<script src="load-print.js?v=type-third-7"></script>
+<script src="load-print.js?v=column-order-9"></script>
 
 <script>
 (() => {
@@ -318,7 +318,7 @@
       details.className="load-details-column";
       decorateLoadConnection(tr,name,entry);
 
-      tr.append(uid, activity, name, details);
+      tr.append(uid, name, activity, details);
       loadBody.appendChild(tr);
     });
   }

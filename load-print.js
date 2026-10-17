@@ -24,8 +24,6 @@
     table.querySelectorAll('td[colspan]').forEach(cell=>cell.colSpan=3);
     // Restore Jumper / Type / Details after removing the admin-only first UID column.
     for(const row of table.rows)if(row.cells.length===3 && row.cells[0].classList.contains('load-type-column'))row.insertBefore(row.cells[1],row.cells[0]);
-    // Keep the print columns as Jumper / Altitude / Type.
-    for(const row of table.rows)if(row.cells.length===3 && row.cells[1].classList.contains('load-type-column'))row.appendChild(row.cells[1]);
     table.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
     if(table.tBodies[0].rows.length>28)printArea.classList.add('compact-load-print');
     printArea.append(printHeader,load,summary,table);document.body.appendChild(printArea);
