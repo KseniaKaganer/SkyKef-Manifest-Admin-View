@@ -6,7 +6,7 @@
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
   <script src="preferences.js?v=admin-sheet-9"></script>
-<script src="auth.js?v=admin-sheet-9"></script>
+<script src="auth.js?v=staff-start-10"></script>
 <style>
 
 .load-row.next-load,
@@ -248,6 +248,10 @@
   }
 
   function showHome(session) {
+    if (["admin", "manifest"].includes(session.role)) {
+      location.replace("jumpers-data");
+      return;
+    }
     closeLogin();
     openLoginBtn.hidden = true;
     updateRegistrationLink();
