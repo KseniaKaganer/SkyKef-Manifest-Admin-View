@@ -233,12 +233,12 @@
   function canEdit() { return isDeveloper(); }
 
   function addDatabaseDownload(account) {
-    if (!isAdmin()) return;
+    if (!isDeveloper()) return;
     account.style.flexWrap = "wrap";
     const downloadDbBtn = document.createElement("button");
     downloadDbBtn.id = "downloadDbBtn";
     downloadDbBtn.type = "button";
-    downloadDbBtn.className = "small-btn";
+    downloadDbBtn.className = "small-btn developer-action";
     downloadDbBtn.textContent = "Download DB JSON";
     const downloadDbStatus = document.createElement("span");
     downloadDbStatus.id = "downloadDbStatus";
@@ -246,7 +246,7 @@
     downloadDbStatus.setAttribute("aria-live", "polite");
     downloadDbStatus.style.cssText = "font-size:14px;flex-basis:100%";
 async function downloadDatabaseJson() {
-  if (!SkyKefAdminAuth.isAdmin() || downloadDbBtn.disabled) return;
+  if (!SkyKefAdminAuth.isDeveloper() || downloadDbBtn.disabled) return;
   downloadDbBtn.disabled = true;
   downloadDbBtn.textContent = "Downloading…";
   downloadDbStatus.textContent = "Preparing database export…";
@@ -325,12 +325,14 @@ async function downloadDatabaseJson() {
     if(["admin","manifest"].includes(session.role)){
       for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"],["registration.html","Registration"]])link(href,label);
       if(isDeveloper()){
+        const devNav=document.createElement("nav");devNav.className="nav header-navigation developer-navigation";
+        devNav.setAttribute("aria-label","Developer tools");header.appendChild(devNav);
         const database=document.createElement("a");database.id="developerDbLink";
-        database.href=DB+"/";database.textContent="DB";database.className="developer-db-link";
+        database.href=DB+"/";database.textContent="DB";database.className="developer-db-link developer-action";
         database.target="_blank";database.rel="noopener noreferrer";
-        nav.appendChild(database);
+        devNav.appendChild(database);
+        addDatabaseDownload(devNav);
       }
-      addDatabaseDownload(nav);
     }else{
       link("index.html","Loads");
       link("my-profile.html","My Profile");

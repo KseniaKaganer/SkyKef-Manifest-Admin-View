@@ -53,3 +53,7 @@ html[data-text-size="large"] .site-header .session-role-badge.jumper-name-badge{
 html[dir="rtl"] .logout-icon-button svg{transform:scaleX(-1)}
 
 .site-header #settingsBtn.settings-icon-button{width:44px;min-width:44px;min-height:48px;padding:10px;flex:0 0 44px}
+
+.unified-header .developer-navigation{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.site-header .developer-navigation .developer-action{color:var(--theme-danger-text,#ff8a8a);border-color:#c34c4c;background:var(--theme-danger-bg,#30181d);font-weight:800}
+.site-header .developer-navigation .developer-action:hover{color:var(--theme-danger-text,#ff8a8a);border-color:#e5484d;background:var(--theme-danger-bg,#30181d)}
