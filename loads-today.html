@@ -27,8 +27,8 @@
 .jumper-manifest-summary p { margin:8px 0 0;color:var(--theme-warning-text, #ffe394); }
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
-<script src="load-presentation.js?v=details-1"></script>
-<link rel="stylesheet" href="load-presentation.css?v=details-1">
+<script src="load-presentation.js?v=activity-2"></script>
+<link rel="stylesheet" href="load-presentation.css?v=activity-2">
 </head>
 <body>
 <header class="site-header">
@@ -352,7 +352,7 @@
       uid.textContent = entry.uid;
 
       const activity = document.createElement("td");
-      activity.textContent = entry.activity;
+      activity.textContent = loadActivityLabel(entry.activity);
       if (jumperCountForActivity(entry.activity) === 2) {
         activity.title = "Counts as 2 jumpers";
       }
