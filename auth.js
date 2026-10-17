@@ -13,7 +13,9 @@
   function addSettings(account) {
     const button = document.createElement("button");
     button.type = "button"; button.className = "small-btn";
-    button.id = "settingsBtn"; button.textContent = "Settings";
+    button.id = "settingsBtn"; button.classList.add("settings-icon-button");
+    button.title = "Settings"; button.setAttribute("aria-label", "Settings");
+    button.innerHTML = '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9.5 3-.5 2-1.5.9-2-.6L3 9.6l1.5 1.4v2L3 14.4l2 4.3 2-.6 1.5.9.5 2h5l.5-2 1.5-.9 2 .6 2.5-4.3-1.5-1.4v-2L21 9.6l-2.5-4.3-2 .6L15 5l-.5-2Z"/><circle cx="12" cy="12" r="3"/></svg>';
     const dialog = document.createElement("dialog");
     dialog.className = "settings-dialog";
     dialog.setAttribute("aria-labelledby", "settingsTitle");
