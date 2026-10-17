@@ -359,5 +359,12 @@ detailsEl.textContent="Select a jumper to view all data.";
 logbookStatus.textContent="Select a jumper to view the logbook.";
 logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
 renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
-todayJumpSort?.addEventListener("change",renderList);
+todayJumpSort?.addEventListener("click",()=>{
+  const ascending=todayJumpSort.value!=="asc";
+  todayJumpSort.value=ascending?"asc":"desc";
+  todayJumpSort.textContent=ascending?"Fewest to most ↑":"Most to fewest ↓";
+  todayJumpSort.setAttribute("aria-label",ascending?"Sort by jumps: fewest to most":"Sort by jumps: most to fewest");
+  todayJumpSort.setAttribute("aria-pressed",String(ascending));
+  renderList();
+});
 searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",load);load();

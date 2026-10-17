@@ -60,3 +60,6 @@ html[dir="rtl"] .logout-icon-button svg{transform:scaleX(-1)}
 
 .today-sort-control{display:grid;gap:6px;font-weight:700}
 .today-sort-control select{min-height:48px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);color:var(--text);font:inherit}
+
+.today-list-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.today-list-heading .today-sort-toggle{min-height:40px;padding:8px 10px;font-size:13px}
