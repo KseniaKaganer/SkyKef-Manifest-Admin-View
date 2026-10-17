@@ -11,3 +11,16 @@
 .settings-dialog legend{padding:0 6px;font-weight:700}
 .settings-dialog label{display:flex;align-items:center;gap:10px;padding:12px;background:var(--panel2);border-radius:8px;cursor:pointer}
 .settings-dialog input{width:18px;height:18px;accent-color:var(--accent)}
+
+.settings-dialog fieldset+fieldset{margin-top:16px}
+.settings-dialog{max-height:calc(100dvh - 32px);overflow-y:auto}
+html[data-text-size="large"]{font-size:20px}
+html[data-text-size="large"] body{font-size:1rem}
+html[data-text-size="large"] :is(button,input,select,.small-btn,.nav a,.site-header .session-role-badge){font-size:18px}
+html[data-text-size="large"] :is(table,.status,.profile-detail-row,.load-row-sub,.data-key,.data-val){font-size:17px}
+html[data-text-size="large"] :is(.small-btn,.site-header .nav a){min-height:52px}
+html[dir="rtl"] :is(.load-row,.detail-tab,.jumper-row,.worker-column){text-align:start}
+html[dir="rtl"] .settings-dialog input{margin-inline:0 8px}
+html[dir="rtl"] .unified-header .header-top h1{text-align:start}
+html[dir="rtl"] :is(.load-jumper-name,.profile-detail-row dd,#sessionRole){unicode-bidi:plaintext}
+html[dir="rtl"] .settings-dialog label{direction:rtl}

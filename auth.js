@@ -17,12 +17,17 @@
     const dialog = document.createElement("dialog");
     dialog.className = "settings-dialog";
     dialog.setAttribute("aria-labelledby", "settingsTitle");
-    dialog.innerHTML = '<form method="dialog"><div class="settings-heading"><h2 id="settingsTitle">Settings</h2><button class="small-btn" aria-label="Close settings">Close</button></div><fieldset><legend>Appearance</legend><label><input type="radio" name="theme" value="dark"> Dark Mode</label><label><input type="radio" name="theme" value="light"> Light Mode</label></fieldset></form>';
+    dialog.innerHTML = '<form method="dialog"><div class="settings-heading"><h2 id="settingsTitle">Settings</h2><button class="small-btn" aria-label="Close settings">Close</button></div><fieldset><legend>Appearance</legend><label><input type="radio" name="theme" value="dark"> Dark Mode</label><label><input type="radio" name="theme" value="light"> Light Mode</label></fieldset><fieldset><legend>Text size</legend><label><input type="radio" name="textSize" value="normal"> Normal</label><label><input type="radio" name="textSize" value="large"> Large</label></fieldset><fieldset><legend>Language</legend><label><input type="radio" name="language" value="he"> עברית</label><label><input type="radio" name="language" value="en"> English</label></fieldset></form>';
     dialog.querySelectorAll('input[name="theme"]').forEach(input => {
       input.addEventListener("change", () => setTheme(input.value));
     });
+    for(const name of ["textSize", "language"]) dialog.querySelectorAll(`input[name="${name}"]`).forEach(input => {
+      input.addEventListener("change", () => window.SkyKefPreferences?.set(name,input.value));
+    });
     button.addEventListener("click", () => {
       dialog.querySelector('input[value="' + document.documentElement.dataset.theme + '"]').checked = true;
+      const preferences=window.SkyKefPreferences?.get() || {textSize:"normal",language:"en"};
+      for(const name of ["textSize","language"]) dialog.querySelector(`input[name="${name}"][value="${preferences[name]}"]`).checked=true;
       dialog.showModal();
     });
     dialog.addEventListener("click", event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if(event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
