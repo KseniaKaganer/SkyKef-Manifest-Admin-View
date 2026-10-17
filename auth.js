@@ -296,7 +296,8 @@ async function downloadDatabaseJson() {
     const top=document.createElement("div");top.className="header-top";
     const account=document.createElement("div");account.id="sessionAccount";account.className="session-account";
     const badge=document.createElement("span");badge.id="sessionRole";badge.className="session-role-badge";
-    badge.textContent=isDeveloper()?session.username:`${session.username} · ${session.role==="admin"?"Admin":session.role==="manifest"?"Manifest":"Jumper"}`;
+    badge.textContent=isDeveloper() || session.role==="jumper" ? session.username : `${session.username} · ${session.role==="admin"?"Admin":"Manifest"}`;
+    if(session.role==="jumper")badge.classList.add("jumper-name-badge");
     if(isDeveloper())badge.classList.add("developer-badge");
     const logoutButton=document.createElement("button");logoutButton.id="sessionLogoutBtn";
     logoutButton.type="button";logoutButton.className="small-btn";logoutButton.textContent="Logout";
