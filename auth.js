@@ -42,7 +42,7 @@
   const pagePath = location.pathname.replace(/\/$/, "").replace(/\.html$/, "");
   const isLoginPage = /(?:^|\/)index$/.test(pagePath) || location.pathname.endsWith("/");
   const isProfilePage = pagePath.endsWith("/my-profile");
-  const isPublicPage = isLoginPage || pagePath.endsWith("/loads-today") || pagePath.endsWith("/registration");
+  const isPublicPage = isLoginPage || pagePath.endsWith("/loads-today") || pagePath.endsWith("/registration") || pagePath.endsWith("/dz-check-in");
 
   function formatDate(value) {
     if (value === null || value === undefined || String(value).trim() === "") return "—";
@@ -92,9 +92,6 @@
   async function requireLogin() {
     const session = getSession();
     if (isPublicPage) return true;
-    if(pagePath.endsWith("/dz-check-in")){
-      const allowed=isAdmin();if(!allowed)location.replace("index.html");return allowed;
-    }
     if (pagePath.endsWith("/daily-report")) {
       const allowed=await canViewDailyReport();
       if(!allowed)location.replace("index.html");
@@ -300,7 +297,7 @@ async function downloadDatabaseJson() {
       login.className="small-btn header-login-btn";login.textContent="Login";
       top.append(title,login);
       const nav=document.createElement("nav");nav.className="nav header-navigation";nav.setAttribute("aria-label","Main navigation");
-      for(const [href,label,active] of [["index.html","Loads",isLoginPage || pagePath.endsWith("/loads-today")],["registration.html","Registration",pagePath.endsWith("/registration")]]){
+      for(const [href,label,active] of [["index.html","Loads",isLoginPage || pagePath.endsWith("/loads-today")],["registration.html","Registration",pagePath.endsWith("/registration")],["dz-check-in.html","DZ Check-in",pagePath.endsWith("/dz-check-in")]]){
         const item=document.createElement("a");item.href=href;item.textContent=label;
         if(active){item.classList.add("active");item.setAttribute("aria-current","page");}
         nav.appendChild(item);
