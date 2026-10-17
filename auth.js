@@ -92,6 +92,9 @@
   async function requireLogin() {
     const session = getSession();
     if (isPublicPage) return true;
+    if(pagePath.endsWith("/dz-check-in")){
+      const allowed=isAdmin();if(!allowed)location.replace("index.html");return allowed;
+    }
     if (pagePath.endsWith("/daily-report")) {
       const allowed=await canViewDailyReport();
       if(!allowed)location.replace("index.html");
@@ -184,7 +187,7 @@
   }
 
   async function applyViewOnlyMode() {
-    if (!["admin", "manifest"].includes(getSession()?.role) || isPublicPage || isProfilePage) return false;
+    if (!["admin", "manifest"].includes(getSession()?.role) || isPublicPage || isProfilePage || pagePath.endsWith("/dz-check-in")) return false;
     let state;
     try {
       state = await getDayState();
@@ -335,6 +338,7 @@ async function downloadDatabaseJson() {
     if(["admin","manifest"].includes(session.role)){
       for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"],["registration.html","Registration"]])link(href,label);
       if(isAdmin()){
+        link("dz-check-in.html","DZ Check-in");
         const guide=document.createElement("a");guide.textContent="App Guide";
         guide.href="https://docs.google.com/document/d/13nvf7p2z807HV0ynag-fAAXBqryen8SvepEI8vBVcYs/edit?usp=sharing";
         guide.target="_blank";guide.rel="noopener noreferrer";nav.appendChild(guide);
