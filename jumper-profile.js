@@ -111,7 +111,7 @@
     const types = [...new Set(allLogbookRows.map(row => logbookActivityType(row.value)))].sort();
     for(const type of types) {
       const label=document.createElement("label");
-      const input=document.createElement("input");input.type="checkbox";input.value=type;
+      const input=document.createElement("input");input.type="checkbox";input.value=type;input.checked=true;
       label.append(input,document.createTextNode(type));typeOptions.appendChild(label);
     }
     logbookFilters.disabled=false;
@@ -226,7 +226,7 @@
 
   logbookFilters.addEventListener("change", applyLogbookFilters);
   document.getElementById("resetLogbookFilters").addEventListener("click", () => {
-    for(const input of typeOptions.querySelectorAll("input"))input.checked=false;
+    for(const input of typeOptions.querySelectorAll("input"))input.checked=true;
     fromDate.value="";toDate.value="";sortOrder.value="newest";applyLogbookFilters();
   });
   exportUserLogbookBtn.addEventListener("click", exportUserLogbook);

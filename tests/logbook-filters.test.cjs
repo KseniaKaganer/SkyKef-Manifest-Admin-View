@@ -6,5 +6,5 @@ assert.deepEqual(filterLogbookRows(rows,{order:'oldest'}).map(r=>r.loadKey),['Lo
 assert.equal(filterLogbookRows(rows,{from:'2026-01-02',to:'2026-01-02'}).length,2);
 assert.equal(filterLogbookRows(rows,{from:'2026-01-02'}).length,3);assert.equal(filterLogbookRows(rows,{to:'2025-12-31'}).length,1);
 assert.equal(filterLogbookRows(rows,{types:['AFF','C']}).length,2);assert.equal(filterLogbookRows(rows,{types:['AFF'],from:'2026-01-02',to:'2026-01-02'})[0].loadKey,'Load 2');
-assert.equal(filterLogbookRows(rows,{types:['V']}).length,0);assert.equal(filterLogbookRows([]).length,0);assert.throws(()=>filterLogbookRows(rows,{from:'2026-02-01',to:'2026-01-01'}));assert.equal(rows[0].loadKey,'Load 10');
+assert.equal(filterLogbookRows(rows,{types:['V']}).length,0);assert.equal(filterLogbookRows(rows,{types:[]}).length,0);assert.equal(filterLogbookRows(rows,{types:['FUN','AFF','C','T']}).length,4);assert.equal(filterLogbookRows(rows,{types:['FUN','AFF','C']}).length,3);assert.equal(filterLogbookRows([]).length,0);assert.throws(()=>filterLogbookRows(rows,{from:'2026-02-01',to:'2026-01-01'}));assert.equal(rows[0].loadKey,'Load 10');
 console.log('Passed type normalization, multi-type selection, inclusive/open date ranges, invalid range, numeric load ordering in both directions, empty results and input immutability.');
