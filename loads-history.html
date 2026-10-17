@@ -6,12 +6,12 @@
   <title>Loads History | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
   <link rel="stylesheet" href="report-calendar.css?v=sunday-1">
-  <script src="preferences.js?v=altitude-5"></script>
+  <script src="preferences.js?v=personal-load-9"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
 <link rel="stylesheet" href="admin-load-table.css?v=type-2">
-<script src="load-presentation.js?v=show-altitude-8"></script>
-<link rel="stylesheet" href="load-presentation.css?v=balanced-columns-10">
+<script src="load-presentation.js?v=personal-load-9"></script>
+<link rel="stylesheet" href="load-presentation.css?v=personal-load-11">
 </head>
 <body>
 <header class="site-header">
@@ -239,6 +239,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "load-row";
+      highlightPersonalLoad(btn,entries,jumpersByUid);
       btn.dataset.key = loadKey;
 
       const left = document.createElement("div");
@@ -324,6 +325,7 @@
         details.textContent = loadAltitudeValue(entry.details,entry.activity,{jumperView:false});
       details.className="load-details-column";
       decorateLoadConnection(tr,name,entry);
+      if(isLoggedInLoadJumper(entry,jumpersByUid))tr.classList.add("my-jumper-row");
 
         tr.append(uid, name, activity, details);
         loadBody.appendChild(tr);

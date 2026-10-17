@@ -12,3 +12,10 @@
 }
 
 .load-table th.load-altitude-column,.load-table th.load-type-column{width:18%!important;min-width:64px;text-align:center;padding-inline:10px}
+
+.load-row.my-load,.load-row.my-load:hover,.load-row.my-load.active{background:var(--theme-warning-bg,#3a300d);box-shadow:inset 4px 0 0 #ffd45a}
+.load-row.my-load :is(.load-row-title,.load-row-sub,.load-row-arrow){color:var(--theme-warning-text,#ffe394)}
+.my-load-badge{order:2;padding:4px 8px;margin-inline-start:auto;font-size:12px;font-weight:800;border:1px solid #b68c1c;border-radius:8px;color:var(--theme-warning-text,#ffe394);white-space:nowrap}
+.load-table tr.my-jumper-row>td{background:var(--theme-warning-bg,#3a300d)!important;color:var(--theme-warning-text,#ffe394)}
+
+.load-row.my-load .load-row-arrow{order:3}

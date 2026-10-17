@@ -69,3 +69,18 @@ function compareTandemAltitude(a,b){
   const av=altitude(a),bv=altitude(b);
   return av===bv?0:av<bv?-1:1;
 }
+
+function isLoggedInLoadJumper(entry,jumpersByUid){
+  const session=SkyKefAdminAuth.getSession();
+  if(session?.role!=='jumper' || session.jumperKey==null)return false;
+  const record=jumpersByUid.get(String(session.jumperKey));
+  const uid=String(record?.Uid ?? record?.uid ?? session.jumperKey);
+  return String(entry.uid)===uid;
+}
+function highlightPersonalLoad(button,entries,jumpersByUid){
+  if(entries.some(entry=>isLoggedInLoadJumper(entry,jumpersByUid))){
+    button.classList.add('my-load');
+    const badge=document.createElement('span');badge.className='my-load-badge';badge.textContent='Your load';
+    button.appendChild(badge);
+  }
+}
