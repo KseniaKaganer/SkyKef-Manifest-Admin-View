@@ -6,7 +6,7 @@
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
   <script src="preferences.js?v=admin-sheet-9"></script>
-<script src="auth.js?v=staff-start-10"></script>
+<script src="auth.js?v=public-navigation-11"></script>
 <style>
 
 .load-row.next-load,
@@ -57,7 +57,6 @@
 </header>
 
 <main class="page">
-  <div id="publicFormAction" class="public-form-action"><a class="small-btn" href="registration.html">Registration</a></div>
 
 
   <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
@@ -156,7 +155,6 @@
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const siteTitle = document.getElementById("siteTitle");
   const publicLoadsCard = document.getElementById("publicLoadsCard");
-  const publicFormAction = document.getElementById("publicFormAction");
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
   const openLoginBtn = document.getElementById("openLoginBtn");
@@ -243,10 +241,6 @@
     requestAnimationFrame(() => document.getElementById("username").focus());
   }
 
-  function updateRegistrationLink() {
-    publicFormAction.hidden = Boolean(SkyKefAdminAuth.getSession());
-  }
-
   function showHome(session) {
     if (["admin", "manifest"].includes(session.role)) {
       location.replace("jumpers-data");
@@ -254,13 +248,11 @@
     }
     closeLogin();
     openLoginBtn.hidden = true;
-    updateRegistrationLink();
 
     if (session.role === "jumper") {
       document.title = "SkyKef Manifest";
       siteTitle.textContent = "SkyKef Manifest";
       publicLoadsCard.hidden = false;
-      updateRegistrationLink();
       adminHome.hidden = true;
       jumperLogoutBtn.hidden = false;
     } else {
@@ -275,7 +267,6 @@
     if (session.role === "jumper") document.getElementById("reloadBtn").click();
   }
 
-  updateRegistrationLink();
 
   const existing = SkyKefAdminAuth.getSession();
   if (existing) showHome(existing);
@@ -336,6 +327,11 @@
   });
 
   openLoginBtn.addEventListener("click", openLogin);
+  if (!SkyKefAdminAuth.getSession() && new URLSearchParams(location.search).get("login") === "1") {
+    openLogin();
+    const cleanUrl=new URL(location.href);cleanUrl.searchParams.delete("login");
+    history.replaceState(null,"",cleanUrl.pathname+cleanUrl.search+cleanUrl.hash);
+  }
   closeLoginBtn.addEventListener("click", closeLogin);
   loginOverlay.addEventListener("click", event => {
     if (event.target === loginOverlay) closeLogin();

@@ -289,7 +289,21 @@ async function downloadDatabaseJson() {
     const title=header.querySelector("h1") || document.createElement("h1");
     title.textContent=isDeveloper()?"SkyKef Manifest DEVELOPER":session?.role==="admin"?"SkyKef Manifest Admin":"SkyKef Manifest";
     if(isDeveloper())title.classList.add("developer-title");
-    if(!session)return;
+    if(!session){
+      header.classList.add("unified-header");
+      const top=document.createElement("div");top.className="header-top";
+      const login=document.getElementById("openLoginBtn") || document.createElement("a");
+      if(login.tagName==="A")login.href="index.html?login=1";
+      login.className="small-btn header-login-btn";login.textContent="Login";
+      top.append(title,login);
+      const nav=document.createElement("nav");nav.className="nav header-navigation";nav.setAttribute("aria-label","Main navigation");
+      for(const [href,label,active] of [["index.html","Loads",isLoginPage || pagePath.endsWith("/loads-today")],["registration.html","Registration",pagePath.endsWith("/registration")]]){
+        const item=document.createElement("a");item.href=href;item.textContent=label;
+        if(active){item.classList.add("active");item.setAttribute("aria-current","page");}
+        nav.appendChild(item);
+      }
+      header.replaceChildren(top,nav);return;
+    }
     document.querySelectorAll("#logoutBtn, #jumperLogoutBtn, #welcomeAdmin").forEach(element=>{
       element.hidden=true;element.style.display="none";
     });
