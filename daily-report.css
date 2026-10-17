@@ -23,3 +23,7 @@
 .daily-report-date-control{display:flex;align-items:center;gap:10px;font-weight:700}
 .daily-report-date-control input{color-scheme:dark;min-height:48px;padding:8px 12px;background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:12px;font:inherit}
 
+
+.daily-report-table tbody tr.current-worker > th,
+.daily-report-table tbody tr.current-worker > td{background:#ffe394;color:#242424;font-weight:800}
+.daily-report-table tbody tr.current-worker > .worker-column{box-shadow:inset 4px 0 0 #9b7617}

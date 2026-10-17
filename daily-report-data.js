@@ -41,3 +41,15 @@ function buildDailyReport(jumpers, loads) {
   return {jobs:activeJobs,loads:loadEntries.map(([key])=>key),
     rows:[...rows.values()].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'})),totals};
 }
+
+// Resolve the authenticated jumper record, never a name supplied by the browser UI.
+function prioritizeDailyReportWorker(report, jumpers, session) {
+  if (session?.role !== 'jumper' || session.jumperKey == null) return report;
+  const jumper = jumpers?.[session.jumperKey];
+  if (!jumper || !todayJumperHasWorker(jumper)) return report;
+  const uid = String(jumper.Uid ?? jumper.uid ?? session.jumperKey);
+  const ownRow = report.rows.find(row => String(row.uid) === uid);
+  if (!ownRow) return report;
+  return {...report, rows: [ownRow, ...report.rows.filter(row => row !== ownRow)]
+    .map(row => ({...row, isCurrentWorker: row === ownRow}))};
+}

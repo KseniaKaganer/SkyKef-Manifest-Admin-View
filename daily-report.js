@@ -19,6 +19,7 @@
     head.appendChild(header);
     for(const worker of report.rows) {
       const row=document.createElement('tr');
+      if(worker.isCurrentWorker) row.classList.add('current-worker');
       const name=cell('th',worker.name,'worker-column');name.scope='row';name.title=`UID: ${worker.uid}`;row.appendChild(name);
       report.jobs.forEach(job=>row.appendChild(cell('td',worker.counts[job] || '','job-column')));
       report.loads.forEach((load,i)=>row.appendChild(cell('td',worker.loads[load] || '',i===0?'load-start':'')));
@@ -53,7 +54,7 @@
       const [jumpers,dayLoads]=await Promise.all([fetchJson('jumpers'),fetchJson(live?'loads':historyPath)]);
       const loads=live && dayLoads==null ? await fetchJson(historyPath) : dayLoads;
       document.getElementById('dailyReportDate').textContent=`${day}/${month}/${year}`;
-      render(buildDailyReport(jumpers,loads));
+      render(prioritizeDailyReportWorker(buildDailyReport(jumpers,loads),jumpers,SkyKefAdminAuth.getSession()));
       if(!loads || !Object.values(loads).some(v=>v && typeof v==='object')) status.textContent='No loads found for the selected date.';
     }catch(error){console.error(error);head.replaceChildren();body.replaceChildren();document.getElementById('dailyReportSummary').replaceChildren();document.getElementById('dailyReportDate').textContent='—';status.textContent='Could not load the daily report. Please try again.';}
     finally{reload.disabled=false;calendar.setBusy(false);}
