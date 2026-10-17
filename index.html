@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=print-load-1"></script>
+  <script src="preferences.js?v=canopies-2"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <style>
 
@@ -576,7 +576,7 @@
 
     const count = getJumperCount(load.entries);
     loadSummary.textContent =
-      `${count} jumper${count === 1 ? "" : "s"} · ${load.entries.length} record${load.entries.length === 1 ? "" : "s"}`;
+      `${count} jumper${count === 1 ? "" : "s"} · ${load.entries.length} ${load.entries.length === 1 ? "canopy" : "canopies"}`;
 
     loadBody.innerHTML = "";
 

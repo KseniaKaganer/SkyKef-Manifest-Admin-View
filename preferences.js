@@ -24,7 +24,7 @@
     if((m=value.match(/^(\d+) jumpers?$/)))return `${m[1]} צנחנים`;
     if((m=value.match(/^Load (\d+)( · (In air|Next load))?$/)))return `יעף ${m[1]}${m[3]?' · '+he[m[3]]:''}`;
     if((m=value.match(/^Load (\d+) is in air\.$/)))return `יעף ${m[1]} באוויר.`;
-    if((m=value.match(/^(\d+) jumper(s)? · (\d+) record(s)?$/)))return `${m[1]} צנחנים · ${m[3]} רשומות`;
+    if((m=value.match(/^(\d+) jumpers? · (\d+) (?:canopy|canopies)$/)))return `${m[1]} צנחנים · ${m[2]} מצנחים`;
     if((m=value.match(/^(\d+) load(s)? today · (\d+) total jumper slot(s)?$/)))return `${m[1]} יעפים היום · ${m[3]} מקומות צנחנים בסך הכול`;
     if((m=value.match(/^(\d+) logbook entr(?:y|ies) · newest first$/)))return `${m[1]} רשומות ביומן · מהחדש לישן`;
     if((m=value.match(/^(\d+) logbook entr(?:y|ies) · oldest first$/)))return `${m[1]} רשומות ביומן · מהישן לחדש`;
