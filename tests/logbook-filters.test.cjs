@@ -1,0 +1,10 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');vm.runInThisContext(fs.readFileSync(path.join(__dirname,'../logbook-filters.js'),'utf8'));
+const rows=[{year:2026,month:1,day:2,loadKey:'Load 10',value:'FUN|normal'},{year:2026,month:1,day:2,loadKey:'Load 2',value:'INSTRUCTOR|student'},{year:2025,month:12,day:31,loadKey:'Load 1',value:'FUN|coaching_0'},{year:2026,month:2,day:1,loadKey:'3',value:'T|12000'}];
+assert.equal(logbookActivityType('INSTRUCTOR|test'),'AFF');assert.equal(logbookActivityType('FUN|coaching_0'),'C');
+assert.deepEqual(filterLogbookRows(rows).map(r=>r.loadKey),['3','Load 10','Load 2','Load 1']);
+assert.deepEqual(filterLogbookRows(rows,{order:'oldest'}).map(r=>r.loadKey),['Load 1','Load 2','Load 10','3']);
+assert.equal(filterLogbookRows(rows,{from:'2026-01-02',to:'2026-01-02'}).length,2);
+assert.equal(filterLogbookRows(rows,{from:'2026-01-02'}).length,3);assert.equal(filterLogbookRows(rows,{to:'2025-12-31'}).length,1);
+assert.equal(filterLogbookRows(rows,{types:['AFF','C']}).length,2);assert.equal(filterLogbookRows(rows,{types:['AFF'],from:'2026-01-02',to:'2026-01-02'})[0].loadKey,'Load 2');
+assert.equal(filterLogbookRows(rows,{types:['V']}).length,0);assert.equal(filterLogbookRows([]).length,0);assert.throws(()=>filterLogbookRows(rows,{from:'2026-02-01',to:'2026-01-01'}));assert.equal(rows[0].loadKey,'Load 10');
+console.log('Passed type normalization, multi-type selection, inclusive/open date ranges, invalid range, numeric load ordering in both directions, empty results and input immutability.');

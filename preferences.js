@@ -5,6 +5,7 @@
   const state = {language:read(keys.language,['en','he'],'en'),textSize:read(keys.textSize,['normal','large'],'normal')};
   const he = {
     'Jumping Day Registration':'הרשמה ליום פעילות','Open in Google Forms ↗':'פתיחה ב־Google Forms ↗','Loading form…':'טוען טופס…','Registration form':'טופס הרשמה','SkyKef jumping day registration form':'טופס הרשמה ליום פעילות בסקיכיף',
+    'Filter logbook':'סינון יומן צניחות','Jump types':'סוגי צניחות','No types selected means all types.':'ללא בחירת סוגים מוצגים כל הסוגים.','From date':'מתאריך','To date':'עד תאריך','Sort order':'סדר מיון','Newest first':'מהחדש לישן','Oldest first':'מהישן לחדש','Reset filters':'איפוס סינון','No jumps match the selected filters.':'לא נמצאו צניחות התואמות לסינון.','Start date must be on or before end date.':'תאריך ההתחלה צריך להיות מוקדם מתאריך הסיום או שווה לו.',
     'Settings':'הגדרות','Close':'סגירה','Close settings':'סגירת הגדרות','Appearance':'מראה','Dark Mode':'מצב כהה','Light Mode':'מצב בהיר','Text size':'גודל טקסט','Normal':'רגיל','Large':'גדול','Language':'שפה',
     'Loads':'יעפים','My Profile':'הפרופיל שלי','My Logbook':'יומן הצניחות שלי','My information':'המידע שלי','My account':'החשבון שלי','Registration':'הרשמה','Registration Form':'טופס הרשמה','Daily Report':'דוח יומי','Logout':'התנתקות','Login':'התחברות','Home':'בית','Refresh':'רענון',
     "Today's Loads":'היעפים של היום','Load Details':'פרטי היעף','Jumper':'צנחן','Activity':'פעילות','Details':'פרטים','In air':'באוויר','Next load':'היעף הבא','Day has not started yet':'יום הפעילות עדיין לא התחיל',"Today's loads will appear here when they are ready.":'היעפים של היום יופיעו כאן כשיהיו מוכנים.',
@@ -26,6 +27,7 @@
     if((m=value.match(/^(\d+) jumper(s)? · (\d+) record(s)?$/)))return `${m[1]} צנחנים · ${m[3]} רשומות`;
     if((m=value.match(/^(\d+) load(s)? today · (\d+) total jumper slot(s)?$/)))return `${m[1]} יעפים היום · ${m[3]} מקומות צנחנים בסך הכול`;
     if((m=value.match(/^(\d+) logbook entr(?:y|ies) · newest first$/)))return `${m[1]} רשומות ביומן · מהחדש לישן`;
+    if((m=value.match(/^(\d+) logbook entr(?:y|ies) · oldest first$/)))return `${m[1]} רשומות ביומן · מהישן לחדש`;
     if((m=value.match(/^(\d+) worker(s)? · (\d+) load(s)?$/)))return `${m[1]} עובדים · ${m[3]} יעפים`;
     return value.replace(/^Jumps so far — /,'צניחות עד כה — ').replace(/^Jumps Today — /,'צניחות היום — ').replace(/^CURRENT: /,'נוכחי: ').replace(/^PAST: /,'קודמים: ').replace(/^Loads: /,'יעפים: ').replace('No current loads','אין יעפים נוכחיים').replace('No past loads','אין יעפים קודמים').replace('No jumps today','אין צניחות היום').replace(/^Day ended · (\d+) loads? today$/,'יום הפעילות הסתיים · $1 יעפים היום');
   }

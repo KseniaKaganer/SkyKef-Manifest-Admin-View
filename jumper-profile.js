@@ -13,6 +13,12 @@
   let loggedInJumper = null;
   let loggedInLogbookRows = [];
   let logbookLoaded = false;
+  let allLogbookRows = [];
+  const logbookFilters = document.getElementById("logbookFilters");
+  const typeOptions = document.getElementById("logbookTypeOptions");
+  const fromDate = document.getElementById("logbookFromDate");
+  const toDate = document.getElementById("logbookToDate");
+  const sortOrder = document.getElementById("logbookSortOrder");
   function profileLabel(key) {
     return String(key)
       .replace(/[_-]+/g, " ")
@@ -100,23 +106,43 @@
   }
 
   function renderUserLogbook(data) {
-    const allRows=flattenHistoryNode(data);
-    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),allRows,{showTypes:SkyKefAdminAuth.hasWorkerRoles(loggedInJumper)});
-    const rows = allRows
-      .filter(row => parseLogbookValue(row.value).details !== "—")
-      .sort((a, b) =>
-      b.year - a.year || b.month - a.month || b.day - a.day || loadNumber(b.loadKey) - loadNumber(a.loadKey)
-    );
+    allLogbookRows = flattenHistoryNode(data).filter(row => parseLogbookValue(row.value).details !== "—");
+    typeOptions.replaceChildren();
+    const types = [...new Set(allLogbookRows.map(row => logbookActivityType(row.value)))].sort();
+    for(const type of types) {
+      const label=document.createElement("label");
+      const input=document.createElement("input");input.type="checkbox";input.value=type;
+      label.append(input,document.createTextNode(type));typeOptions.appendChild(label);
+    }
+    logbookFilters.disabled=false;
+    applyLogbookFilters();
+  }
+
+  function applyLogbookFilters() {
+    let rows;
+    fromDate.removeAttribute("aria-invalid");toDate.removeAttribute("aria-invalid");
+    try {
+      rows=filterLogbookRows(allLogbookRows,{
+        types:[...typeOptions.querySelectorAll("input:checked")].map(input=>input.value),
+        from:fromDate.value,to:toDate.value,order:sortOrder.value
+      });
+    } catch(error) {
+      userLogbookBody.replaceChildren();loggedInLogbookRows=[];exportUserLogbookBtn.disabled=true;
+      document.getElementById("userLogbookAnnualStats").hidden=true;
+      fromDate.setAttribute("aria-invalid","true");toDate.setAttribute("aria-invalid","true");
+      userLogbookStatus.textContent=error.message;return;
+    }
+    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),rows,{showTypes:SkyKefAdminAuth.hasWorkerRoles(loggedInJumper)});
     userLogbookBody.replaceChildren();
     loggedInLogbookRows = rows;
     exportUserLogbookBtn.disabled = rows.length === 0;
 
     if (!rows.length) {
-      userLogbookStatus.textContent = "No logbook history found.";
+      userLogbookStatus.textContent = allLogbookRows.length ? "No jumps match the selected filters." : "No logbook history found.";
       return;
     }
 
-    userLogbookStatus.textContent = `${rows.length} logbook entr${rows.length === 1 ? "y" : "ies"} · newest first`;
+    userLogbookStatus.textContent = `${rows.length} logbook entr${rows.length === 1 ? "y" : "ies"} · ${sortOrder.value === "oldest" ? "oldest first" : "newest first"}`;
     let previousDate = "";
 
     rows.forEach(row => {
@@ -126,7 +152,7 @@
       const values = [
         dateKey === previousDate ? "" : `${String(row.day).padStart(2, "0")}/${String(row.month).padStart(2, "0")}/${row.year}`,
         loadNumber(row.loadKey) ? `Load ${loadNumber(row.loadKey)}` : row.loadKey,
-        parsed.activity,
+        logbookActivityType(row.value),
         parsed.details
       ];
       values.forEach(value => {
@@ -172,7 +198,7 @@
       const parsed = parseLogbookValue(row.value);
       const date = `${String(row.day).padStart(2, "0")}/${String(row.month).padStart(2, "0")}/${row.year}`;
       const load = loadNumber(row.loadKey) ? `Load ${loadNumber(row.loadKey)}` : row.loadKey;
-      lines.push([date, load, parsed.activity, parsed.details].map(csvCell).join(","));
+      lines.push([date, load, logbookActivityType(row.value), parsed.details].map(csvCell).join(","));
     });
 
     const blob = new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" });
@@ -198,6 +224,11 @@
     if (!profileSelected) loadUserLogbook();
   }
 
+  logbookFilters.addEventListener("change", applyLogbookFilters);
+  document.getElementById("resetLogbookFilters").addEventListener("click", () => {
+    for(const input of typeOptions.querySelectorAll("input"))input.checked=false;
+    fromDate.value="";toDate.value="";sortOrder.value="newest";applyLogbookFilters();
+  });
   exportUserLogbookBtn.addEventListener("click", exportUserLogbook);
   userProfileTab.addEventListener("click", () => selectUserTab("profile"));
   userLogbookTab.addEventListener("click", () => selectUserTab("logbook"));

@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Profile | SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=he-terms-2"></script>
+  <script src="preferences.js?v=logbook-filters-1"></script>
 <script src="auth.js?v=preferences-1"></script>
-<link rel="stylesheet" href="theme.css?v=preferences-1">
+<link rel="stylesheet" href="theme.css?v=logbook-filters-1">
 </head>
 <body>
 <header class="site-header">
@@ -32,6 +32,16 @@
       <dl id="userProfileDetails" class="profile-details"></dl>
     </div>
     <div id="userLogbookView" hidden>
+      <fieldset id="logbookFilters" class="logbook-filters" disabled>
+        <legend>Filter logbook</legend>
+        <fieldset class="logbook-type-filter"><legend>Jump types</legend><p class="status">No types selected means all types.</p><div id="logbookTypeOptions" class="logbook-type-options"></div></fieldset>
+        <div class="logbook-filter-controls">
+          <label><span>From date</span><input id="logbookFromDate" type="date"></label>
+          <label><span>To date</span><input id="logbookToDate" type="date"></label>
+          <label><span>Sort order</span><select id="logbookSortOrder"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></label>
+          <button id="resetLogbookFilters" class="small-btn" type="button">Reset filters</button>
+        </div>
+      </fieldset>
       <section id="userLogbookAnnualStats" class="logbook-annual-stats" hidden></section>
       <div class="user-logbook-toolbar">
         <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
@@ -48,5 +58,6 @@
 
 </main>
 <script src="logbook-annual-stats.js?v=actual-jumps-1"></script>
-<script src="jumper-profile.js?v=personal-totals-1"></script>
+<script src="logbook-filters.js?v=logbook-filters-1"></script>
+<script src="jumper-profile.js?v=logbook-filters-1"></script>
 </body></html>
