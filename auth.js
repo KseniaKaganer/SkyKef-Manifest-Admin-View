@@ -301,7 +301,9 @@ async function downloadDatabaseJson() {
     if(session.role==="jumper"){badge.classList.add("jumper-name-badge");badge.title=session.username;}
     if(isDeveloper())badge.classList.add("developer-badge");
     const logoutButton=document.createElement("button");logoutButton.id="sessionLogoutBtn";
-    logoutButton.type="button";logoutButton.className="small-btn";logoutButton.textContent="Logout";
+    logoutButton.type="button";logoutButton.className="small-btn logout-icon-button";
+    logoutButton.title="Logout";logoutButton.setAttribute("aria-label","Logout");
+    logoutButton.innerHTML='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg>';
     logoutButton.addEventListener("click",logout);
     const home=document.createElement("a");home.href="index.html";home.className="small-btn header-home-button";
     home.setAttribute("aria-label","Home");home.title="Home";

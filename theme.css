@@ -48,3 +48,6 @@ html[data-text-size="large"] .site-header .session-role-badge.jumper-name-badge{
  html[data-text-size="large"] .site-header .jumper-header .session-role-badge.jumper-name-badge{font-size:18px}
  html[data-text-size="large"] .site-header .jumper-header #sessionLogoutBtn{font-size:17px}
 }
+
+.site-header #sessionLogoutBtn.logout-icon-button{width:44px;min-width:44px;min-height:44px;padding:10px;flex:0 0 44px}
+html[dir="rtl"] .logout-icon-button svg{transform:scaleX(-1)}
