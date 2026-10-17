@@ -1,7 +1,8 @@
 (() => {
   const button=document.getElementById('printLoadBtn');
   let printArea=null;
-  function clearPrintArea(){printArea?.remove();printArea=null;}
+  let originalTitle=null;
+  function clearPrintArea(){printArea?.remove();printArea=null;if(originalTitle!==null){document.title=originalTitle;originalTitle=null;}}
   window.addEventListener('afterprint',clearPrintArea);
   button.addEventListener('click',()=>{
     const session=SkyKefAdminAuth.getSession();
@@ -10,9 +11,8 @@
     printArea=document.createElement('section');printArea.id='loadPrintArea';
     printArea.dir=document.documentElement.dir || 'ltr';
     const title=document.createElement('h1');title.textContent='SkyKef Manifest';
-    const load=document.createElement('h2');load.textContent=document.getElementById('loadTitle').textContent;
-    const date=document.createElement('p');date.textContent=document.getElementById('todayLabel').textContent;
-    const summary=document.createElement('p');summary.textContent=document.getElementById('loadSummary').textContent;
+    const load=document.createElement('h2');load.textContent=document.getElementById('loadTitle').textContent.split('·')[0].trim();
+    const summary=document.createElement('p');summary.className='load-print-counts';summary.textContent=document.getElementById('loadSummary').textContent;
     const table=document.querySelector('#loadDetail table').cloneNode(true);
     table.removeAttribute('class');
     // Remove the UID heading and cells from the cloned print table only.
@@ -22,7 +22,8 @@
     for(const row of table.rows)if(row.cells.length===3 && row.cells[0].classList.contains('load-type-column'))row.insertBefore(row.cells[1],row.cells[0]);
     table.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
     if(table.tBodies[0].rows.length>28)printArea.classList.add('compact-load-print');
-    printArea.append(title,load,date,summary,table);document.body.appendChild(printArea);
+    printArea.append(title,load,summary,table);document.body.appendChild(printArea);
+    originalTitle=document.title;document.title="SkyKef Manifest";
     window.print();
   });
 })();
