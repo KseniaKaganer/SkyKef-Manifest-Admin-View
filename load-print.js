@@ -11,6 +11,10 @@
     printArea=document.createElement('section');printArea.id='loadPrintArea';
     printArea.dir=document.documentElement.dir || 'ltr';
     const title=document.createElement('h1');title.textContent='SkyKef Manifest';
+    const timestamp=document.createElement('time');timestamp.className='load-print-timestamp';
+    const printedAt=new Date();timestamp.dateTime=printedAt.toISOString();
+    timestamp.textContent=new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Jerusalem',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(printedAt);
+    const printHeader=document.createElement('div');printHeader.className='load-print-top';printHeader.append(timestamp,title);
     const load=document.createElement('h2');load.textContent=document.getElementById('loadTitle').textContent.split('·')[0].trim();
     const summary=document.createElement('p');summary.className='load-print-counts';summary.textContent=document.getElementById('loadSummary').textContent;
     const table=document.querySelector('#loadDetail table').cloneNode(true);
@@ -22,7 +26,7 @@
     for(const row of table.rows)if(row.cells.length===3 && row.cells[0].classList.contains('load-type-column'))row.insertBefore(row.cells[1],row.cells[0]);
     table.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
     if(table.tBodies[0].rows.length>28)printArea.classList.add('compact-load-print');
-    printArea.append(title,load,summary,table);document.body.appendChild(printArea);
+    printArea.append(printHeader,load,summary,table);document.body.appendChild(printArea);
     originalTitle=document.title;document.title="SkyKef Manifest";
     window.print();
   });

@@ -6,6 +6,8 @@
  body:has(#loadPrintArea)>:not(#loadPrintArea){display:none!important}
  html:has(#loadPrintArea),body:has(#loadPrintArea){background:#fff!important;color:#000!important;margin:0!important;font-size:11pt!important}
  #loadPrintArea{display:block!important;width:100%;padding:12mm;box-sizing:border-box;color:#000;background:#fff;font:11pt Arial,sans-serif}
+ #loadPrintArea .load-print-top{display:flex;align-items:baseline;justify-content:space-between;gap:8mm;direction:ltr;margin-bottom:5mm}
+ #loadPrintArea .load-print-timestamp{font-size:10pt;white-space:nowrap}
  #loadPrintArea h1{margin:0 0 3mm;font-size:18pt}
  #loadPrintArea h2{margin:0 0 3mm;font-size:34pt}
  #loadPrintArea .load-print-counts{margin:3mm 0 6mm;font-size:23pt;font-weight:800;line-height:1.2}
