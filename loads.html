@@ -22,7 +22,7 @@
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
 <link rel="stylesheet" href="admin-load-table.css?v=uid-1">
-<script src="load-presentation.js?v=activity-2"></script>
+<script src="load-presentation.js?v=video-order-3"></script>
 <link rel="stylesheet" href="load-presentation.css?v=activity-2">
 </head>
 <body>
@@ -176,7 +176,7 @@
   function normalizeLoadEntries(loadValue) {
     if (!loadValue || typeof loadValue !== "object") return [];
 
-    return Object.entries(loadValue)
+    const entries=Object.entries(loadValue)
       .filter(([, value]) => value !== null && value !== undefined)
       .map(([uid, value]) => {
         const parsed = parseActivityValue(value);
@@ -194,6 +194,7 @@
         const bn = displayName(jumpersByUid.get(b.uid), b.uid);
         return an.localeCompare(bn, undefined, { sensitivity: "base" });
       });
+    return orderAttachedVideoFlyers(entries,entry=>displayName(jumpersByUid.get(entry.uid),entry.uid));
   }
 
   function getJumperCount(entries) {
