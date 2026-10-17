@@ -5,10 +5,8 @@
 .load-table .load-type-column{width:1%!important;min-width:58px;white-space:nowrap;text-align:center;padding-inline:10px}
 .load-table .load-name-column{width:auto!important}
 .load-table .load-details-column{width:26%!important}
-.load-table :is(.video-group-parent,.video-group-child) .load-name-column{border-inline-start:3px solid var(--accent)}
 .load-video-connection{display:flex;align-items:baseline;flex-wrap:wrap;gap:3px;margin-top:6px;font-size:.9em;color:var(--accent);font-weight:700}
 .video-group-child .load-name-column{padding-inline-start:24px}
 @media print{
- #loadPrintArea :is(.video-group-parent,.video-group-child) .load-name-column{border-inline-start:3px solid #444}
  #loadPrintArea .load-video-connection{color:#222;font-size:9pt}
 }
