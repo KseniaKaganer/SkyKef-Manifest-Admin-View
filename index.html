@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=canopies-2"></script>
+  <script src="preferences.js?v=type-groups-4"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <style>
 
@@ -44,8 +44,8 @@
 #publicLoadsCard #loadsStatus:empty { display:none; }
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
-<script src="load-presentation.js?v=video-order-3"></script>
-<link rel="stylesheet" href="load-presentation.css?v=activity-2">
+<script src="load-presentation.js?v=type-groups-4"></script>
+<link rel="stylesheet" href="load-presentation.css?v=type-groups-4">
 </head>
 <body>
 <header class="site-header">
@@ -93,7 +93,7 @@
             <thead>
               <tr>
                 <th>Jumper</th>
-                <th>Activity</th>
+                <th class="load-type-column">Type</th>
                 <th>Details</th>
               </tr>
             </thead>
@@ -602,12 +602,15 @@
 
       const activity = document.createElement("td");
       activity.textContent = loadActivityLabel(entry.activity);
+      activity.className="load-type-column";
       if (jumperCountForActivity(entry.activity) === 2) {
         activity.title = "Counts as 2 jumpers";
       }
 
       const details = document.createElement("td");
       details.textContent = splitLoadDetails(entry.details).first;
+      details.className="load-details-column";
+      decorateLoadConnection(tr,name,entry);
 
       tr.append(name, activity, details);
       loadBody.appendChild(tr);

@@ -22,6 +22,7 @@ function orderAttachedVideoFlyers(entries,nameForEntry){
   const normalize=value=>String(value ?? '').normalize('NFKC').trim().toLowerCase().replace(/[_\s]+/g,' ');
   const isVideo=entry=>String(entry.activity ?? '').trim().toUpperCase()==='V';
   const attachments=new Map(),attached=new Set();
+  for(const entry of entries){delete entry.videoConnection;delete entry.hasAttachedVideo;}
   for(const video of entries.filter(isVideo)){
     const reference=String(video.details ?? '').split('·')[0].trim();
     if(!reference || reference==='—')continue;
@@ -32,10 +33,24 @@ function orderAttachedVideoFlyers(entries,nameForEntry){
     // Ambiguous names stay in their normal position rather than attaching to the wrong jumper.
     if(matches.length!==1)continue;
     const target=matches[0];
+    video.videoConnection={uid:target.uid,name:nameForEntry(target)};target.hasAttachedVideo=true;
     if(!attachments.has(target))attachments.set(target,[]);
     attachments.get(target).push(video);attached.add(video);
   }
   const ordered=[];
   for(const entry of entries){if(attached.has(entry))continue;ordered.push(entry,...(attachments.get(entry)||[]));}
   return ordered;
+}
+
+function decorateLoadConnection(row,nameCell,entry){
+  nameCell.classList.add('load-name-column');
+  if(entry.hasAttachedVideo)row.classList.add('video-group-parent');
+  if(entry.videoConnection){
+    row.classList.add('video-group-child');
+    const connection=document.createElement('div');connection.className='load-video-connection';
+    const label=document.createElement('span');label.textContent='Video for';
+    const target=document.createElement('bdi');target.textContent=entry.videoConnection.name;
+    connection.append(document.createTextNode('↳ '),label,document.createTextNode(': '),target);
+    nameCell.appendChild(connection);
+  }
 }

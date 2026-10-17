@@ -18,6 +18,8 @@
     // Remove the UID heading and cells from the cloned print table only.
     table.querySelectorAll('.load-uid-column').forEach(cell=>cell.remove());
     table.querySelectorAll('td[colspan]').forEach(cell=>cell.colSpan=3);
+    // Restore Jumper / Type / Details after removing the admin-only first UID column.
+    for(const row of table.rows)if(row.cells.length===3 && row.cells[0].classList.contains('load-type-column'))row.insertBefore(row.cells[1],row.cells[0]);
     table.querySelectorAll('[id]').forEach(element=>element.removeAttribute('id'));
     if(table.tBodies[0].rows.length>28)printArea.classList.add('compact-load-print');
     printArea.append(title,load,date,summary,table);document.body.appendChild(printArea);

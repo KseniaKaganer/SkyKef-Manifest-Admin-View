@@ -1,4 +1,1 @@
-.admin-load-table th:nth-child(1),.admin-load-table td:nth-child(1){width:9%;min-width:52px;padding-inline:8px;white-space:nowrap}
-.admin-load-table th:nth-child(2),.admin-load-table td:nth-child(2){width:35%}
-.admin-load-table th:nth-child(3),.admin-load-table td:nth-child(3){width:16%}
-.admin-load-table th:nth-child(4),.admin-load-table td:nth-child(4){width:40%}
+.admin-load-table .load-uid-column{width:1%!important;min-width:48px;padding-inline:8px;white-space:nowrap}
