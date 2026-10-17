@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="auth.js?v=settings-theme-1"></script>
+  <script src="auth.js?v=remove-timed-registration-1"></script>
 <style>
 
 .load-row.next-load,
@@ -57,9 +57,7 @@
 
 <main class="page">
   <div id="publicFormAction" class="public-form-action"><a class="small-btn" href="registration.html">Registration</a></div>
-  <div id="registrationAction" class="registration-action" hidden>
-    <a class="small-btn registration-btn" href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform" target="_blank" rel="noopener noreferrer">Register for Jumping</a>
-  </div>
+
 
   <section id="publicLoadsCard" class="public-loads-card" aria-labelledby="publicLoadsTitle">
     <div id="publicLoadsIntro">
@@ -157,7 +155,6 @@
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const siteTitle = document.getElementById("siteTitle");
   const publicLoadsCard = document.getElementById("publicLoadsCard");
-  const registrationAction = document.getElementById("registrationAction");
   const publicFormAction = document.getElementById("publicFormAction");
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
@@ -245,19 +242,8 @@
     requestAnimationFrame(() => document.getElementById("username").focus());
   }
 
-  function registrationIsOpen(now = new Date()) {
-    const hour = Number(new Intl.DateTimeFormat("en-GB", {
-      timeZone: "Asia/Jerusalem",
-      hour: "2-digit",
-      hourCycle: "h23"
-    }).format(now));
-    return hour >= 8 && hour < 17;
-  }
-
-  function updateRegistrationAvailability() {
-    const role = SkyKefAdminAuth.getSession()?.role;
-    registrationAction.hidden = !registrationIsOpen() || ["admin", "manifest"].includes(role);
-    publicFormAction.hidden = role === "jumper";
+  function updateRegistrationLink() {
+    publicFormAction.hidden = SkyKefAdminAuth.getSession()?.role === "jumper";
   }
 
   function showHome(session) {
@@ -268,14 +254,13 @@
       document.title = "SkyKef Manifest";
       siteTitle.textContent = "SkyKef Manifest";
       publicLoadsCard.hidden = false;
-      updateRegistrationAvailability();
+      updateRegistrationLink();
       adminHome.hidden = true;
       jumperLogoutBtn.hidden = false;
     } else {
       document.title = "SkyKef Manifest Admin View";
       siteTitle.textContent = "SkyKef Manifest Admin View";
       publicLoadsCard.hidden = true;
-      registrationAction.hidden = true;
       adminHome.hidden = false;
       jumperLogoutBtn.hidden = true;
       welcomeAdmin.textContent = `Logged in as ${session.username} · ${session.role === "admin" ? "Admin" : "Manifest"}`;
@@ -284,10 +269,7 @@
     if (session.role === "jumper") document.getElementById("reloadBtn").click();
   }
 
-  updateRegistrationAvailability();
-  setInterval(updateRegistrationAvailability, 10000);
-  window.addEventListener("focus", updateRegistrationAvailability);
-  document.addEventListener("visibilitychange", updateRegistrationAvailability);
+  updateRegistrationLink();
 
   const existing = SkyKefAdminAuth.getSession();
   if (existing) showHome(existing);
