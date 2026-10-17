@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=personal-load-9"></script>
+  <script src="preferences.js?v=load-tools-12"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <style>
 .load-row.next-load,
@@ -26,9 +26,11 @@
 .jumper-manifest-summary strong { display:block;font-size:1.15rem; }
 .jumper-manifest-summary p { margin:8px 0 0;color:var(--theme-warning-text, #ffe394); }
 </style>
-<link rel="stylesheet" href="theme.css?v=today-toggle-3">
+<link rel="stylesheet" href="theme.css?v=load-tools-12">
 <script src="load-presentation.js?v=personal-load-9"></script>
 <link rel="stylesheet" href="load-presentation.css?v=personal-load-11">
+<script src="load-view-tools.js?v=tools-1"></script>
+<link rel="stylesheet" href="load-view-tools.css?v=tools-1">
 </head>
 <body>
 <header class="site-header">
@@ -174,9 +176,7 @@
   }
 
   async function fetchJson(path) {
-    const response = await fetch(`${DB}/${path}.json`, { cache: "no-store" });
-    if (!response.ok) throw new Error(`${path}: HTTP ${response.status}`);
-    return response.json();
+    return LoadViewTools.fetchJson(`${DB}/${path}.json`);
   }
 
   function parseActivityValue(value) {
@@ -445,6 +445,7 @@
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "load-row" + (index === 0 ? " active" : "");
+      btn.dataset.key=String(load.key);
       highlightPersonalLoad(btn,load.entries,jumpersByUid);
       btn.classList.toggle("next-load", loadStatus(load) === "Next load");
 
@@ -478,10 +479,11 @@
   }
 
   async function loadToday() {
-    todayLabel.textContent = "Loading current date…";
+    LoadViewTools.start();
+    if(!currentLoads.length)todayLabel.textContent = "Loading current date…";
     loadsStatus.textContent = "Loading current loads…";
     reloadBtn.disabled = true;
-    document.getElementById("jumperManifestSummary").hidden = true;
+    if(!currentLoads.length)document.getElementById("jumperManifestSummary").hidden = true;
 
     try {
       const [loadsData, jumpersData, currentData] = await Promise.all([
@@ -490,6 +492,7 @@
         fetchJson("current_data")
       ]);
 
+      LoadViewTools.success();
       inAirLoad = currentData?.in_air_load ?? null;
       dayEnded = currentData?.end_of_day === true;
       jumpersByUid = normalizeJumpers(jumpersData);
@@ -520,8 +523,9 @@
       renderLoads();
     } catch (err) {
       console.error(err);
+      LoadViewTools.failure();
       loadsStatus.textContent = "Could not load the current loads.";
-      todayLoadsLayout.hidden = true;
+      todayLoadsLayout.hidden = currentLoads.length===0;
       notStartedCard.hidden = true;
     } finally {
       reloadBtn.disabled = false;

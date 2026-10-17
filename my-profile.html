@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>My Profile | SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=personal-load-9"></script>
+  <script src="preferences.js?v=load-tools-12"></script>
 <script src="auth.js?v=public-navigation-11"></script>
-<link rel="stylesheet" href="theme.css?v=today-toggle-3">
+<link rel="stylesheet" href="theme.css?v=load-tools-12">
 </head>
 <body>
 <header class="site-header">
@@ -31,6 +31,7 @@
       <dl id="userProfileDetails" class="profile-details"></dl>
     </div>
     <div id="userLogbookView" hidden>
+      <details id="logbookFilterPanel" class="logbook-filter-panel" open><summary>Filter logbook</summary>
       <fieldset id="logbookFilters" class="logbook-filters" disabled>
         <legend>Filter logbook</legend>
         <fieldset class="logbook-type-filter"><legend>Jump types</legend><div id="logbookTypeOptions" class="logbook-type-options"></div></fieldset>
@@ -41,6 +42,7 @@
           <button id="resetLogbookFilters" class="small-btn" type="button">Reset filters</button>
         </div>
       </fieldset>
+      </details>
       <section id="userLogbookAnnualStats" class="logbook-annual-stats" hidden></section>
       <div class="user-logbook-toolbar">
         <div id="userLogbookStatus" class="status">Open this tab to load your logbook.</div>
@@ -57,6 +59,7 @@
 
 </main>
 <script src="logbook-annual-stats.js?v=actual-jumps-1"></script>
+<script>if(matchMedia("(max-width:700px)").matches)document.getElementById("logbookFilterPanel").open=false;</script>
 <script src="logbook-filters.js?v=logbook-types-2"></script>
 <script src="jumper-profile.js?v=profile-header-3"></script>
 </body></html>

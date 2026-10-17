@@ -1,0 +1,17 @@
+const fs=require('fs'),vm=require('vm'),assert=require('assert'),path=require('path');
+class Element{
+ constructor(tag='div'){this.tag=tag;this.dataset={};this.hidden=false;this.children=[];this.events={};this.textContent='';const classes=new Set();this.classList={add:x=>classes.add(x),contains:x=>classes.has(x),toggle:(x,on)=>on?classes.add(x):classes.delete(x)};}
+ append(...items){this.children.push(...items)}appendChild(item){this.append(item)}replaceChildren(...items){this.children=items}before(item){this.beforeElement=item}after(item){this.afterElement=item}setAttribute(k,v){this[k]=v}addEventListener(name,fn){this.events[name]=fn}contains(item){return this.children.includes(item)}querySelectorAll(){return this.children}click(){this.clicked=(this.clicked||0)+1;for(const b of list.children)b.classList.toggle('active',b===this);list.events.click?.({target:{closest:()=>this}})}
+}
+const list=new Element(),status=new Element(),detail=new Element(),storage=new Map();
+const a=new Element('button'),b=new Element('button');a.dataset.key='1';b.dataset.key='2';a.classList.add('active');b.classList.add('my-load');list.children=[a,b];
+const session={role:'jumper',jumperKey:'42'};const root={loadsList:list,loadsStatus:status,loadDetail:detail};const callbacks=[];let observer;
+const document={readyState:'loading',getElementById:id=>root[id],createElement:tag=>new Element(tag),createTextNode:text=>({textContent:text}),addEventListener:(event,fn)=>callbacks.push(fn)};
+const context={document,navigator:{onLine:true},location:{pathname:'/index'},SkyKefAdminAuth:{getSession:()=>session},sessionStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},window:{addEventListener(){}},MutationObserver:class{constructor(fn){observer=fn}observe(){}},Intl,Date,AbortController,setTimeout,clearTimeout,fetch:async()=>({ok:true,json:async()=>({ok:true})})};
+vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../load-view-tools.js'),'utf8'),context);callbacks[0]();
+const checkbox=list.beforeElement.children[0];checkbox.checked=true;checkbox.events.change();assert.equal(a.hidden,true);assert.equal(b.hidden,false);assert.equal(b.clicked,1);
+checkbox.checked=false;checkbox.events.change();assert.equal(a.hidden,false);b.click();a.classList.add('active');b.classList.toggle('active',false);observer();assert(b.clicked>=3);assert(b.classList.contains('active'));
+checkbox.checked=true;b.classList.toggle('my-load',false);checkbox.events.change();assert.equal(detail.hidden,true);assert.equal(list.afterElement.hidden,false);checkbox.checked=false;checkbox.events.change();assert.equal(detail.hidden,false);
+context.window.LoadViewTools.success();context.window.LoadViewTools.failure();assert.equal(list.children.length,2);assert(status.beforeElement.children[0].textContent.includes('showing last loaded data'));assert(status.beforeElement.children[1].children.length>0);
+context.navigator.onLine=false;context.window.LoadViewTools.start();assert(status.beforeElement.children[0].textContent.startsWith('Offline'));
+(async()=>{assert.deepEqual(await context.window.LoadViewTools.fetchJson('test'),{ok:true});context.fetch=async()=>({ok:false,status:403});await assert.rejects(context.window.LoadViewTools.fetchJson('test'));console.log('Passed own-load filtering, empty state, selection persistence, stale/offline status, retained rows and GET error handling.');})();

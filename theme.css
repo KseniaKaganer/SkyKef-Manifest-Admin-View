@@ -63,3 +63,8 @@ html[dir="rtl"] .logout-icon-button svg{transform:scaleX(-1)}
 
 .today-list-heading{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .today-list-heading .today-sort-toggle{min-height:40px;padding:8px 10px;font-size:13px}
+
+.logbook-filter-panel{margin:16px;border:1px solid var(--border);border-radius:12px}
+.logbook-filter-panel>summary{padding:14px 16px;cursor:pointer;font-weight:700}
+.logbook-filter-panel .logbook-filters{margin:0;border:0}
+.logbook-filter-panel .logbook-filters>legend{display:none}

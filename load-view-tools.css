@@ -1,0 +1,8 @@
+.load-refresh-info{display:flex;align-items:center;flex-wrap:wrap;gap:8px 20px;margin:10px 0 14px;font-size:14px;color:var(--muted)}
+.load-connection-status{color:var(--theme-success-text,#7de1ac);font-weight:700}
+.load-connection-status.stale{color:var(--theme-danger-text,#ffb7b7)}
+.only-my-loads{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border);font-weight:700;cursor:pointer}
+.only-my-loads input{width:20px;height:20px;accent-color:var(--accent)}
+.only-my-loads[hidden],.load-row[hidden]{display:none!important}
+
+html[data-text-size="large"] .load-refresh-info{font-size:17px}
