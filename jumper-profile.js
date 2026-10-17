@@ -35,7 +35,6 @@
       const jumper = await response.json();
       if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
       loggedInJumper = jumper;
-      document.getElementById("profileName").textContent = `${jumper.Name ?? ""} ${jumper.Surname ?? ""}`.trim() || session.username;
 
       const hiddenFields = new Set([
         "Id", "ID", "id", "password", "Password",
