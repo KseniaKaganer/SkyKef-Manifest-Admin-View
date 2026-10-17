@@ -323,7 +323,7 @@ async function downloadDatabaseJson() {
       nav.appendChild(item);
     }
     if(["admin","manifest"].includes(session.role)){
-      for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"]])link(href,label);
+      for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"],["registration.html","Registration"]])link(href,label);
       if(isDeveloper()){
         const database=document.createElement("a");database.id="developerDbLink";
         database.href=DB+"/";database.textContent="DB";database.className="developer-db-link";

@@ -6,7 +6,7 @@
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
   <script src="preferences.js?v=logbook-types-2"></script>
-<script src="auth.js?v=settings-icon-5"></script>
+<script src="auth.js?v=admin-registration-6"></script>
 <style>
 
 .load-row.next-load,
@@ -244,12 +244,13 @@
   }
 
   function updateRegistrationLink() {
-    publicFormAction.hidden = SkyKefAdminAuth.getSession()?.role === "jumper";
+    publicFormAction.hidden = Boolean(SkyKefAdminAuth.getSession());
   }
 
   function showHome(session) {
     closeLogin();
     openLoginBtn.hidden = true;
+    updateRegistrationLink();
 
     if (session.role === "jumper") {
       document.title = "SkyKef Manifest";
