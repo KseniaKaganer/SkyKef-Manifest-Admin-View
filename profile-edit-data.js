@@ -9,8 +9,8 @@ function validateProfileEdit(field, raw, original) {
   }
   if (typeof original !== 'string') throw new Error('Unsupported contact format. Contact the administrator.');
   if (!text || text.length > (field === 'Phone' ? 40 : 120) || /[\u0000-\u001f\u007f<>]/.test(text)) throw new Error('Enter valid contact details without markup or control characters.');
-  if (field === 'Phone' && !/^\+?[0-9 ()-]+$/.test(text)) throw new Error('Phone may contain digits, spaces, parentheses, hyphens and one leading +.');
-  if (field === 'Emergency' && !/^[\p{L}\p{M}\d\s+().,'’:\/-]+$/u.test(text)) throw new Error('Emergency contact may contain a name and phone number.');
+  if (field === 'Phone' && !/^\d+$/.test(text)) throw new Error('Phone must contain digits only, without +, spaces or separators.');
+  if (field === 'Emergency' && !/^[A-Za-z0-9 ]+$/.test(text)) throw new Error('Emergency contact may contain English letters, digits and spaces only.');
   const digits = text.replace(/\D/g, '');
   if (digits.length < 7 || digits.length > 15 || /^0+$/.test(digits)) throw new Error('Enter a phone number containing 7–15 digits.');
   return text;

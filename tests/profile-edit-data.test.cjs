@@ -1,11 +1,11 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');vm.runInThisContext(fs.readFileSync(require('path').join(__dirname,'../profile-edit-data.js'),'utf8'));
 const original={Uid:42,Name:'Test',Surname:'Worker',Id:'test-id',Weight:70,Phone:'0501234567',Emergency:'Contact 0509876543',Balance:500};
 const mirrors={'Test_Worker':{...original}};const session={role:'jumper',jumperKey:'42'};
-const patch=buildProfileEditPatch(original,{...original},mirrors,session,{Weight:75,Phone:'+972 50-123-4567',Emergency:'איש קשר 050-9876543'});
-assert.equal(Object.keys(patch).length,6);assert.equal(patch['jumpers/42/Weight'],75);assert.equal(patch['jumpers_by_name/Test_Worker/Phone'],'+972 50-123-4567');assert(!JSON.stringify(patch).includes('Balance'));assert.equal(original.Weight,70);
+const patch=buildProfileEditPatch(original,{...original},mirrors,session,{Weight:75,Phone:'0501112233',Emergency:'Other 0509876543'});
+assert.equal(Object.keys(patch).length,6);assert.equal(patch['jumpers/42/Weight'],75);assert.equal(patch['jumpers_by_name/Test_Worker/Phone'],'0501112233');assert(!JSON.stringify(patch).includes('Balance'));assert.equal(original.Weight,70);
 for(const value of ['',0,-10,19,251,70.5,'1e2','NaN','70kg'])assert.throws(()=>validateProfileEdit('Weight',value,70));
-for(const value of ['','abc','1234','00000000','1234567890123456','1234567<script>','++972501234567'])assert.throws(()=>validateProfileEdit('Phone',value,''));
-for(const value of ['','Name only','Name\n0501234567','<img>0501234567'])assert.throws(()=>validateProfileEdit('Emergency',value,''));
+for(const value of ['','abc','1234','00000000','1234567890123456','1234567<script>','++972501234567','+972501234567','050 1234567','050-1234567'])assert.throws(()=>validateProfileEdit('Phone',value,''));
+for(const value of ['','Name only','Name\n0501234567','<img>0501234567','איש 0501234567','Name +972501234567','Name 050-1234567'])assert.throws(()=>validateProfileEdit('Emergency',value,''));
 assert.equal(validateProfileEdit('Weight','75','70'),'75');assert.equal(validateProfileEdit('Phone','0501234567',''), '0501234567');assert.throws(()=>validateProfileEdit('Phone','0501234567',501234567));
 const build=(changes={},fresh=original,byName=mirrors,s=session)=>buildProfileEditPatch(original,fresh,byName,s,changes);
 assert.deepEqual(build({Weight:70}),{});

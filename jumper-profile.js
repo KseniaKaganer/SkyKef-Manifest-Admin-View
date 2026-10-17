@@ -49,11 +49,22 @@
       editFields.replaceChildren(); editInputs.clear();
       for(const field of PROFILE_EDIT_FIELDS) {
         if(!Object.hasOwn(editBaseline, field)) continue;
-        const label = document.createElement("label"); label.textContent = field === "Weight" ? "Weight (kg)" : field === "Emergency" ? "Emergency contact (name and phone, or phone)" : "Phone";
-        const input = document.createElement("input"); input.className = "jumper-edit-input"; input.name = field;
+        const label = document.createElement("label"); label.textContent = field === "Weight" ? "Weight (kg)" : field === "Emergency" ? "Emergency" : "Phone";
+        if(field === "Emergency") {
+          const info = document.createElement("button"); info.type = "button"; info.className = "profile-field-info"; info.textContent = "i";
+          info.title = "Emergency Contact - Name and Phone";
+          info.setAttribute("aria-label", "Emergency Contact - Name and Phone");
+          info.setAttribute("aria-expanded", "false"); info.setAttribute("aria-controls", "emergencyContactHint");
+          const hint = document.createElement("span"); hint.id = "emergencyContactHint"; hint.className = "profile-field-hint"; hint.textContent = "Emergency Contact - Name and Phone"; hint.hidden = true;
+          info.addEventListener("click", event => { event.preventDefault(); hint.hidden = !hint.hidden; info.setAttribute("aria-expanded", String(!hint.hidden)); });
+          label.append(info, hint);
+        }
+        const input = document.createElement("input"); input.className = "jumper-edit-input"; input.name = field; input.id = `profileEdit${field}`; label.htmlFor = input.id;
         input.type = field === "Phone" ? "tel" : "text"; input.value = String(editBaseline[field] ?? "");
         input.maxLength = field === "Weight" ? 3 : field === "Phone" ? 40 : 120;
-        if(field === "Weight") input.inputMode = "numeric";
+        if(field === "Weight" || field === "Phone") input.inputMode = "numeric";
+        if(field === "Phone") input.pattern = "[0-9]{7,15}";
+        if(field === "Emergency") { input.pattern = "[A-Za-z0-9 ]+"; input.setAttribute("aria-describedby", "emergencyContactHint"); }
         input.required = true; input.addEventListener("input", updateEditValidity);
         label.appendChild(input); editFields.appendChild(label); editInputs.set(field,input);
       }
