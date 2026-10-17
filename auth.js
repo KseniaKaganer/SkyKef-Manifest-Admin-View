@@ -292,6 +292,7 @@ async function downloadDatabaseJson() {
     }else{
       link("index.html","Loads");
       link("my-profile.html","My Profile");
+      link("registration.html","Registration");
       const register=document.createElement("a");register.id="headerRegistrationLink";
       register.href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform";
       register.className="small-btn";register.textContent="Register for Jumping";
@@ -299,7 +300,7 @@ async function downloadDatabaseJson() {
       nav.appendChild(register);
       function updateRegistration(){
         const hour=Number(new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",hour:"2-digit",hourCycle:"h23"}).format(new Date()));
-        register.hidden=hour<8 || hour>=17;
+        register.hidden=isLoginPage || hour<8 || hour>=17;
       }
       updateRegistration();
       window.setInterval(updateRegistration,10000);

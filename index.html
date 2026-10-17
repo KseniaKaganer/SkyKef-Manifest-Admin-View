@@ -4,8 +4,8 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
-  <link rel="stylesheet" href="style.css?v=public-registration-1">
-  <script src="auth.js?v=public-registration-1"></script>
+  <link rel="stylesheet" href="style.css?v=registration-navigation-2">
+  <script src="auth.js?v=registration-navigation-2"></script>
 <style>
 
 .load-row.next-load,
@@ -55,7 +55,7 @@
 </header>
 
 <main class="page">
-  <div class="public-form-action"><a class="small-btn" href="registration.html">Registration Form</a></div>
+  <div id="publicFormAction" class="public-form-action"><a class="small-btn" href="registration.html">Registration</a></div>
   <div id="registrationAction" class="registration-action" hidden>
     <a class="small-btn registration-btn" href="https://docs.google.com/forms/d/1Zdrh-JbO2c9PQmyEsvIHwPxv80kXYozxFXfZT3Jerz4/viewform" target="_blank" rel="noopener noreferrer">Register for Jumping</a>
   </div>
@@ -157,6 +157,7 @@
   const siteTitle = document.getElementById("siteTitle");
   const publicLoadsCard = document.getElementById("publicLoadsCard");
   const registrationAction = document.getElementById("registrationAction");
+  const publicFormAction = document.getElementById("publicFormAction");
   const loginCard = document.getElementById("loginCard");
   const loginOverlay = document.getElementById("loginOverlay");
   const openLoginBtn = document.getElementById("openLoginBtn");
@@ -254,7 +255,8 @@
 
   function updateRegistrationAvailability() {
     const role = SkyKefAdminAuth.getSession()?.role;
-    registrationAction.hidden = !registrationIsOpen() || Boolean(role);
+    registrationAction.hidden = !registrationIsOpen() || ["admin", "manifest"].includes(role);
+    publicFormAction.hidden = role === "jumper";
   }
 
   function showHome(session) {
