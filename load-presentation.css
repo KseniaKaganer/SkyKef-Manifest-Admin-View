@@ -1,0 +1,2 @@
+.load-jumper-extra{margin-top:5px;font-size:.85em;font-weight:400;line-height:1.4;color:var(--muted);white-space:normal;overflow-wrap:anywhere}
+@media print{#loadPrintArea .load-jumper-extra{color:#444;font-size:9pt;margin-top:1mm}}

@@ -22,6 +22,8 @@
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
 <link rel="stylesheet" href="admin-load-table.css?v=uid-1">
+<script src="load-presentation.js?v=details-1"></script>
+<link rel="stylesheet" href="load-presentation.css?v=details-1">
 </head>
 <body>
 <header class="site-header">
@@ -185,7 +187,7 @@
         };
       })
       .sort((a, b) => {
-        const priorityDiff = activityPriority(a.activity) - activityPriority(b.activity);
+        const priorityDiff = loadActivityPriority(a.activity) - loadActivityPriority(b.activity);
         if (priorityDiff !== 0) return priorityDiff;
 
         const an = displayName(jumpersByUid.get(a.uid), a.uid);
@@ -295,6 +297,7 @@
       const name = document.createElement("td");
       name.className = "load-jumper-name";
       name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
+      appendLoadNameDetails(name,entry.details);
 
       const uid = document.createElement("td");
       uid.textContent = entry.uid;
@@ -307,7 +310,7 @@
       }
 
       const details = document.createElement("td");
-      details.textContent = entry.details;
+      details.textContent = splitLoadDetails(entry.details).first;
 
       tr.append(uid, name, activity, details);
       loadBody.appendChild(tr);

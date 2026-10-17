@@ -44,6 +44,8 @@
 #publicLoadsCard #loadsStatus:empty { display:none; }
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
+<script src="load-presentation.js?v=details-1"></script>
+<link rel="stylesheet" href="load-presentation.css?v=details-1">
 </head>
 <body>
 <header class="site-header">
@@ -499,6 +501,8 @@
         };
       })
       .sort((a, b) => {
+        const priorityDiff=loadActivityPriority(a.activity)-loadActivityPriority(b.activity);
+        if(priorityDiff!==0)return priorityDiff;
         const an = displayName(jumpersByUid.get(a.uid), a.uid);
         const bn = displayName(jumpersByUid.get(b.uid), b.uid);
         return an.localeCompare(bn, undefined, { sensitivity: "base" });
@@ -593,6 +597,7 @@
       const name = document.createElement("td");
       name.className = "load-jumper-name";
       name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
+      appendLoadNameDetails(name,entry.details);
 
       const activity = document.createElement("td");
       activity.textContent = entry.activity;
@@ -601,7 +606,7 @@
       }
 
       const details = document.createElement("td");
-      details.textContent = entry.details;
+      details.textContent = splitLoadDetails(entry.details).first;
 
       tr.append(name, activity, details);
       loadBody.appendChild(tr);
