@@ -38,3 +38,13 @@ html[dir="rtl"] .settings-dialog label{direction:rtl}
 
 .site-header .session-role-badge.jumper-name-badge{font-size:16px;font-weight:800}
 html[data-text-size="large"] .site-header .session-role-badge.jumper-name-badge{font-size:20px}
+
+@media(max-width:700px){
+ .unified-header.jumper-header .header-top{flex-direction:row;align-items:center;gap:8px}
+ .unified-header.jumper-header .header-top h1{flex:1 1 auto;min-width:0;align-self:center;margin:0;font-size:clamp(14px,3.5vw,18px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .unified-header.jumper-header .session-account{width:auto;flex:0 1 auto;max-width:65%;min-width:0;flex-wrap:nowrap;align-self:center;margin-left:0;margin-inline-start:auto;gap:6px}
+ .site-header .jumper-header .session-role-badge.jumper-name-badge{display:block;min-width:0;max-width:none;flex:0 1 auto;min-height:44px;padding:12px 8px;font-size:14px;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .site-header .jumper-header #sessionLogoutBtn{flex:0 0 auto;min-height:44px;padding:8px 10px;font-size:13px}
+ html[data-text-size="large"] .site-header .jumper-header .session-role-badge.jumper-name-badge{font-size:18px}
+ html[data-text-size="large"] .site-header .jumper-header #sessionLogoutBtn{font-size:17px}
+}

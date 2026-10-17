@@ -293,11 +293,12 @@ async function downloadDatabaseJson() {
     });
     if(document.getElementById("sessionAccount"))return;
     header.classList.add("unified-header");
+    if(session.role==="jumper")header.classList.add("jumper-header");
     const top=document.createElement("div");top.className="header-top";
     const account=document.createElement("div");account.id="sessionAccount";account.className="session-account";
     const badge=document.createElement("span");badge.id="sessionRole";badge.className="session-role-badge";
     badge.textContent=isDeveloper() || session.role==="jumper" ? session.username : `${session.username} · ${session.role==="admin"?"Admin":"Manifest"}`;
-    if(session.role==="jumper")badge.classList.add("jumper-name-badge");
+    if(session.role==="jumper"){badge.classList.add("jumper-name-badge");badge.title=session.username;}
     if(isDeveloper())badge.classList.add("developer-badge");
     const logoutButton=document.createElement("button");logoutButton.id="sessionLogoutBtn";
     logoutButton.type="button";logoutButton.className="small-btn";logoutButton.textContent="Logout";
