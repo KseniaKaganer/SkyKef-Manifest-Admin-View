@@ -299,7 +299,9 @@ async function downloadDatabaseJson() {
     const home=document.createElement("a");home.href="index.html";home.className="small-btn header-home-button";
     home.setAttribute("aria-label","Home");home.title="Home";
     home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';
-    account.append(badge);addSettings(account);account.append(logoutButton,home);top.append(title,account);
+    account.append(badge,logoutButton);
+    if(session.role !== "jumper") account.appendChild(home);
+    top.append(title,account);
     const nav=document.createElement("nav");nav.className="nav header-navigation";nav.setAttribute("aria-label","Main navigation");
     // Attach synchronously: repeated calls during worker verification must see one header.
     header.replaceChildren(top,nav);
@@ -324,6 +326,7 @@ async function downloadDatabaseJson() {
       link("registration.html","Registration");
       if(await canViewDailyReport())link("daily-report.html","Daily Report");
     }
+    addSettings(nav);
   }
   document.addEventListener("DOMContentLoaded", showSessionRole);
   window.SkyKefAdminAuth = { formatDate, getSession, verifyUser, verifyJumper, getLoginUsers, isAdmin, isDeveloper, canEdit, createSession, createJumperSession, logout, getDayState, applyViewOnlyMode, showSessionRole };
