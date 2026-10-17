@@ -5,15 +5,25 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>DZ Check-in | SkyKef Manifest</title>
 <link rel="stylesheet" href="style.css?v=settings-theme-1">
-<script src="preferences.js?v=dz-check-in-13"></script>
+<script src="preferences.js?v=local-checkin-14"></script>
 <script src="auth.js?v=dz-check-in-12"></script>
 <link rel="stylesheet" href="theme.css?v=logbook-years-13">
 <style>
 .check-in-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
 .check-in-heading h2{margin:0}
 .check-in-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.check-in-actions a{display:inline-flex;align-items:center;justify-content:center}
-.check-in-frame{width:100%;height:78vh;min-height:480px;border:1px solid var(--border);border-radius:12px;background:#fff}
+.check-in-actions :is(a,button){display:inline-flex;align-items:center;justify-content:center}
+.check-in-document{max-width:850px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.check-in-document img{display:block;width:100%;height:auto}
+@page{size:A4 portrait;margin:8mm}
+@media print{
+ body>*:not(#checkInPage){display:none!important}
+ html,body{background:#fff!important;margin:0!important;padding:0!important}
+ #checkInPage{display:block!important;padding:0!important;margin:0!important;max-width:none!important}
+ #checkInPage>*:not(.check-in-document){display:none!important}
+ #checkInPage .check-in-document{border:0;border-radius:0;margin:0;max-width:none;width:194mm;height:280mm;display:flex;align-items:center;justify-content:center;break-inside:avoid}
+ #checkInPage .check-in-document img{width:100%;height:auto;max-height:280mm;object-fit:contain}
+}
 .check-in-print{width:48px;padding:10px}
 </style>
 </head>
@@ -21,17 +31,23 @@
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest</h1></div></header>
 <main id="checkInPage" class="page" hidden>
 <div class="check-in-heading"><h2>DZ Check-in</h2><div class="check-in-actions">
-<a class="small-btn" href="https://drive.google.com/file/d/1LhNcarB68GS778QXEAmnw4V0WtoHwKcM/view?usp=sharing" target="_blank" rel="noopener noreferrer">Open in Google Drive</a>
-<a class="small-btn check-in-print" href="https://drive.google.com/file/d/1LhNcarB68GS778QXEAmnw4V0WtoHwKcM/view?usp=sharing" target="_blank" rel="noopener noreferrer" title="Print file" aria-label="Print file"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></a>
+<a class="small-btn" href="assets/dz-check-in/skykef-dz-checkin.pdf" download>Download PDF</a>
+<button id="printCheckInBtn" class="small-btn check-in-print" type="button" title="Print file" aria-label="Print file" disabled><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
 </div></div>
-<p class="status">Print opens the file in Google Drive. Use the viewer’s print button.</p>
-<iframe id="checkInFrame" class="check-in-frame" title="DZ Check-in" allow="fullscreen" referrerpolicy="strict-origin-when-cross-origin"></iframe>
+<p id="checkInStatus" class="status" role="status">Loading document…</p>
+<div class="check-in-document"><img id="checkInImage" alt="SkyKef DZ Check-in form" width="1655" height="2340"></div>
 </main>
 <script>
 (async()=>{
  if(!await SkyKefAdminAuth.ready || !SkyKefAdminAuth.isAdmin())return;
  document.getElementById('checkInPage').hidden=false;
- document.getElementById('checkInFrame').src='https://drive.google.com/file/d/1LhNcarB68GS778QXEAmnw4V0WtoHwKcM/preview';
+ const image=document.getElementById('checkInImage');
+ const button=document.getElementById('printCheckInBtn');
+ const status=document.getElementById('checkInStatus');
+ image.src='assets/dz-check-in/skykef-dz-checkin.png';
+ try{await image.decode();button.disabled=false;status.textContent='';}
+ catch{status.textContent='Could not load the document. Download the PDF to print it.';}
+ button.addEventListener('click',()=>{if(SkyKefAdminAuth.isAdmin() && !button.disabled)window.print();});
 })();
 </script>
 </body>
