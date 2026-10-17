@@ -9,6 +9,7 @@
   <script src="preferences.js?v=print-load-1"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
+<link rel="stylesheet" href="admin-load-table.css?v=uid-1">
 </head>
 <body>
 <header class="site-header">
@@ -59,11 +60,11 @@
       <div id="loadDetail" hidden>
         <div class="load-summary" id="loadSummary"></div>
         <div class="load-table-scroll">
-          <table class="load-table">
+          <table class="load-table admin-load-table">
             <thead>
               <tr>
+                <th class="load-uid-column">UID</th>
                 <th>Jumper</th>
-                <th>UID</th>
                 <th>Activity</th>
                 <th>Details</th>
               </tr>
@@ -304,6 +305,7 @@
 
         const uid = document.createElement("td");
         uid.textContent = entry.uid;
+        uid.className = "load-uid-column";
 
         const activity = document.createElement("td");
         activity.textContent = entry.activity;
@@ -314,7 +316,7 @@
         const details = document.createElement("td");
         details.textContent = entry.details;
 
-        tr.append(name, uid, activity, details);
+        tr.append(uid, name, activity, details);
         loadBody.appendChild(tr);
       });
     }
