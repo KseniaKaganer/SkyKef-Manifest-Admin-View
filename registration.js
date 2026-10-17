@@ -12,6 +12,15 @@ function registrationFormUrl(profile,embedded=false){
   const iframe=document.getElementById('registrationFrame');
   const originalLink=document.getElementById('registrationOriginalLink');
   const status=document.getElementById('registrationFormStatus');
+  if(SkyKefAdminAuth.isAdmin()){
+    const sheet='https://docs.google.com/spreadsheets/d/1iANChJB6OTxoPyjZHFgcLVeen_WEcJzL5V_vBBmzX5o';
+    document.querySelector('.registration-page').classList.add('registration-sheet-page');
+    document.getElementById('registrationPageTitle').textContent='Registration';
+    document.getElementById('registrationPageSubtitle').hidden=true;
+    originalLink.href=sheet+'/edit?usp=sharing';originalLink.textContent='Open in Google Sheets ↗';
+    iframe.title='Registration spreadsheet';iframe.src=sheet+'/preview';iframe.hidden=false;
+    status.textContent='';return;
+  }
   let profile=null;
   try{
     const session=SkyKefAdminAuth.getSession();

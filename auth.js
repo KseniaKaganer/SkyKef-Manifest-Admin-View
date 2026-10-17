@@ -325,7 +325,7 @@ async function downloadDatabaseJson() {
     if(["admin","manifest"].includes(session.role)){
       for(const [href,label] of [["jumpers-data.html","Jumpers Data"],["today-jumpers.html","Today Jumpers"],["loads.html","Loads"],["loads-history.html","Loads History"],["daily-report.html","Daily Report"],["reports.html","Reports"],["registration.html","Registration"]])link(href,label);
       if(isAdmin()){
-        const guide=document.createElement("a");guide.textContent="APP GUIDE";
+        const guide=document.createElement("a");guide.textContent="App Guide";
         guide.href="https://docs.google.com/document/d/13nvf7p2z807HV0ynag-fAAXBqryen8SvepEI8vBVcYs/edit?usp=sharing";
         guide.target="_blank";guide.rel="noopener noreferrer";nav.appendChild(guide);
       }

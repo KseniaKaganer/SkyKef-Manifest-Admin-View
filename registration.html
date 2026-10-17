@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Registration Form | SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=app-guide-8"></script>
-<script src="auth.js?v=app-guide-8"></script>
+  <script src="preferences.js?v=admin-sheet-9"></script>
+<script src="auth.js?v=admin-sheet-9"></script>
   <style>
     .registration-page{max-width:1000px}
     .registration-page-heading{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
@@ -15,6 +15,8 @@
     .registration-original-link{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
     .registration-embed{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff}
     .registration-embed iframe{display:block;width:100%;height:1500px;border:0;background:#fff}
+    .registration-page.registration-sheet-page{max-width:1600px}
+    .registration-sheet-page .registration-embed iframe{height:75vh;min-height:480px}
     @media(max-width:600px){.registration-page{padding:20px 10px}.registration-embed iframe{height:1650px}}
   </style>
 <link rel="stylesheet" href="theme.css?v=dev-tools-7">
@@ -28,7 +30,7 @@
 </header>
 <main class="page registration-page">
   <div class="registration-page-heading">
-    <div><h2>Jumping Day Registration</h2><p lang="he" dir="rtl">סקיכיף — טופס הרשמה ליום פעילות</p></div>
+    <div><h2 id="registrationPageTitle">Jumping Day Registration</h2><p id="registrationPageSubtitle" lang="he" dir="rtl">סקיכיף — טופס הרשמה ליום פעילות</p></div>
     <a id="registrationOriginalLink" class="small-btn registration-original-link" href="https://docs.google.com/forms/d/e/1FAIpQLSeFem8JsrpMqbjNy95eaZVijdfKK-ptlyiDPB2LPLJefuomBg/viewform" target="_blank" rel="noopener noreferrer">Open in Google Forms ↗</a>
   </div>
   <p id="registrationFormStatus" class="status" role="status">Loading form…</p>
@@ -36,6 +38,6 @@
     <iframe id="registrationFrame" hidden title="SkyKef jumping day registration form" referrerpolicy="strict-origin-when-cross-origin">Loading registration form…</iframe>
   </section>
 </main>
-<script src="registration.js?v=profile-prefill-1"></script>
+<script src="registration.js?v=admin-sheet-2"></script>
 </body>
 </html>
