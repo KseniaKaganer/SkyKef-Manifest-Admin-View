@@ -57,8 +57,7 @@ function decorateLoadConnection(row,nameCell,entry){
 function loadAltitudeValue(details,activity,{jumperView=false}={}){
   if(String(activity ?? '').trim().toUpperCase()==='V')return '';
   const first=splitLoadDetails(details).first;
-  const type=String(activity ?? '').trim().toUpperCase();
-  return (jumperView || type==='FUN' || type==='FUN_RENTAL') && ['12','12000'].includes(first)?'':first;
+  return first;
 }
 function compareTandemAltitude(a,b){
   if(!String(a.activity ?? '').trim().toUpperCase().startsWith('T') || !String(b.activity ?? '').trim().toUpperCase().startsWith('T'))return 0;
