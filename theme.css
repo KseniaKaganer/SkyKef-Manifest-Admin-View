@@ -57,3 +57,6 @@ html[dir="rtl"] .logout-icon-button svg{transform:scaleX(-1)}
 .unified-header .developer-navigation{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
 .site-header .developer-navigation .developer-action{color:var(--theme-danger-text,#ff8a8a);border-color:#c34c4c;background:var(--theme-danger-bg,#30181d);font-weight:800}
 .site-header .developer-navigation .developer-action:hover{color:var(--theme-danger-text,#ff8a8a);border-color:#e5484d;background:var(--theme-danger-bg,#30181d)}
+
+.today-sort-control{display:grid;gap:6px;font-weight:700}
+.today-sort-control select{min-height:48px;max-width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:var(--panel);color:var(--text);font:inherit}

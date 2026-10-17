@@ -17,6 +17,7 @@ logbookBody=document.getElementById("logbookBody");
 let jumpers=[],selectedKey=null,selectedJumper=null;
 const logbookCache=new Map();
 let todayJumpCounts=new Map();
+const todayJumpSort=document.getElementById("todayJumpSort");
 const displayName=j=>`${j.Name??""} ${j.Surname??""}`.trim()||"Unnamed jumper";
 function normalize(data){if(!data)return[];if(Array.isArray(data))return data.map((v,i)=>v?({key:String(i),...v}):null).filter(Boolean);if(typeof data==="object")return Object.entries(data).filter(([,v])=>v&&typeof v==="object").map(([k,v])=>({key:k,...v}));return[]}
 function renderList(){const q=searchInput.value.trim().toLowerCase();const filtered=jumpers.filter(j=>[j.Name,j.Surname,j.Phone,j.Id,j.Uid].filter(v=>v!==undefined&&v!==null).join(" ").toLowerCase().includes(q));listEl.innerHTML="";
@@ -42,7 +43,8 @@ if(todayOnly){
       const aCounts=todayJumpCounts.get(String(a.Uid??a.uid??a.key));
       const bCounts=todayJumpCounts.get(String(b.Uid??b.uid??b.key));
       const field=isWorker?"work":"total";
-      return (aCounts?.[field]??0)-(bCounts?.[field]??0)||displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"});
+      const direction=todayJumpSort?.value==="asc"?1:-1;
+      return direction*((aCounts?.[field]??0)-(bCounts?.[field]??0))||displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"});
     });
     const section=document.createElement("section");section.className="today-jumper-group";
     section.setAttribute("aria-label",label);
@@ -357,4 +359,5 @@ detailsEl.textContent="Select a jumper to view all data.";
 logbookStatus.textContent="Select a jumper to view the logbook.";
 logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
 renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
+todayJumpSort?.addEventListener("change",renderList);
 searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",load);load();
