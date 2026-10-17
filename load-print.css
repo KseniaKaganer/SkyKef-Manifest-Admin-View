@@ -14,11 +14,13 @@
  #loadPrintArea table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:5mm;font-size:11pt}
  #loadPrintArea th,#loadPrintArea td{border:1px solid #555;padding:2.5mm;text-align:start;overflow-wrap:anywhere;color:#000!important;background:#fff!important;box-shadow:none!important}
  #loadPrintArea th{font-weight:700;background:#eee!important}
- #loadPrintArea th:nth-child(1){width:40%}
- #loadPrintArea th:nth-child(2){width:16%}
- #loadPrintArea th:nth-child(3){width:44%}
+ #loadPrintArea th:nth-child(1){width:60%}
+ #loadPrintArea th:nth-child(2){width:20%}
+ #loadPrintArea th:nth-child(3){width:20%}
  #loadPrintArea thead{display:table-header-group}
  #loadPrintArea tr{break-inside:avoid}
  #loadPrintArea.compact-load-print table{font-size:9pt}
  #loadPrintArea.compact-load-print td{padding:1.5mm 2mm}
 }
+
+@media print{#loadPrintArea :is(th,td):nth-child(2),#loadPrintArea :is(th,td):nth-child(3){text-align:center}}
