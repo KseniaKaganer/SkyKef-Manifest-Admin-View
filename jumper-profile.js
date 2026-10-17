@@ -10,6 +10,87 @@
   const userLogbookStatus = document.getElementById("userLogbookStatus");
   const userLogbookBody = document.getElementById("userLogbookBody");
   const exportUserLogbookBtn = document.getElementById("exportUserLogbookBtn");
+
+  const editButton = document.getElementById("editProfileBtn");
+  const editForm = document.getElementById("profileEditForm");
+  const editFields = document.getElementById("profileEditFields");
+  const editStatus = document.getElementById("profileEditStatus");
+  const saveButton = document.getElementById("saveProfileBtn");
+  const cancelButton = document.getElementById("cancelProfileBtn");
+  let editBaseline = null;
+  let savingProfile = false;
+  const editInputs = new Map();
+  async function profileJson(path) {
+    const response = await fetch(`${DB}/${path}.json`, {cache:"no-store"});
+    if (!response.ok) throw new Error("Could not read profile records. Please try again.");
+    return response.json();
+  }
+  function profileChanges() {
+    const changes = {};
+    for (const [field, input] of editInputs) {
+      input.removeAttribute("aria-invalid");
+      if (input.value === String(editBaseline[field] ?? "")) continue;
+      try { changes[field] = validateProfileEdit(field, input.value, editBaseline[field]); }
+      catch(error) { input.setAttribute("aria-invalid", "true"); throw new Error(`${field}: ${error.message}`); }
+    }
+    return changes;
+  }
+  function updateEditValidity() {
+    try { saveButton.disabled = savingProfile || !Object.keys(profileChanges()).length; editStatus.textContent = ""; }
+    catch(error) { saveButton.disabled = true; editStatus.textContent = error.message; }
+  }
+  editButton.addEventListener("click", async () => {
+    editButton.disabled = true; editStatus.textContent = "Loading current details…";
+    try {
+      const session = SkyKefAdminAuth.getSession();
+      if(session?.role !== "jumper") throw new Error("Please log in again.");
+      editBaseline = await profileJson(`jumpers/${encodeURIComponent(session.jumperKey)}`);
+      if(!editBaseline || String(editBaseline.Uid ?? editBaseline.uid ?? '') !== String(session.jumperKey)) throw new Error("Profile identity mismatch. Please contact the administrator.");
+      editFields.replaceChildren(); editInputs.clear();
+      for(const field of PROFILE_EDIT_FIELDS) {
+        if(!Object.hasOwn(editBaseline, field)) continue;
+        const label = document.createElement("label"); label.textContent = field === "Weight" ? "Weight (kg)" : field === "Emergency" ? "Emergency contact (name and phone, or phone)" : "Phone";
+        const input = document.createElement("input"); input.className = "jumper-edit-input"; input.name = field;
+        input.type = field === "Phone" ? "tel" : "text"; input.value = String(editBaseline[field] ?? "");
+        input.maxLength = field === "Weight" ? 3 : field === "Phone" ? 40 : 120;
+        if(field === "Weight") input.inputMode = "numeric";
+        input.required = true; input.addEventListener("input", updateEditValidity);
+        label.appendChild(input); editFields.appendChild(label); editInputs.set(field,input);
+      }
+      editForm.hidden = false; editButton.hidden = true; updateEditValidity();
+      editInputs.values().next().value?.focus();
+    } catch(error) { editStatus.textContent = error.message; }
+    finally { editButton.disabled = false; }
+  });
+  cancelButton.addEventListener("click", () => {
+    if(savingProfile) return;
+    editForm.hidden = true; editButton.hidden = false; editStatus.textContent = ""; editBaseline = null;
+  });
+  editForm.addEventListener("submit", async event => {
+    event.preventDefault(); if(savingProfile) return;
+    let changes;
+    try { changes = profileChanges(); } catch(error) { editStatus.textContent = error.message; return; }
+    if(!Object.keys(changes).length) return;
+    savingProfile = true; saveButton.disabled = true; cancelButton.disabled = true;
+    for(const input of editInputs.values()) input.disabled = true;
+    editStatus.textContent = "Saving…";
+    try {
+      const session = SkyKefAdminAuth.getSession();
+      if(session?.role !== "jumper" || String(session.jumperKey) !== String(editBaseline.Uid ?? editBaseline.uid)) throw new Error("Your login changed. Please log in again.");
+      const [fresh,byName] = await Promise.all([profileJson(`jumpers/${encodeURIComponent(session.jumperKey)}`),profileJson("jumpers_by_name")]);
+      const patch = buildProfileEditPatch(editBaseline,fresh,byName,session,changes);
+      if(!Object.keys(patch).length) throw new Error("No changes to save.");
+      const activeSession = SkyKefAdminAuth.getSession();
+      if(activeSession?.role !== "jumper" || activeSession.jumperKey !== session.jumperKey) throw new Error("Your login changed. Nothing was saved.");
+      const response = await fetch(`${DB}/.json`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify(patch)});
+      if(!response.ok) throw new Error(`Save failed (HTTP ${response.status}). Your edits are still here.`);
+      editForm.hidden = true; editButton.hidden = false;
+      await loadJumperProfile(session);
+      editStatus.textContent = "Saved to both profile records.";
+    } catch(error) { editStatus.textContent = error.message || "Could not confirm saving. Reopen Edit to check the current values before retrying."; }
+    finally { savingProfile = false; cancelButton.disabled = false; for(const input of editInputs.values()) input.disabled = false; try { saveButton.disabled = !Object.keys(profileChanges()).length; } catch { saveButton.disabled = true; } }
+  });
+
   let loggedInJumper = null;
   let loggedInLogbookRows = [];
   let logbookLoaded = false;
@@ -29,6 +110,7 @@
       const jumper = await response.json();
       if (!jumper || typeof jumper !== "object") throw new Error("Profile not found");
       loggedInJumper = jumper;
+      editButton.disabled = false;
       document.getElementById("profileName").textContent = `${jumper.Name ?? ""} ${jumper.Surname ?? ""}`.trim() || session.username;
 
       const hiddenFields = new Set([
