@@ -9,8 +9,8 @@
 .report-calendar-weekdays{font-size:12px;color:var(--muted);margin-bottom:6px}
 .report-calendar-days button:disabled{opacity:.25;cursor:default}
 .report-calendar-days button:not(:disabled){border-color:var(--accent)}
-.report-calendar-days button[aria-pressed="true"]{background:#164975}
-.report-calendar-days button:not(:disabled):hover{background:#164975}
+.report-calendar-days button[aria-pressed="true"]{background:var(--theme-hover, #164975)}
+.report-calendar-days button:not(:disabled):hover{background:var(--theme-hover, #164975)}
 .report-calendar p{font-size:12px;line-height:1.4;font-weight:400;color:var(--muted);margin:12px 0 0}
 @media(max-width:420px){.report-calendar{right:auto;left:-40px}}
 

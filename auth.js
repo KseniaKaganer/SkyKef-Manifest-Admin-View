@@ -1,6 +1,35 @@
 (() => {
   "use strict";
 
+  const THEME_KEY = "skykef_manifest_theme";
+  function setTheme(theme) {
+    const value = theme === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = value;
+    try { localStorage.setItem(THEME_KEY, value); } catch {}
+  }
+  try { document.documentElement.dataset.theme = localStorage.getItem(THEME_KEY) === "light" ? "light" : "dark"; }
+  catch { document.documentElement.dataset.theme = "dark"; }
+
+  function addSettings(account) {
+    const button = document.createElement("button");
+    button.type = "button"; button.className = "small-btn";
+    button.id = "settingsBtn"; button.textContent = "Settings";
+    const dialog = document.createElement("dialog");
+    dialog.className = "settings-dialog";
+    dialog.setAttribute("aria-labelledby", "settingsTitle");
+    dialog.innerHTML = '<form method="dialog"><div class="settings-heading"><h2 id="settingsTitle">Settings</h2><button class="small-btn" aria-label="Close settings">Close</button></div><fieldset><legend>Appearance</legend><label><input type="radio" name="theme" value="dark"> Dark Mode</label><label><input type="radio" name="theme" value="light"> Light Mode</label></fieldset></form>';
+    dialog.querySelectorAll('input[name="theme"]').forEach(input => {
+      input.addEventListener("change", () => setTheme(input.value));
+    });
+    button.addEventListener("click", () => {
+      dialog.querySelector('input[value="' + document.documentElement.dataset.theme + '"]').checked = true;
+      dialog.showModal();
+    });
+    dialog.addEventListener("click", event => { if (event.target === dialog) { const r = dialog.getBoundingClientRect(); if(event.clientX < r.left || event.clientX > r.right || event.clientY < r.top || event.clientY > r.bottom) dialog.close(); } });
+    document.body.appendChild(dialog);
+    account.appendChild(button);
+  }
+
   const DB = "https://skykef-app-default-rtdb.europe-west1.firebasedatabase.app";
   const SESSION_KEY = "skykef_manifest_admin_session";
   const pagePath = location.pathname.replace(/\/$/, "").replace(/\.html$/, "");
@@ -270,7 +299,7 @@ async function downloadDatabaseJson() {
     const home=document.createElement("a");home.href="index.html";home.className="small-btn header-home-button";
     home.setAttribute("aria-label","Home");home.title="Home";
     home.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>';
-    account.append(badge,logoutButton,home);top.append(title,account);
+    account.append(badge);addSettings(account);account.append(logoutButton,home);top.append(title,account);
     const nav=document.createElement("nav");nav.className="nav header-navigation";nav.setAttribute("aria-label","Main navigation");
     // Attach synchronously: repeated calls during worker verification must see one header.
     header.replaceChildren(top,nav);

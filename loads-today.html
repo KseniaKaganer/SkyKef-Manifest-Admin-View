@@ -4,27 +4,28 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Loads | SkyKef Manifest Admin View</title>
-  <link rel="stylesheet" href="style.css?v=registration-navigation-2">
-  <script src="auth.js?v=registration-navigation-2"></script>
+  <link rel="stylesheet" href="style.css?v=settings-theme-1">
+  <script src="auth.js?v=settings-theme-1"></script>
 <style>
 .load-row.next-load,
 .load-row.next-load:hover,
 .load-row.next-load.active {
-  background:#3a300d;
+  background:var(--theme-warning-bg, #3a300d);
   box-shadow:inset 4px 0 0 #ffd45a;
 }
 .load-row.next-load .load-row-title,
 .load-row.next-load .load-row-arrow,
-.next-load-title { color:#ffe394; }
-.load-row.next-load .load-row-sub { color:#e4d6a1; }
+.next-load-title { color:var(--theme-warning-text, #ffe394); }
+.load-row.next-load .load-row-sub { color:var(--theme-warning-text, #e4d6a1); }
 .jumper-manifest-summary {
   margin-bottom:22px;padding:20px 24px;border:2px solid #ffd45a;
-  border-radius:16px;background:#3a300d;color:#fff1b8;line-height:1.5;
+  border-radius:16px;background:var(--theme-warning-bg, #3a300d);color:var(--theme-warning-text, #fff1b8);line-height:1.5;
 }
 .jumper-manifest-summary[hidden] { display:none; }
 .jumper-manifest-summary strong { display:block;font-size:1.15rem; }
-.jumper-manifest-summary p { margin:8px 0 0;color:#ffe394; }
+.jumper-manifest-summary p { margin:8px 0 0;color:var(--theme-warning-text, #ffe394); }
 </style>
+<link rel="stylesheet" href="theme.css?v=settings-theme-1">
 </head>
 <body>
 <header class="site-header">
