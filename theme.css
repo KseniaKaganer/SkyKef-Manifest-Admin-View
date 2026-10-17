@@ -68,3 +68,11 @@ html[dir="rtl"] .logout-icon-button svg{transform:scaleX(-1)}
 .logbook-filter-panel>summary{padding:14px 16px;cursor:pointer;font-weight:700}
 .logbook-filter-panel .logbook-filters{margin:0;border:0}
 .logbook-filter-panel .logbook-filters>legend{display:none}
+
+.logbook-annual-stats summary{cursor:pointer;font-weight:700;font-size:1rem;padding:4px}
+.logbook-annual-stats details[open]>summary{margin-bottom:12px}
+.user-logbook-table .logbook-year-separator th{padding:0;background:var(--panel2);border-top:2px solid var(--accent);border-bottom:1px solid var(--border)}
+.logbook-year-toggle{display:flex;align-items:center;gap:12px;width:100%;border:0;padding:14px 16px;background:transparent;color:var(--text);font:inherit;font-size:1.1rem;font-weight:800;text-align:start;cursor:pointer}
+.logbook-year-count{font-size:.85em;color:var(--muted)}
+.logbook-year-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:-3px}
+.user-logbook-table tr[data-logbook-year][hidden]{display:none!important}

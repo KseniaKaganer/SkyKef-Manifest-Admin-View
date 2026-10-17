@@ -14,6 +14,7 @@
   let loggedInLogbookRows = [];
   let logbookLoaded = false;
   let allLogbookRows = [];
+  const collapsedLogbookYears=new Set();
   const logbookFilters = document.getElementById("logbookFilters");
   const typeOptions = document.getElementById("logbookTypeOptions");
   const fromDate = document.getElementById("logbookFromDate");
@@ -131,7 +132,7 @@
       fromDate.setAttribute("aria-invalid","true");toDate.setAttribute("aria-invalid","true");
       userLogbookStatus.textContent=error.message;return;
     }
-    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),rows,{showTypes:SkyKefAdminAuth.hasWorkerRoles(loggedInJumper)});
+    renderLogbookAnnualStats(document.getElementById("userLogbookAnnualStats"),rows,{showTypes:SkyKefAdminAuth.hasWorkerRoles(loggedInJumper),collapsible:true});
     userLogbookBody.replaceChildren();
     loggedInLogbookRows = rows;
     exportUserLogbookBtn.disabled = rows.length === 0;
@@ -143,9 +144,27 @@
 
     userLogbookStatus.textContent = `${rows.length} logbook entr${rows.length === 1 ? "y" : "ies"} · ${sortOrder.value === "oldest" ? "oldest first" : "newest first"}`;
     let previousDate = "";
-
+    let previousYear=null;
+    const counts=new Map();for(const row of rows)counts.set(row.year,(counts.get(row.year)||0)+1);
     rows.forEach(row => {
+      if(row.year!==previousYear){
+        const separator=document.createElement("tr");separator.className="logbook-year-separator";
+        const cell=document.createElement("th");cell.colSpan=4;cell.scope="rowgroup";
+        const toggle=document.createElement("button");toggle.type="button";toggle.className="logbook-year-toggle";
+        toggle.setAttribute("aria-expanded",String(!collapsedLogbookYears.has(row.year)));
+        const arrow=document.createElement("span");arrow.className="logbook-year-arrow";arrow.setAttribute("aria-hidden","true");arrow.textContent=collapsedLogbookYears.has(row.year)?"▸":"▾";
+        const year=document.createElement("span");year.textContent=String(row.year);
+        const count=document.createElement("span");count.textContent=`(${counts.get(row.year)})`;count.className="logbook-year-count";
+        toggle.append(arrow,year,count);cell.appendChild(toggle);separator.appendChild(cell);userLogbookBody.appendChild(separator);
+        toggle.addEventListener("click",()=>{
+          if(collapsedLogbookYears.has(row.year))collapsedLogbookYears.delete(row.year);else collapsedLogbookYears.add(row.year);
+          const collapsed=collapsedLogbookYears.has(row.year);toggle.setAttribute("aria-expanded",String(!collapsed));arrow.textContent=collapsed?"▸":"▾";
+          for(const item of userLogbookBody.querySelectorAll("tr[data-logbook-year]"))if(item.dataset.logbookYear===String(row.year))item.hidden=collapsed;
+        });
+        previousYear=row.year;previousDate="";
+      }
       const tr = document.createElement("tr");
+      tr.dataset.logbookYear=String(row.year);tr.hidden=collapsedLogbookYears.has(row.year);
       const parsed = parseLogbookValue(row.value);
       const dateKey = `${row.year}-${row.month}-${row.day}`;
       const values = [
