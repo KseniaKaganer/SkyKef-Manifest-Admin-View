@@ -54,3 +54,18 @@ function decorateLoadConnection(row,nameCell,entry){
     nameCell.appendChild(connection);
   }
 }
+function loadAltitudeValue(details,activity,{jumperView=false}={}){
+  if(String(activity ?? '').trim().toUpperCase()==='V')return '';
+  const first=splitLoadDetails(details).first;
+  return jumperView && ['12','12000'].includes(first)?'':first;
+}
+function compareTandemAltitude(a,b){
+  if(!String(a.activity ?? '').trim().toUpperCase().startsWith('T') || !String(b.activity ?? '').trim().toUpperCase().startsWith('T'))return 0;
+  const altitude=entry=>{
+    const first=splitLoadDetails(entry.details).first;
+    if(!/^\d+(?:\.\d+)?$/.test(first))return Infinity;
+    const number=Number(first);return number>1000?number/1000:number;
+  };
+  const av=altitude(a),bv=altitude(b);
+  return av===bv?0:av<bv?-1:1;
+}

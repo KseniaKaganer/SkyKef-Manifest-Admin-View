@@ -6,11 +6,11 @@
   <title>Loads History | SkyKef Manifest Admin View</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
   <link rel="stylesheet" href="report-calendar.css?v=sunday-1">
-  <script src="preferences.js?v=type-groups-4"></script>
+  <script src="preferences.js?v=altitude-5"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
 <link rel="stylesheet" href="admin-load-table.css?v=type-2">
-<script src="load-presentation.js?v=type-groups-4"></script>
+<script src="load-presentation.js?v=altitude-5"></script>
 <link rel="stylesheet" href="load-presentation.css?v=type-groups-4">
 </head>
 <body>
@@ -68,7 +68,7 @@
                 <th class="load-uid-column">UID</th>
                 <th class="load-type-column">Type</th>
                 <th>Jumper</th>
-                <th>Details</th>
+                <th>Altitude</th>
               </tr>
             </thead>
             <tbody id="loadBody"></tbody>
@@ -199,6 +199,8 @@
       .sort((a, b) => {
         const priorityDiff = loadActivityPriority(a.activity) - loadActivityPriority(b.activity);
         if (priorityDiff !== 0) return priorityDiff;
+        const altitudeDiff=compareTandemAltitude(a,b);
+        if(altitudeDiff!==0)return altitudeDiff;
 
         const an = displayName(jumpersByUid.get(a.uid), a.uid);
         const bn = displayName(jumpersByUid.get(b.uid), b.uid);
@@ -319,7 +321,7 @@
         }
 
         const details = document.createElement("td");
-        details.textContent = splitLoadDetails(entry.details).first;
+        details.textContent = loadAltitudeValue(entry.details,entry.activity,{jumperView:false});
       details.className="load-details-column";
       decorateLoadConnection(tr,name,entry);
 

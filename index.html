@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>SkyKef Manifest</title>
   <link rel="stylesheet" href="style.css?v=settings-theme-1">
-  <script src="preferences.js?v=type-groups-4"></script>
+  <script src="preferences.js?v=altitude-5"></script>
 <script src="auth.js?v=public-navigation-11"></script>
 <style>
 
@@ -44,7 +44,7 @@
 #publicLoadsCard #loadsStatus:empty { display:none; }
 </style>
 <link rel="stylesheet" href="theme.css?v=today-toggle-3">
-<script src="load-presentation.js?v=type-groups-4"></script>
+<script src="load-presentation.js?v=altitude-5"></script>
 <link rel="stylesheet" href="load-presentation.css?v=type-groups-4">
 </head>
 <body>
@@ -94,7 +94,7 @@
               <tr>
                 <th>Jumper</th>
                 <th class="load-type-column">Type</th>
-                <th>Details</th>
+                <th>Altitude</th>
               </tr>
             </thead>
             <tbody id="loadBody"></tbody>
@@ -503,6 +503,8 @@
       .sort((a, b) => {
         const priorityDiff=loadActivityPriority(a.activity)-loadActivityPriority(b.activity);
         if(priorityDiff!==0)return priorityDiff;
+        const altitudeDiff=compareTandemAltitude(a,b);
+        if(altitudeDiff!==0)return altitudeDiff;
         const an = displayName(jumpersByUid.get(a.uid), a.uid);
         const bn = displayName(jumpersByUid.get(b.uid), b.uid);
         return an.localeCompare(bn, undefined, { sensitivity: "base" });
@@ -608,7 +610,7 @@
       }
 
       const details = document.createElement("td");
-      details.textContent = splitLoadDetails(entry.details).first;
+      details.textContent = loadAltitudeValue(entry.details,entry.activity,{jumperView:true});
       details.className="load-details-column";
       decorateLoadConnection(tr,name,entry);
 
