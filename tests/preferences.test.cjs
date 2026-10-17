@@ -17,6 +17,6 @@ env.api.set('textSize','large');assert.equal(env.root.dataset.textSize,'large');
 const restored=run(env.storage);assert.equal(restored.root.dataset.textSize,'large');
 env.api.set('language','bad');assert.equal(env.root.lang,'en');env.api.set('textSize','bad');assert.equal(env.root.dataset.textSize,'large');
 const unavailable=run({},true);unavailable.api.set('language','he');assert.equal(unavailable.root.dir,'rtl');
-env.api.set('language','he');assert.equal(env.api.translate('Load 12 · In air'),'לוד 12 · באוויר');assert.equal(env.api.translate('3 logbook entries · newest first'),'3 רשומות ביומן · מהחדש לישן');
+env.api.set('language','he');assert.equal(env.api.translate('Worker name'),'שם');assert.equal(env.api.translate('Load 7'),'יעף 7');assert.equal(env.api.translate('Loads'),'יעפים');assert.equal(env.api.translate('Load 12 · In air'),'יעף 12 · באוויר');assert.equal(env.api.translate('3 logbook entries · newest first'),'3 רשומות ביומן · מהחדש לישן');
 for(const file of fs.readdirSync(path.join(__dirname,'..')).filter(f=>f.endsWith('.html'))){const html=fs.readFileSync(path.join(__dirname,'..',file),'utf8');assert(html.indexOf('preferences.js')<html.indexOf('auth.js'));for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(script[1]);}
 console.log('Passed defaults, storage persistence/failure, input validation, translation round trips, live text changes, data exclusion, RTL, dynamic labels and page scripts.');
