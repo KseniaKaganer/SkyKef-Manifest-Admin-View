@@ -38,7 +38,7 @@
       if(!filtered.length){const empty=document.createElement('div');empty.className='detail-empty';empty.textContent='No jumpers match your search.';list.appendChild(empty);}
     }
     selection('sourceSelection',source,'No source selected.');selection('destinationSelection',destination,'No destination selected.');
-    $('mergeSummary').textContent=source&&destination?`From ${label(source)} → To ${label(destination)}`:'Choose two different jumpers.';
+    $('mergeSummary').textContent=source&&destination?`From ${label(source)} → To ${label(destination)}`:'';
   }
   async function load(){
     if(!SkyKefAdminAuth.isDeveloper())return;
