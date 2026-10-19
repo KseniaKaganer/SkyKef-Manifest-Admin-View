@@ -290,16 +290,17 @@ function renderLogbookRows(rawData){
 
     const load=document.createElement("td");
     const loadNo=parseLoadNumber(row.loadKey);
-    load.textContent=/^load_0_credit_/i.test(row.loadKey)
-      ? row.loadKey.replace(/^load_0_/i,"load 0 ")
-      : loadNo?`Load ${loadNo}`:row.loadKey;
-    if(isCreditHistoryKey(row.loadKey)) load.title="Balance update";
+    const creditMatch=row.loadKey.match(/^(?:load_(\d+)_)?(cre?edit_.+)$/i);
+    load.textContent=creditMatch?`Load ${creditMatch[1]??0}`:loadNo?`Load ${loadNo}`:row.loadKey;
+    if(creditMatch) load.title="Balance update";
 
     const activity=document.createElement("td");
     activity.textContent=parsed.activity;
 
     const details=document.createElement("td");
-    details.textContent=parsed.details;
+    details.textContent=creditMatch
+      ? [creditMatch[2],parsed.details==="—"?"":parsed.details].filter(Boolean).join(" · ")
+      : parsed.details;
 
     tr.append(date,load,activity,details);
     logbookBody.appendChild(tr);
