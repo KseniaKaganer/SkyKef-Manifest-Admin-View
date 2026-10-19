@@ -15,6 +15,17 @@ logbookView=document.getElementById("logbookView"),
 logbookStatus=document.getElementById("logbookStatus"),
 logbookBody=document.getElementById("logbookBody");
 let jumpers=[],selectedKey=null,selectedJumper=null;
+const viewStateKey="skykef-admin-jumper-view";
+function readViewState(){
+  if(todayOnly)return null;
+  try{return JSON.parse(sessionStorage.getItem(viewStateKey)||"null")}catch{return null}
+}
+function saveViewState(){
+  if(todayOnly)return;
+  try{sessionStorage.setItem(viewStateKey,JSON.stringify({
+    key:selectedKey,tab:logbookView.hidden?"details":"logbook"
+  }))}catch{}
+}
 const logbookCache=new Map();
 let todayJumpCounts=new Map();
 const todayJumpSort=document.getElementById("todayJumpSort");
@@ -33,6 +44,7 @@ if(todayOnly){
 }else b.append(n,s);b.onclick=()=>{
   selectedKey=j.key;
   selectedJumper=j;
+  saveViewState();
   renderList();
   renderDetails(j);
   if(!logbookView.hidden) loadLogbook(j);
@@ -180,6 +192,7 @@ function setDetailTab(tab){
   logbookTab.setAttribute("aria-selected",String(!showDetails));
   detailsView.hidden=!showDetails;
   logbookView.hidden=showDetails;
+  saveViewState();
 
   if(!showDetails){
     if(selectedJumper) loadLogbook(selectedJumper);
@@ -351,7 +364,7 @@ async function loadLogbook(jumper){
 detailsTab.addEventListener("click",()=>setDetailTab("details"));
 logbookTab.addEventListener("click",()=>setDetailTab("logbook"));
 
-async function load(){statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;try{const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const allJumpers=normalize(await r.json());
+async function load(){const savedView=readViewState();statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;try{const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const allJumpers=normalize(await r.json());
 if(todayOnly){
   const [loads,currentData]=await Promise.all([fetchDb("loads"),fetchDb("current_data")]);
   const date=SkyKefAdminAuth.formatDate(currentData?.date);
@@ -367,7 +380,18 @@ detailsEl.className="detail-empty";
 detailsEl.textContent="Select a jumper to view all data.";
 logbookStatus.textContent="Select a jumper to view the logbook.";
 logbookBody.innerHTML="";renderLogbookAnnualStats(document.getElementById("logbookAnnualStats"),[]);
-renderList()}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
+renderList();
+if(savedView){
+  const restored=jumpers.find(j=>j.key===savedView.key);
+  if(restored){
+    selectedKey=restored.key;
+    selectedJumper=restored;
+    renderDetails(restored);
+    renderList();
+  }
+  setDetailTab(savedView.tab==="logbook"?"logbook":"details");
+}
+}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
 todayJumpSort?.addEventListener("click",()=>{
   const ascending=todayJumpSort.value!=="asc";
   todayJumpSort.value=ascending?"asc":"desc";
