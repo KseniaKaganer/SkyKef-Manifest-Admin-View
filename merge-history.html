@@ -9,16 +9,32 @@
 .merge-direction .merge-arrow-wide,.merge-direction .merge-arrow-down{font-size:3rem;line-height:1}
 .merge-arrow-down{display:none}
 @media(max-width:800px){.merge-direction{padding:0}.merge-direction .merge-arrow-wide{display:none}.merge-direction .merge-arrow-down{display:block}}
+.merge-actions{margin:20px 0 28px;padding:0 4px;overflow-wrap:anywhere}
+.merge-actions .toolbar{margin-bottom:12px}
+.merge-actions p{margin:8px 0}
+.merge-search-pair .toolbar{padding:16px;margin:0;border-bottom:1px solid var(--border)}
+.merge-search-pair .search{min-width:0;width:100%}
+@media(max-width:800px){.merge-search-spacer{display:none}}
 </style></head><body>
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1></div></header>
 <main class="page"><h1>Merge History</h1><p id="accessStatus" role="status">Checking DEV access…</p>
 <div id="mergeWorkspace" hidden>
 <p>Select the jumper whose history will be transferred, then the jumper who will receive it.</p>
 <div class="toolbar"><button id="reloadMergeJumpers" type="button" class="small-btn">Reload Data</button></div><p id="mergeListStatus" class="status" role="status"></p>
-<div class="merge-columns">
-<section class="list-panel"><div class="panel-head"><h2>From — source jumper</h2></div><div id="sourceSelection" class="merge-selection" aria-live="polite">No source selected.</div><div class="toolbar"><input id="sourceSearch" type="search" class="search" placeholder="Search name or UID" aria-label="Search source jumper"></div><div id="sourceList" class="jumpers-list"></div></section>
+<div class="merge-columns merge-selected-pair">
+<section class="list-panel"><div class="panel-head"><h2>From — source jumper</h2></div><div id="sourceSelection" class="merge-selection" aria-live="polite">No source selected.</div></section>
 <div class="merge-direction" role="img" aria-label="History transfers from the source jumper to the destination jumper"><span class="merge-arrow-wide" aria-hidden="true">→</span><span class="merge-arrow-down" aria-hidden="true">↓</span><span>History transfer</span></div>
-<section class="list-panel"><div class="panel-head"><h2>To — destination jumper</h2></div><div id="destinationSelection" class="merge-selection" aria-live="polite">No destination selected.</div><div class="toolbar"><input id="destinationSearch" type="search" class="search" placeholder="Search name or UID" aria-label="Search destination jumper"></div><div id="destinationList" class="jumpers-list"></div></section>
+<section class="list-panel"><div class="panel-head"><h2>To — destination jumper</h2></div><div id="destinationSelection" class="merge-selection" aria-live="polite">No destination selected.</div></section>
 </div>
-<section class="detail-panel merge-summary"><h2>Selected transfer</h2><p id="mergeSummary" aria-live="polite">Choose two different jumpers.</p><p class="merge-preview-note">Copies history into the destination in both history branches. Source history and jumper records remain unchanged. Identical entries are skipped; conflicting entries stop the merge.</p><button id="mergeHistoryBtn" type="button" class="small-btn developer-action" disabled>Merge History</button> <button id="clearMergeSelection" type="button" class="small-btn">Clear selection</button><p id="mergeResult" class="status" role="status" aria-live="polite"></p></section>
+<section class="merge-actions" aria-label="History transfer actions">
+<div class="toolbar"><button id="mergeHistoryBtn" type="button" class="small-btn developer-action" disabled>Merge History</button><button id="clearMergeSelection" type="button" class="small-btn">Clear selection</button></div>
+<p id="mergeSummary" aria-live="polite">Choose two different jumpers.</p>
+<p class="merge-preview-note">Copies history into the destination in both history branches. Source history and jumper records remain unchanged. Identical entries are skipped; conflicting entries stop the merge.</p>
+<p id="mergeResult" class="status" role="status" aria-live="polite"></p>
+</section>
+<div class="merge-columns merge-search-pair">
+<section class="list-panel" aria-label="Search source jumper"><div class="toolbar"><input id="sourceSearch" type="search" class="search" placeholder="Search source name or UID" aria-label="Search source jumper"></div><div id="sourceList" class="jumpers-list"></div></section>
+<div class="merge-search-spacer" aria-hidden="true"></div>
+<section class="list-panel" aria-label="Search destination jumper"><div class="toolbar"><input id="destinationSearch" type="search" class="search" placeholder="Search destination name or UID" aria-label="Search destination jumper"></div><div id="destinationList" class="jumpers-list"></div></section>
+</div>
 </div></main><script src="merge-history.js?v=transfer-3"></script></body></html>
