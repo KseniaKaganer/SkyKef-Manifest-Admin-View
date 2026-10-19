@@ -1,6 +1,19 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Jumpers Data | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css?v=settings-theme-1">  <script src="preferences.js?v=local-checkin-14"></script>
 <script src="auth.js?v=merge-history-1"></script>
 <link rel="stylesheet" href="theme.css?v=logbook-years-13">
+<style>
+/* Keep credit timestamps inside the Load column in the admin logbook. */
+#logbookView .logbook-table{min-width:680px}
+#logbookView .logbook-table th:nth-child(1),
+#logbookView .logbook-table td:nth-child(1){width:22%}
+#logbookView .logbook-table th:nth-child(2),
+#logbookView .logbook-table td:nth-child(2),
+#logbookView .logbook-table th:nth-child(3),
+#logbookView .logbook-table td:nth-child(3),
+#logbookView .logbook-table th:nth-child(4),
+#logbookView .logbook-table td:nth-child(4){width:26%}
+#logbookView .logbook-table td:nth-child(2){white-space:normal;overflow-wrap:anywhere}
+</style>
 </head><body>
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1><nav class="nav">
       <a href="jumpers-data.html">Jumpers Data</a>
