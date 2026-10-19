@@ -348,6 +348,11 @@ async function downloadDatabaseJson() {
         database.target="_blank";database.rel="noopener noreferrer";
         devNav.appendChild(database);
         addDatabaseDownload(devNav);
+        const mergeHistory=document.createElement("a");
+        mergeHistory.id="mergeHistoryLink";mergeHistory.href="merge-history.html";
+        mergeHistory.textContent="Merge History";mergeHistory.className="developer-action";
+        if(pagePath.endsWith("/merge-history")){mergeHistory.classList.add("active");mergeHistory.setAttribute("aria-current","page");}
+        devNav.insertBefore(mergeHistory,document.getElementById("downloadDbStatus"));
       }
     }else{
       link("index.html","Loads");
