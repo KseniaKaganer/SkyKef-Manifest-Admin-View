@@ -3,7 +3,7 @@
 <link rel="stylesheet" href="style.css?v=settings-theme-1"><link rel="stylesheet" href="theme.css?v=logbook-years-13">
 <script src="preferences.js?v=local-checkin-14"></script><script src="auth.js?v=merge-history-1"></script>
 <style>
-.merge-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}.merge-selection{padding:16px 18px;border-top:1px solid var(--border);min-height:85px}.merge-summary{margin-top:18px;padding:20px}.merge-summary p{overflow-wrap:anywhere}.merge-columns .jumpers-list{max-height:48vh}.merge-columns h2{margin:0;font-size:1.1rem}.merge-selected-name{font-weight:800}.merge-preview-note{color:var(--muted)}@media(max-width:800px){.merge-columns{grid-template-columns:1fr}.merge-columns .jumpers-list{max-height:30vh}}
+.merge-columns{display:grid;grid-template-columns:1fr 1fr;gap:18px}.merge-selection{padding:16px 18px;border-top:1px solid var(--border);min-height:85px}.merge-summary{margin-top:18px;padding:20px}.merge-summary p{overflow-wrap:anywhere}.merge-columns .jumpers-list{max-height:48vh}.merge-columns h2{margin:0;font-size:1.1rem}.merge-columns .jumper-row.active{background:var(--theme-danger-bg,#30181d);color:var(--theme-danger-text,#ff8a8a);border-inline-start:4px solid #e5484d}.merge-columns .jumper-row.active .jumper-sub{color:inherit}.merge-selected-name{font-weight:800}.merge-preview-note{color:var(--muted)}@media(max-width:800px){.merge-columns{grid-template-columns:1fr}.merge-columns .jumpers-list{max-height:30vh}}
 </style></head><body>
 <header class="site-header"><div class="header-inner"><h1>SkyKef Manifest Admin View</h1></div></header>
 <main class="page"><h1>Merge History</h1><p id="accessStatus" role="status">Checking DEV access…</p>
@@ -15,4 +15,4 @@
 <section class="list-panel"><div class="panel-head"><h2>To — destination jumper</h2></div><div class="toolbar"><input id="destinationSearch" type="search" class="search" placeholder="Search name or UID" aria-label="Search destination jumper"></div><div id="destinationList" class="jumpers-list"></div><div id="destinationSelection" class="merge-selection" aria-live="polite">No destination selected.</div></section>
 </div>
 <section class="detail-panel merge-summary"><h2>Selected transfer</h2><p id="mergeSummary" aria-live="polite">Choose two different jumpers.</p><p class="merge-preview-note">Preview only. No history will be merged or changed yet.</p><button type="button" class="small-btn developer-action" disabled>Merge History — coming next</button> <button id="clearMergeSelection" type="button" class="small-btn">Clear selection</button></section>
-</div></main><script src="merge-history.js?v=1"></script></body></html>
+</div></main><script src="merge-history.js?v=2"></script></body></html>

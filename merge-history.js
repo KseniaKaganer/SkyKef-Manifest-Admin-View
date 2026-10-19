@@ -21,7 +21,8 @@
     for(const side of ['source','destination']){
       const list=$(side+'List'),q=$(side+'Search').value.trim().toLowerCase();list.replaceChildren();
       const selected=side==='source'?source:destination,other=side==='source'?destination:source;
-      const filtered=jumpers.filter(j=>`${name(j)} ${uid(j)}`.toLowerCase().includes(q));
+      const filtered=jumpers.filter(j=>j.key!==selected?.key && `${name(j)} ${uid(j)}`.toLowerCase().includes(q));
+      if(selected)filtered.unshift(selected);
       for(const j of filtered){
         const b=document.createElement('button');b.type='button';b.className='jumper-row'+(selected?.key===j.key?' active':'');
         b.setAttribute('aria-pressed',String(selected?.key===j.key));
