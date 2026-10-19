@@ -290,7 +290,9 @@ function renderLogbookRows(rawData){
 
     const load=document.createElement("td");
     const loadNo=parseLoadNumber(row.loadKey);
-    load.textContent=loadNo?`Load ${loadNo}`:row.loadKey;
+    load.textContent=/^load_0_credit_/i.test(row.loadKey)
+      ? row.loadKey.replace(/^load_0_/i,"load 0 ")
+      : loadNo?`Load ${loadNo}`:row.loadKey;
     if(isCreditHistoryKey(row.loadKey)) load.title="Balance update";
 
     const activity=document.createElement("td");
