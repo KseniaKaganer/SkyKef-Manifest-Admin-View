@@ -218,7 +218,12 @@ function flattenHistoryNode(node, path=[], rows=[]){
   return rows;
 }
 
+function isCreditHistoryKey(loadKey){
+  return /^cre?edit_/i.test(String(loadKey));
+}
+
 function parseLoadNumber(loadKey){
+  if(isCreditHistoryKey(loadKey)) return 0;
   const match=String(loadKey).match(/(\d+)/);
   return match?Number(match[1]):0;
 }
@@ -286,6 +291,7 @@ function renderLogbookRows(rawData){
     const load=document.createElement("td");
     const loadNo=parseLoadNumber(row.loadKey);
     load.textContent=loadNo?`Load ${loadNo}`:row.loadKey;
+    if(isCreditHistoryKey(row.loadKey)) load.title="Balance update";
 
     const activity=document.createElement("td");
     activity.textContent=parsed.activity;
