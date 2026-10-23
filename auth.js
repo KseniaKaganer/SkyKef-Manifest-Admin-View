@@ -63,6 +63,10 @@
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const session = JSON.parse(raw);
+      if (session?.role === "manifest") {
+        session.role = "admin";
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      }
       return session && session.username && ["admin", "manifest", "jumper"].includes(session.role) ? session : null;
     } catch {
       return null;
