@@ -145,9 +145,28 @@ function renderLoadManifest(container,entries,jumpersByUid){
     name.textContent=nameForEntry(entry);
     main.appendChild(name);
     if(kind==='tandem')appendLoadNameDetails(main,entry.details);
-    else if(kind==='jumper')appendLoadSpecialDetails(main,entry.details);
+    if(kind==='jumper')main.classList.add('load-manifest-centered-main');
     card.appendChild(main);
     const activity=String(entry.activity??'').trim().toUpperCase();
+    if(kind==='jumper'){
+      const side=document.createElement('div');
+      side.className='load-manifest-side-details';
+      appendLoadSpecialDetails(side,entry.details);
+      const label=loadActivityLabel(entry.activity);
+      if(label){
+        const type=document.createElement('div');
+        type.className='load-manifest-side-type';
+        type.textContent=label;
+        side.appendChild(type);
+      }
+      card.appendChild(side);
+      if(activity.includes('H')){
+        const left=document.createElement('div');
+        left.className='load-manifest-left-meta';
+        left.appendChild(cameraIcon());
+        card.appendChild(left);
+      }
+    }
     if(kind==='tandem'||kind==='video'||activity==='V'){
       const meta=document.createElement('div');
       meta.className='load-manifest-meta';
@@ -166,7 +185,7 @@ function renderLoadManifest(container,entries,jumpersByUid){
         const value=document.createElement('span');value.className='load-manifest-type';value.textContent=loadActivityLabel(entry.activity)||'V';meta.appendChild(value);
       }
       card.appendChild(meta);
-    }else if(activity.includes('H'))card.appendChild(cameraIcon());
+    }
     if(activity.includes('RENTAL'))card.classList.add('rental');
     return card;
   };
