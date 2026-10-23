@@ -124,3 +124,10 @@
  .load-manifest-empty-cell{min-height:18mm}
  .load-manifest-empty-message{border-radius:0}
 }
+
+@media print{
+ .load-manifest-card,.load-manifest-card.video,.load-manifest-card.rental{background:#fff!important;color:#000!important}
+ .load-manifest-card.tandem{background:#fff!important;color:#000!important;border:2px solid #000!important}
+ .load-manifest-card.rental{border:1px solid #111!important}
+ .load-manifest-card.lo{border:2px dotted #000!important}
+}
