@@ -72,3 +72,23 @@
  .load-manifest-empty-message{background:#fff!important;color:#000!important;border:1px solid #111}
  .load-manifest-empty-cell{background:transparent!important}
 }
+
+/* Larger, centered non-tandem names with their details on the right */
+.load-manifest-card{font-size:20px;line-height:1.3;min-height:76px}
+.load-manifest-card.tandem{min-height:82px}
+.load-manifest-card.tandem .load-jumper-extra{font-size:1em;line-height:1.25}
+.load-manifest-card.jumper{display:grid;grid-template-columns:minmax(28px,1fr) minmax(0,2fr) minmax(0,1fr);align-items:center}
+.load-manifest-card.jumper .load-manifest-centered-main{grid-column:2;grid-row:1;text-align:center}
+.load-manifest-card.jumper .load-manifest-name{text-align:center;font-size:1.08em}
+.load-manifest-card.jumper .load-manifest-side-details{grid-column:3;grid-row:1;min-width:0;justify-self:end;text-align:right;overflow-wrap:anywhere;font-size:.9em;line-height:1.25}
+.load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{font-size:1em;line-height:1.25}
+.load-manifest-side-type{font-size:.9em;font-weight:900;line-height:1.2}
+.load-manifest-card.jumper .load-manifest-left-meta{grid-column:1;grid-row:1;display:flex;align-items:center}
+@media print{
+ .load-manifest-card{font-size:12pt!important;min-height:18mm}
+ .load-manifest-card.tandem{min-height:20mm}
+ .load-manifest-card.tandem .load-jumper-extra{font-size:11pt!important}
+ .load-manifest-card.jumper .load-manifest-side-details{font-size:10.5pt}
+ .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{font-size:10.5pt!important}
+ .load-manifest-side-type{font-size:10pt}
+}
