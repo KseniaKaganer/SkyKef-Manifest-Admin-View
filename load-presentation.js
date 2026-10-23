@@ -148,6 +148,7 @@ function renderLoadManifest(container,entries,jumpersByUid){
     if(kind==='jumper')main.classList.add('load-manifest-centered-main');
     card.appendChild(main);
     const activity=String(entry.activity??'').trim().toUpperCase();
+    if(/(^|[^A-Z0-9])LO([^A-Z0-9]|$)/i.test(activity+' '+String(entry.details??'')))card.classList.add('lo');
     if(kind==='jumper'){
       const side=document.createElement('div');
       side.className='load-manifest-side-details';
