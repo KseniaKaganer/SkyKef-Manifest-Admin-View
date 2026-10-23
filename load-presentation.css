@@ -92,3 +92,13 @@
  .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{font-size:10.5pt!important}
  .load-manifest-side-type{font-size:10pt}
 }
+
+@media print{
+ .load-manifest-card.rental{border:1px solid #111!important}
+ .load-manifest-card.lo{border:2px dotted #000!important}
+}
+.load-manifest-card.jumper{grid-template-columns:auto minmax(0,2fr) minmax(0,1fr)}
+.load-manifest-card.jumper .load-manifest-centered-main{grid-column:2;text-align:left}
+.load-manifest-card.jumper .load-manifest-name{text-align:left}
+.load-manifest-card.jumper .load-manifest-side-details{grid-column:3}
+.load-manifest-card.jumper .load-manifest-left-meta{grid-column:1}
