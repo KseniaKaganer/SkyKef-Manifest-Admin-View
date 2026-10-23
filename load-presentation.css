@@ -131,3 +131,15 @@
  .load-manifest-card.rental{border:1px solid #111!important}
  .load-manifest-card.lo{border:2px dotted #000!important}
 }
+
+/* Restore the original on-screen Loads palette */
+.load-manifest-grid{background:#ffc653;color:#222}
+.load-manifest-card,.load-manifest-card.video{background:#fffde7;color:#242424;border-color:transparent}
+.load-manifest-card.tandem{background:#ff7378;color:#242424;border-color:transparent;border-inline-start-color:transparent}
+.load-manifest-card.rental{background:#258feb;color:#102033;border-color:transparent;border-inline-start-color:transparent}
+.load-manifest-empty-message{background:#fffde7;color:#242424}
+@media print{
+ .load-manifest-grid{background:#fff!important;color:#000!important}
+ .load-manifest-card,.load-manifest-card.video,.load-manifest-card.rental{background:#fff!important;color:#000!important}
+ .load-manifest-card.tandem{background:#fff!important;color:#000!important}
+}
