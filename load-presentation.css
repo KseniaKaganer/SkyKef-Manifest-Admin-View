@@ -57,3 +57,18 @@
  .load-manifest-card.tandem .load-jumper-extra{font-size:8.5pt;margin-top:1mm}
  .load-manifest-camera{width:4mm;height:4mm;flex-basis:4mm}
 }
+
+/* Readability and high-contrast print treatment */
+.load-manifest-grid,.load-manifest-card{font-family:Arial,Helvetica,sans-serif}
+.load-manifest-card{font-size:16px;line-height:1.3}
+.load-manifest-name{font-size:1.08em}
+.load-manifest-card.tandem .load-jumper-extra{font-size:.95em;line-height:1.3;font-weight:600}
+@media print{
+ .load-manifest-grid{background:#fff!important;color:#000!important;padding:0!important;gap:1.5mm!important;print-color-adjust:economy;-webkit-print-color-adjust:economy}
+ .load-manifest-card,.load-manifest-card.tandem,.load-manifest-card.video,.load-manifest-card.rental{background:#fff!important;color:#000!important;border:1px solid #111}
+ .load-manifest-card.tandem{border:2px solid #000}
+ .load-manifest-card.rental{border:2px dashed #000}
+ .load-manifest-card.tandem .load-jumper-extra{font-size:10pt!important;line-height:1.25}
+ .load-manifest-empty-message{background:#fff!important;color:#000!important;border:1px solid #111}
+ .load-manifest-empty-cell{background:transparent!important}
+}
