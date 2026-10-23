@@ -34,9 +34,6 @@
 
 .loads-date-actions { display:flex;align-items:center;gap:12px;flex-wrap:wrap; }
 #publicLoadsCard .loads-date-actions #reloadBtn { min-height:36px;padding:0 12px;border-radius:10px; }
-#publicLoadsCard .load-table th:nth-child(1), #publicLoadsCard .load-table td:nth-child(1) { width:44%; }
-#publicLoadsCard .load-table th:nth-child(2), #publicLoadsCard .load-table td:nth-child(2) { width:20%; }
-#publicLoadsCard .load-table th:nth-child(3), #publicLoadsCard .load-table td:nth-child(3) { width:36%; }
 
 .loads-heading-actions { display:flex;align-items:center;justify-content:space-between;gap:12px; }
 #publicLoadsCard .loads-heading-actions h2 { margin:0 0 8px; }
@@ -44,8 +41,8 @@
 #publicLoadsCard #loadsStatus:empty { display:none; }
 </style>
 <link rel="stylesheet" href="theme.css?v=logbook-years-13">
-<script src="load-presentation.js?v=personal-load-9"></script>
-<link rel="stylesheet" href="load-presentation.css?v=personal-load-11">
+<script src="load-presentation.js?v=manifest-cards-1"></script>
+<link rel="stylesheet" href="load-presentation.css?v=manifest-cards-1">
 <script src="load-view-tools.js?v=tools-1"></script>
 <link rel="stylesheet" href="load-view-tools.css?v=tools-1">
 </head>
@@ -90,17 +87,8 @@
       <div id="loadDetail">
         <div class="load-summary" id="loadSummary"></div>
 
-        <div class="load-table-scroll">
-          <table class="load-table">
-            <thead>
-              <tr>
-                <th>Jumper</th>
-                <th class="load-type-column">Type</th>
-                <th class="load-altitude-column">Altitude</th>
-              </tr>
-            </thead>
-            <tbody id="loadBody"></tbody>
-          </table>
+        <div class="load-manifest-scroll">
+          <div id="loadBody" class="load-manifest-grid"></div>
         </div>
       </div>
     </div>
@@ -578,93 +566,9 @@
     loadTitle.classList.toggle("next-load-title", loadStatus(load) === "Next load");
 
     const count = getJumperCount(load.entries);
-    loadSummary.textContent =
-      `${count} jumper${count === 1 ? "" : "s"} · ${load.entries.length} ${load.entries.length === 1 ? "canopy" : "canopies"}`;
+    loadSummary.textContent = loadSummaryLabel(load.entries, count);
 
-    loadBody.innerHTML = "";
-
-    if (!load.entries.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 3;
-      td.className = "report-empty";
-      td.textContent = "No jumper records in this load.";
-      tr.appendChild(td);
-      loadBody.appendChild(tr);
-      return;
-    }
-
-    load.entries.forEach(entry => {
-      const tr = document.createElement("tr");
-
-      const name = document.createElement("td");
-      name.className = "load-jumper-name";
-      name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
-      appendLoadNameDetails(name,entry.details);
-
-      const activity = document.createElement("td");
-      activity.textContent = loadActivityLabel(entry.activity);
-      activity.className="load-type-column";
-      if (jumperCountForActivity(entry.activity) === 2) {
-        activity.title = "Counts as 2 jumpers";
-      }
-
-      const details = document.createElement("td");
-      details.textContent = loadAltitudeValue(entry.details,entry.activity,{jumperView:true});
-      details.className="load-details-column";
-      decorateLoadConnection(tr,name,entry);
-      if(isLoggedInLoadJumper(entry,jumpersByUid))tr.classList.add("my-jumper-row");
-
-      tr.append(name, activity, details);
-      loadBody.appendChild(tr);
-    });
-  }
-
-  function manifestedLoadNumbers(loads, uid, showActivity=false) {
-    if (uid === null || uid === undefined || String(uid).trim() === "") return [];
-    return loads
-      .filter(load => load.entries.some(entry => entry.uid === String(uid)))
-      .sort((a, b) => a.number - b.number)
-      .map(load => {
-        const number=load.number || load.key;
-        if(!showActivity)return number;
-        const entry=load.entries.find(entry=>entry.uid===String(uid));
-        let activity=String(entry?.activity || "—").trim().toUpperCase();
-        if(activity==="INSTRUCTOR")activity="AFF";
-        if(activity==="FUN" && String(entry?.details || "").toLowerCase().includes("coaching_0"))activity="C";
-        const altitude=(activity.startsWith("T") || ["V","VS"].includes(activity))?entry?.altitude:"";
-        return `${number} (${activity}${altitude?` · ${altitude}`:""})`;
-      });
-  }
-
-  function renderJumperManifest(jumpersData) {
-    const box = document.getElementById("jumperManifestSummary");
-    const session = SkyKefAdminAuth.getSession();
-    if (session?.role !== "jumper") {
-      box.hidden = true;
-      return;
-    }
-    const jumper = jumpersData?.[session.jumperKey];
-    const uid = jumper?.Uid ?? jumper?.uid ?? session.jumperKey;
-    const worker=SkyKefAdminAuth.hasWorkerRoles(jumper);
-    const airNumber=getLoadNumber(inAirLoad);
-    const progress=jumperManifestProgress(currentLoads,uid,airNumber,dayEnded);
-    const heading=dayEnded?"Jumps Today":"Jumps so far";
-    document.getElementById("jumperJumpTotals").textContent=worker
-      ? `${heading} — WORK: ${progress.counts.work} · FUN: ${progress.counts.fun}`
-      : `${heading} — FUN: ${progress.counts.total}`;
-    const current=manifestedLoadNumbers(progress.current,uid,worker);
-    const past=manifestedLoadNumbers(progress.past,uid,worker);
-    document.getElementById("jumperManifestLoads").textContent=dayEnded
-      ? `Loads: ${past.length?past.join(", "):"No jumps today"}`
-      : `CURRENT: ${current.length?current.join(", "):"No current loads"}`;
-    const pastLine=document.getElementById("jumperPastLoads");
-    pastLine.hidden=dayEnded;
-    pastLine.textContent=dayEnded?"":`PAST: ${past.length?past.join(", "):"No past loads"}`;
-    document.getElementById("jumperInAirLoad").textContent = dayEnded
-      ? `Day ended · ${currentLoads.length} load${currentLoads.length===1?"":"s"} today`
-      : airNumber > 0 ? `Load ${airNumber} is in air.` : "No load is currently in air.";
-    box.hidden = false;
+    renderLoadManifest(loadBody, load.entries, jumpersByUid);
   }
 
   function renderLoads() {
