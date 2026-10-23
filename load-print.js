@@ -27,9 +27,9 @@
     const remainingCards=manifest.querySelectorAll('.load-manifest-rest > .load-manifest-card').length;
     printRows+=Math.ceil(remainingCards/2);
     printRows=Math.max(1,printRows);
-    const cardHeight=Math.min(17,(264-0.6*(printRows+2))/printRows);
-    const cardFont=Math.max(5,Math.min(10.5,cardHeight*0.58));
-    const cardPadding=Math.max(0.45,Math.min(1.4,cardHeight*0.075));
+    const cardHeight=Math.min(26,(264-0.6*(printRows+2))/printRows);
+    const cardFont=Math.max(5,Math.min(12,cardHeight*0.58));
+    const cardPadding=Math.max(0.45,Math.min(1.8,cardHeight*0.075));
     printArea.style.setProperty('--load-print-card-height',cardHeight.toFixed(2)+'mm');
     printArea.style.setProperty('--load-print-card-font',cardFont.toFixed(2)+'pt');
     printArea.style.setProperty('--load-print-card-padding',cardPadding.toFixed(2)+'mm');
