@@ -19,7 +19,22 @@
     const summary=document.createElement('p');summary.className='load-print-counts';summary.textContent=document.getElementById('loadSummary').textContent;
     const manifest=document.getElementById('loadBody').cloneNode(true);
     manifest.removeAttribute('id');
-    if(manifest.querySelectorAll('.load-manifest-card').length>28)printArea.classList.add('compact-load-print');
+    let printRows=0;
+    manifest.querySelectorAll('.load-manifest-pair').forEach(pair=>{
+      const videoRows=pair.querySelectorAll('.load-manifest-video-stack .load-manifest-card').length;
+      printRows+=Math.max(1,videoRows);
+    });
+    const remainingCards=manifest.querySelectorAll('.load-manifest-rest > .load-manifest-card').length;
+    printRows+=Math.ceil(remainingCards/2);
+    printRows=Math.max(1,printRows);
+    const cardHeight=Math.min(17,(264-0.6*(printRows+2))/printRows);
+    const cardFont=Math.max(5,Math.min(10.5,cardHeight*0.58));
+    const cardPadding=Math.max(0.45,Math.min(1.4,cardHeight*0.075));
+    printArea.style.setProperty('--load-print-card-height',cardHeight.toFixed(2)+'mm');
+    printArea.style.setProperty('--load-print-card-font',cardFont.toFixed(2)+'pt');
+    printArea.style.setProperty('--load-print-card-padding',cardPadding.toFixed(2)+'mm');
+    printArea.style.setProperty('--load-print-gap','0.6mm');
+    if(cardHeight<17)printArea.classList.add('compact-load-print');
     printArea.append(printHeader,load,summary,manifest);document.body.appendChild(printArea);
     originalTitle=document.title;document.title='SkyKef Manifest';
     window.print();
