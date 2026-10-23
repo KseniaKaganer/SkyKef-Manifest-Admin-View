@@ -10,6 +10,10 @@ function appendLoadNameDetails(nameCell,details){
   const {extra}=splitLoadDetails(details);
   if(extra){const text=document.createElement('div');text.className='load-jumper-extra';text.textContent=extra;nameCell.appendChild(text);}
 }
+function appendLoadSpecialDetails(nameCell,details){
+  const value=String(details??'').split('·').map(part=>part.trim()).filter(part=>part&&part!=='—').join(' · ');
+  if(value){const text=document.createElement('div');text.className='load-jumper-extra';text.textContent=value;nameCell.appendChild(text);}
+}
 
 function loadActivityLabel(activity){
   const value=String(activity ?? '').trim();
@@ -141,6 +145,7 @@ function renderLoadManifest(container,entries,jumpersByUid){
     name.textContent=nameForEntry(entry);
     main.appendChild(name);
     if(kind==='tandem')appendLoadNameDetails(main,entry.details);
+    else if(kind==='jumper')appendLoadSpecialDetails(main,entry.details);
     card.appendChild(main);
     const activity=String(entry.activity??'').trim().toUpperCase();
     if(kind==='tandem'||kind==='video'||activity==='V'){
