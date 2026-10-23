@@ -102,3 +102,25 @@
 .load-manifest-card.jumper .load-manifest-name{text-align:left}
 .load-manifest-card.jumper .load-manifest-side-details{grid-column:3}
 .load-manifest-card.jumper .load-manifest-left-meta{grid-column:1}
+
+/* Consistent spacing and calm, readable card colors */
+.load-manifest-grid{gap:10px;padding:10px;background:#f1f5f9;color:#17212b}
+.load-manifest-pairs,.load-manifest-video-stack{gap:10px}
+.load-manifest-pair,.load-manifest-rest{gap:10px}
+.load-manifest-pair{align-items:stretch}
+.load-manifest-rest{grid-auto-rows:minmax(96px,auto);align-items:stretch}
+.load-manifest-card,.load-manifest-card.tandem{box-sizing:border-box;min-height:96px;padding:13px 15px;border:1px solid #d2dce6;border-radius:12px;background:#fff;color:#1c2733;box-shadow:0 2px 5px rgba(20,38,58,.12);line-height:1.28}
+.load-manifest-card.tandem{border-color:#e99aa0;border-inline-start:5px solid #c94c58;background:#ffe3e5}
+.load-manifest-card.video{border-color:#cad5e2;background:#fff}
+.load-manifest-card.rental{border-color:#93bee6;border-inline-start:5px solid #3685c5;background:#dfedfb;color:#183a58}
+.load-manifest-empty-cell{min-height:96px}
+.load-manifest-empty-message{border:1px solid #d2dce6;border-radius:12px;background:#fff}
+.load-manifest-card.jumper .load-manifest-name{line-height:1.25}
+.load-manifest-card.jumper .load-manifest-side-details{line-height:1.25}
+@media print{
+ .load-manifest-grid{gap:1.5mm!important;padding:0!important;background:#fff!important}
+ .load-manifest-pairs,.load-manifest-video-stack,.load-manifest-pair,.load-manifest-rest{gap:1.5mm!important}
+ .load-manifest-card,.load-manifest-card.tandem,.load-manifest-card.video,.load-manifest-card.rental{min-height:18mm;border-radius:0;box-shadow:none}
+ .load-manifest-empty-cell{min-height:18mm}
+ .load-manifest-empty-message{border-radius:0}
+}
