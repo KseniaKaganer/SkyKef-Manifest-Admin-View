@@ -51,3 +51,11 @@
  #loadPrintArea .load-manifest-card.rental{border:1px solid #111!important}
  #loadPrintArea .load-manifest-card.lo{border:2px dotted #000!important}
 }
+
+@media print{
+ #loadPrintArea .load-manifest-grid{gap:1.5mm!important;padding:0!important;background:#fff!important}
+ #loadPrintArea .load-manifest-pairs,#loadPrintArea .load-manifest-video-stack,#loadPrintArea .load-manifest-pair,#loadPrintArea .load-manifest-rest{gap:1.5mm!important}
+ #loadPrintArea .load-manifest-card,#loadPrintArea .load-manifest-card.tandem,#loadPrintArea .load-manifest-card.video,#loadPrintArea .load-manifest-card.rental{min-height:18mm;border-radius:0;box-shadow:none}
+ #loadPrintArea .load-manifest-empty-cell{min-height:18mm}
+ #loadPrintArea .load-manifest-empty-message{border-radius:0}
+}
