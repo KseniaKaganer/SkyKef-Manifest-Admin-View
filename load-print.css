@@ -9,18 +9,18 @@
  #loadPrintArea .load-print-top{display:flex;align-items:baseline;justify-content:space-between;gap:8mm;direction:ltr;margin-bottom:5mm}
  #loadPrintArea .load-print-timestamp{font-size:10pt;white-space:nowrap}
  #loadPrintArea h1{margin:0 0 3mm;font-size:18pt}
- #loadPrintArea h2{margin:0 0 3mm;font-size:34pt}
- #loadPrintArea .load-print-counts{margin:3mm 0 6mm;font-size:23pt;font-weight:800;line-height:1.2}
- #loadPrintArea table{width:100%;border-collapse:collapse;table-layout:fixed;margin-top:5mm;font-size:11pt}
- #loadPrintArea th,#loadPrintArea td{border:1px solid #555;padding:2.5mm;text-align:start;overflow-wrap:anywhere;color:#000!important;background:#fff!important;box-shadow:none!important}
- #loadPrintArea th{font-weight:700;background:#eee!important}
- #loadPrintArea th:nth-child(1){width:60%}
- #loadPrintArea th:nth-child(2){width:20%}
- #loadPrintArea th:nth-child(3){width:20%}
- #loadPrintArea thead{display:table-header-group}
- #loadPrintArea tr{break-inside:avoid}
- #loadPrintArea.compact-load-print table{font-size:9pt}
- #loadPrintArea.compact-load-print td{padding:1.5mm 2mm}
+ #loadPrintArea h2{margin:0 0 3mm;font-size:28pt}
+ #loadPrintArea .load-print-counts{margin:3mm 0 6mm;font-size:16pt;font-weight:800;line-height:1.2}
+ #loadPrintArea .load-manifest-grid{max-height:none;overflow:visible;gap:1.5mm;padding:1.5mm;background:#ffc653!important;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+ #loadPrintArea .load-manifest-pairs,#loadPrintArea .load-manifest-video-stack{gap:1.5mm}
+ #loadPrintArea .load-manifest-pair,#loadPrintArea .load-manifest-rest{gap:1.5mm}
+ #loadPrintArea .load-manifest-card{min-height:14mm;padding:2mm;font-size:10pt;break-inside:avoid}
+ #loadPrintArea .load-manifest-card.tandem{min-height:16mm}
+ #loadPrintArea .load-manifest-card.rental{background:#258feb!important;color:#102033!important}
+ #loadPrintArea .load-manifest-card.my-jumper{outline:0}
+ #loadPrintArea .load-manifest-empty-cell{min-height:14mm}
+ #loadPrintArea .load-manifest-empty-message{padding:5mm}
+ #loadPrintArea.compact-load-print .load-manifest-card{min-height:11mm;padding:1.5mm;font-size:8.5pt}
+ #loadPrintArea.compact-load-print .load-manifest-card.tandem{min-height:13mm}
+ #loadPrintArea.compact-load-print .load-jumper-extra{font-size:7.5pt}
 }
-
-@media print{#loadPrintArea :is(th,td):nth-child(2),#loadPrintArea :is(th,td):nth-child(3){text-align:center}}
