@@ -99,3 +99,12 @@
 @media print{
  #loadPrintArea h2{font-size:24pt!important;line-height:1.05!important;margin:0 0 .6mm!important}
 }
+
+@media print{
+ #loadPrintArea .load-print-top{align-items:flex-start!important}
+ #loadPrintArea .load-print-timestamp{font-size:10pt!important;line-height:1.15!important}
+ #loadPrintArea .load-print-altitudes{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:.25mm}
+ #loadPrintArea .load-print-altitudes h1{font-size:12pt!important;line-height:1.05!important;margin:0!important}
+ #loadPrintArea .load-print-altitude-list{font-size:10pt;font-weight:700;line-height:1.05;text-align:right}
+ #loadPrintArea .load-print-footer{flex:0 0 auto;margin-top:.8mm;padding-top:.6mm;border-top:.25mm solid #111;text-align:center;font-size:8pt;line-height:1}
+}
