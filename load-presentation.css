@@ -147,3 +147,28 @@
 @media screen{
  .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{color:#171717!important;font-weight:700}
 }
+
+/* Requested screen readability and tighter vertical spacing */
+@media screen {
+  .load-manifest-grid,
+  .load-manifest-pairs,
+  .load-manifest-video-stack,
+  .load-manifest-pair,
+  .load-manifest-rest { row-gap: 4px; }
+
+  .load-manifest-name { font-size: 1.28em; line-height: 1.12; }
+  .load-manifest-card.tandem .load-jumper-extra {
+    font-size: 1.12em !important;
+    line-height: 1.2;
+  }
+  .load-manifest-altitude { font-size: 1.16em; }
+}
+
+@media print {
+  .load-manifest-name { font-size: 1.2em !important; line-height: 1.05; }
+  .load-manifest-card.tandem .load-jumper-extra {
+    font-size: calc(var(--load-print-card-font, 10pt) + 1pt) !important;
+    line-height: 1.05 !important;
+  }
+  .load-manifest-altitude { font-size: 1.15em !important; }
+}
