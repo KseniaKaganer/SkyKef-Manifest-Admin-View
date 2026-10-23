@@ -35,3 +35,14 @@
  #loadPrintArea .load-manifest-empty-cell{background:transparent!important}
  #loadPrintArea.compact-load-print .load-manifest-card.tandem .load-jumper-extra{font-size:8.5pt!important}
 }
+
+@media print{
+ #loadPrintArea .load-manifest-card{font-size:12pt;min-height:18mm}
+ #loadPrintArea .load-manifest-card.tandem{min-height:20mm}
+ #loadPrintArea .load-manifest-card.jumper .load-manifest-side-details{font-size:10.5pt}
+ #loadPrintArea .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{font-size:10.5pt!important}
+ #loadPrintArea .load-manifest-side-type{font-size:10pt}
+ #loadPrintArea.compact-load-print .load-manifest-card{font-size:10.5pt;min-height:15mm}
+ #loadPrintArea.compact-load-print .load-manifest-card.tandem{min-height:17mm}
+ #loadPrintArea.compact-load-print .load-manifest-card.jumper .load-manifest-side-details{font-size:9pt}
+}
