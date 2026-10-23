@@ -46,3 +46,8 @@
  #loadPrintArea.compact-load-print .load-manifest-card.tandem{min-height:17mm}
  #loadPrintArea.compact-load-print .load-manifest-card.jumper .load-manifest-side-details{font-size:9pt}
 }
+
+@media print{
+ #loadPrintArea .load-manifest-card.rental{border:1px solid #111!important}
+ #loadPrintArea .load-manifest-card.lo{border:2px dotted #000!important}
+}
