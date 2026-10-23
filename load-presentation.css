@@ -143,3 +143,7 @@
  .load-manifest-card,.load-manifest-card.video,.load-manifest-card.rental{background:#fff!important;color:#000!important}
  .load-manifest-card.tandem{background:#fff!important;color:#000!important}
 }
+
+@media screen{
+ .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{color:#171717!important;font-weight:700}
+}
