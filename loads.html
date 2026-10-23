@@ -22,7 +22,7 @@
 </style>
 <link rel="stylesheet" href="theme.css?v=logbook-years-13">
 <link rel="stylesheet" href="admin-load-table.css?v=type-2">
-<script src="load-presentation.js?v=lo-dotted-5"></script>
+<script src="load-presentation.js?v=jumper-special-data-6"></script>
 <link rel="stylesheet" href="load-presentation.css?v=lo-dotted-5">
 <script src="load-view-tools.js?v=tools-1"></script>
 <link rel="stylesheet" href="load-view-tools.css?v=tools-1">
@@ -125,24 +125,47 @@
 
   function parseActivityValue(value) {
     if (value === null || value === undefined) {
-      return { activity: "—", details: "—" };
+      return { activity: "—", details: "—", specialData: [] };
     }
 
     if (typeof value === "object") {
-      return { activity: "Record", details: JSON.stringify(value) };
+      const activityKeys = ["activity", "Activity", "type", "Type", "jumpType", "jump_type"];
+      const detailKeys = ["details", "Details", "detail", "Detail", "notes", "Notes", "comment", "Comment", "info", "Info"];
+      const findValue = keys => {
+        for (const key of keys) if (value[key] !== undefined && value[key] !== null) return value[key];
+        return undefined;
+      };
+      const formatValue = item => {
+        if (Array.isArray(item)) return item.map(formatValue).filter(Boolean).join(", ");
+        if (item && typeof item === "object") return JSON.stringify(item);
+        if (typeof item === "boolean") return item ? "Yes" : "";
+        return String(item ?? "").trim();
+      };
+      const activity = formatValue(findValue(activityKeys)) || "Record";
+      const details = formatValue(findValue(detailKeys)) || "—";
+      const ignored = new Set([...activityKeys, ...detailKeys, "uid", "Uid", "name", "Name", "surname", "Surname"]);
+      const specialData = Object.entries(value)
+        .filter(([key]) => !ignored.has(key))
+        .map(([key, item]) => {
+          const formatted = formatValue(item);
+          if (!formatted || formatted === "—") return "";
+          const label = key.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ").trim();
+          return label ? label.charAt(0).toUpperCase() + label.slice(1) + ": " + formatted : formatted;
+        })
+        .filter(Boolean);
+      return { activity, details, specialData };
     }
 
     const raw = String(value).trim();
-
     if (raw.includes("|")) {
       const parts = raw.split("|");
       return {
         activity: parts[0] || "—",
-        details: parts.slice(1).filter(Boolean).join(" · ") || "—"
+        details: parts.slice(1).filter(Boolean).join(" · ") || "—",
+        specialData: []
       };
     }
-
-    return { activity: raw || "—", details: "—" };
+    return { activity: raw || "—", details: "—", specialData: [] };
   }
 
   function jumperCountForActivity(activity) {
@@ -173,7 +196,8 @@
         return {
           uid: String(uid),
           activity: parsed.activity,
-          details: parsed.details
+          details: parsed.details,
+          specialData: parsed.specialData
         };
       })
       .sort((a, b) => {
