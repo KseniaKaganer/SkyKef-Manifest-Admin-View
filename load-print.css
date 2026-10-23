@@ -67,3 +67,31 @@
  #loadPrintArea .load-manifest-card.lo{border:2px dotted #000!important}
  #loadPrintArea.compact-load-print .load-manifest-card,#loadPrintArea.compact-load-print .load-manifest-card.tandem,#loadPrintArea.compact-load-print .load-manifest-card.video,#loadPrintArea.compact-load-print .load-manifest-card.rental{min-height:18mm!important}
 }
+
+/* Compact, single-page A4 print layout */
+@media print{
+ #loadPrintArea{height:296mm!important;max-height:296mm!important;padding:4mm 7mm!important;overflow:hidden!important;display:flex!important;flex-direction:column!important;gap:0!important}
+ #loadPrintArea .load-print-top{flex:0 0 auto;margin:0 0 .7mm!important;gap:4mm!important}
+ #loadPrintArea .load-print-timestamp{font-size:8pt!important}
+ #loadPrintArea h1{font-size:13pt!important;line-height:1!important;margin:0!important}
+ #loadPrintArea h2{font-size:20pt!important;line-height:1.05!important;margin:0 0 .6mm!important}
+ #loadPrintArea .load-print-counts{flex:0 0 auto;margin:0 0 1.2mm!important;font-size:9.5pt!important;line-height:1.1!important}
+ #loadPrintArea .load-manifest-grid{flex:1 1 auto;min-height:0!important;overflow:hidden!important;gap:var(--load-print-gap,.6mm)!important;padding:0!important;background:#fff!important}
+ #loadPrintArea .load-manifest-pairs,#loadPrintArea .load-manifest-video-stack{gap:var(--load-print-gap,.6mm)!important}
+ #loadPrintArea .load-manifest-pair,#loadPrintArea .load-manifest-rest{gap:var(--load-print-gap,.6mm)!important}
+ #loadPrintArea .load-manifest-pairs{min-height:0!important}
+ #loadPrintArea .load-manifest-rest{grid-auto-rows:var(--load-print-card-height,17mm)!important;align-content:start;min-height:0!important}
+ #loadPrintArea .load-manifest-card,#loadPrintArea .load-manifest-card.tandem,#loadPrintArea .load-manifest-card.video,#loadPrintArea .load-manifest-card.rental{height:var(--load-print-card-height,17mm)!important;min-height:var(--load-print-card-height,17mm)!important;max-height:var(--load-print-card-height,17mm)!important;box-sizing:border-box!important;padding:var(--load-print-card-padding,1mm)!important;font-size:var(--load-print-card-font,10pt)!important;line-height:1.05!important;overflow:hidden!important;border-radius:0!important;box-shadow:none!important;break-inside:avoid}
+ #loadPrintArea .load-manifest-card.tandem{grid-template-columns:minmax(0,1fr) auto!important}
+ #loadPrintArea .load-manifest-card.jumper .load-manifest-side-details,#loadPrintArea .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra{font-size:var(--load-print-card-font,10pt)!important;line-height:1.05!important}
+ #loadPrintArea .load-jumper-extra{margin-top:.3mm!important;font-size:var(--load-print-card-font,10pt)!important;line-height:1.05!important}
+ #loadPrintArea .load-manifest-side-type{font-size:var(--load-print-card-font,10pt)!important;line-height:1.05!important}
+ #loadPrintArea .load-manifest-camera{width:3mm!important;height:3mm!important;flex-basis:3mm!important}
+ #loadPrintArea .load-manifest-empty-cell{height:var(--load-print-card-height,17mm)!important;min-height:var(--load-print-card-height,17mm)!important;max-height:var(--load-print-card-height,17mm)!important}
+ #loadPrintArea .load-manifest-empty-message{padding:1mm!important}
+ #loadPrintArea .load-manifest-card,#loadPrintArea .load-manifest-card.video,#loadPrintArea .load-manifest-card.rental{background:#fff!important;color:#000!important}
+ #loadPrintArea .load-manifest-card.tandem{background:#fff!important;color:#000!important;border:1px solid #000!important}
+ #loadPrintArea .load-manifest-card.rental{border:1px solid #111!important}
+ #loadPrintArea .load-manifest-card.lo{border:1px dotted #000!important}
+ #loadPrintArea .load-manifest-card.my-jumper{outline:0!important}
+}
