@@ -309,7 +309,7 @@
         : false;
 
       if (validStaff) {
-        SkyKefAdminAuth.createSession(username, user.role);
+        SkyKefAdminAuth.createSession(username, "admin");
       } else {
         const jumper = await SkyKefAdminAuth.verifyJumper(typedUsername, password);
         if (!jumper) {
