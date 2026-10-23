@@ -59,3 +59,11 @@
  #loadPrintArea .load-manifest-empty-cell{min-height:18mm}
  #loadPrintArea .load-manifest-empty-message{border-radius:0}
 }
+
+@media print{
+ #loadPrintArea .load-manifest-card,#loadPrintArea .load-manifest-card.video,#loadPrintArea .load-manifest-card.rental{background:#fff!important;color:#000!important}
+ #loadPrintArea .load-manifest-card.tandem{background:#fff!important;color:#000!important;border:2px solid #000!important}
+ #loadPrintArea .load-manifest-card.rental{border:1px solid #111!important}
+ #loadPrintArea .load-manifest-card.lo{border:2px dotted #000!important}
+ #loadPrintArea.compact-load-print .load-manifest-card,#loadPrintArea.compact-load-print .load-manifest-card.tandem,#loadPrintArea.compact-load-print .load-manifest-card.video,#loadPrintArea.compact-load-print .load-manifest-card.rental{min-height:18mm!important}
+}
