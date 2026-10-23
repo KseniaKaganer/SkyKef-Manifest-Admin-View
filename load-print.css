@@ -95,3 +95,7 @@
  #loadPrintArea .load-manifest-card.lo{border:1px dotted #000!important}
  #loadPrintArea .load-manifest-card.my-jumper{outline:0!important}
 }
+
+@media print{
+ #loadPrintArea h2{font-size:24pt!important;line-height:1.05!important;margin:0 0 .6mm!important}
+}
