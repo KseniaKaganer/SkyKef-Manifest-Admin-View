@@ -172,3 +172,18 @@
   }
   .load-manifest-altitude { font-size: 1.15em !important; }
 }
+
+/* Identify jump masters under their names and keep right-side details clean */
+.load-manifest-jumpmaster {
+  margin-top: 3px;
+  font-size: .9em;
+  font-weight: 800;
+  line-height: 1.1;
+}
+@media print {
+  #loadPrintArea .load-manifest-jumpmaster {
+    margin-top: .3mm;
+    font-size: var(--load-print-card-font, 10pt) !important;
+    line-height: 1.05 !important;
+  }
+}
