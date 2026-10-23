@@ -22,8 +22,8 @@
 </style>
 <link rel="stylesheet" href="theme.css?v=logbook-years-13">
 <link rel="stylesheet" href="admin-load-table.css?v=type-2">
-<script src="load-presentation.js?v=personal-load-9"></script>
-<link rel="stylesheet" href="load-presentation.css?v=personal-load-11">
+<script src="load-presentation.js?v=manifest-cards-1"></script>
+<link rel="stylesheet" href="load-presentation.css?v=manifest-cards-1">
 <script src="load-view-tools.js?v=tools-1"></script>
 <link rel="stylesheet" href="load-view-tools.css?v=tools-1">
 </head>
@@ -71,25 +71,15 @@
       <div id="loadDetail">
         <div class="load-summary" id="loadSummary"></div>
 
-        <div class="load-table-scroll">
-          <table class="load-table admin-load-table">
-            <thead>
-              <tr>
-                <th class="load-uid-column">UID</th>
-                <th>Jumper</th>
-                <th class="load-type-column">Type</th>
-                <th class="load-altitude-column">Altitude</th>
-              </tr>
-            </thead>
-            <tbody id="loadBody"></tbody>
-          </table>
+        <div class="load-manifest-scroll">
+          <div id="loadBody" class="load-manifest-grid"></div>
         </div>
       </div>
     </div>
   </section>
 </main>
-<link rel="stylesheet" href="load-print.css?v=balanced-6">
-<script src="load-print.js?v=column-order-9"></script>
+<link rel="stylesheet" href="load-print.css?v=manifest-cards-1">
+<script src="load-print.js?v=manifest-cards-1"></script>
 
 <script>
 (() => {
@@ -278,50 +268,9 @@
     loadTitle.classList.toggle("next-load-title", loadStatus(load) === "Next load");
 
     const count = getJumperCount(load.entries);
-    loadSummary.textContent =
-      `${count} jumper${count === 1 ? "" : "s"} · ${load.entries.length} ${load.entries.length === 1 ? "canopy" : "canopies"}`;
+    loadSummary.textContent = loadSummaryLabel(load.entries, count);
 
-    loadBody.innerHTML = "";
-
-    if (!load.entries.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.className = "report-empty";
-      td.textContent = "No jumper records in this load.";
-      tr.appendChild(td);
-      loadBody.appendChild(tr);
-      return;
-    }
-
-    load.entries.forEach(entry => {
-      const tr = document.createElement("tr");
-
-      const name = document.createElement("td");
-      name.className = "load-jumper-name";
-      name.textContent = displayName(jumpersByUid.get(entry.uid), entry.uid);
-      appendLoadNameDetails(name,entry.details);
-
-      const uid = document.createElement("td");
-      uid.textContent = entry.uid;
-      uid.className = "load-uid-column";
-
-      const activity = document.createElement("td");
-      activity.textContent = loadActivityLabel(entry.activity);
-      activity.className="load-type-column";
-      if (jumperCountForActivity(entry.activity) === 2) {
-        activity.title = "Counts as 2 jumpers";
-      }
-
-      const details = document.createElement("td");
-      details.textContent = loadAltitudeValue(entry.details,entry.activity,{jumperView:false});
-      details.className="load-details-column";
-      decorateLoadConnection(tr,name,entry);
-      if(isLoggedInLoadJumper(entry,jumpersByUid))tr.classList.add("my-jumper-row");
-
-      tr.append(uid, name, activity, details);
-      loadBody.appendChild(tr);
-    });
+    renderLoadManifest(loadBody, load.entries, jumpersByUid);
   }
 
   function renderLoads() {
