@@ -10,8 +10,10 @@ function appendLoadNameDetails(nameCell,details){
   const {extra}=splitLoadDetails(details);
   if(extra){const text=document.createElement('div');text.className='load-jumper-extra';text.textContent=extra;nameCell.appendChild(text);}
 }
-function appendLoadSpecialDetails(nameCell,details){
-  const value=String(details??'').split('·').map(part=>part.trim()).filter(part=>part&&part!=='—').join(' · ');
+function appendLoadSpecialDetails(nameCell,details,specialData=[]){
+  const values=String(details??'').split('·').map(part=>part.trim()).filter(part=>part&&part!=='—');
+  if(Array.isArray(specialData))values.push(...specialData.map(value=>String(value??'').trim()).filter(Boolean));
+  const value=values.join(' · ');
   if(value){const text=document.createElement('div');text.className='load-jumper-extra';text.textContent=value;nameCell.appendChild(text);}
 }
 
@@ -148,11 +150,11 @@ function renderLoadManifest(container,entries,jumpersByUid){
     if(kind==='jumper')main.classList.add('load-manifest-centered-main');
     card.appendChild(main);
     const activity=String(entry.activity??'').trim().toUpperCase();
-    if(/(^|[^A-Z0-9])LO([^A-Z0-9]|$)/i.test(activity+' '+String(entry.details??'')))card.classList.add('lo');
+    if(/(^|[^A-Z0-9])LO([^A-Z0-9]|$)/i.test(activity+' '+String(entry.details??'')+' '+String((entry.specialData||[]).join(' '))))card.classList.add('lo');
     if(kind==='jumper'){
       const side=document.createElement('div');
       side.className='load-manifest-side-details';
-      appendLoadSpecialDetails(side,entry.details);
+      appendLoadSpecialDetails(side,entry.details,entry.specialData);
       const label=loadActivityLabel(entry.activity);
       if(label){
         const type=document.createElement('div');
