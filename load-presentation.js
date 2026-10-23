@@ -13,7 +13,7 @@ function appendLoadNameDetails(nameCell,details){
 function appendLoadSpecialDetails(nameCell,details,specialData=[]){
   const values=String(details??'').split('·').map(part=>part.trim()).filter(part=>part&&part!=='—');
   if(Array.isArray(specialData))values.push(...specialData.map(value=>String(value??'').trim()).filter(Boolean));
-  const value=values.join(' · ');
+  const value=values.join(', ');
   if(value){const text=document.createElement('div');text.className='load-jumper-extra';text.textContent=value;nameCell.appendChild(text);}
 }
 
@@ -152,11 +152,18 @@ function renderLoadManifest(container,entries,jumpersByUid){
     const activity=String(entry.activity??'').trim().toUpperCase();
     if(/(^|[^A-Z0-9])LO([^A-Z0-9]|$)/i.test(activity+' '+String(entry.details??'')+' '+String((entry.specialData||[]).join(' '))))card.classList.add('lo');
     if(kind==='jumper'){
+      const jumpMaster=/(^|[^A-Z0-9])LO([^A-Z0-9]|$)/i.test(activity);
+      if(jumpMaster){
+        const role=document.createElement('div');
+        role.className='load-manifest-jumpmaster';
+        role.textContent='Jump master';
+        main.appendChild(role);
+      }
       const side=document.createElement('div');
       side.className='load-manifest-side-details';
       appendLoadSpecialDetails(side,entry.details,entry.specialData);
       const label=loadActivityLabel(entry.activity);
-      if(label){
+      if(label&&!jumpMaster){
         const type=document.createElement('div');
         type.className='load-manifest-side-type';
         type.textContent=label;
