@@ -108,3 +108,18 @@
  #loadPrintArea .load-print-altitude-list{font-size:10pt;font-weight:700;line-height:1.05;text-align:right}
  #loadPrintArea .load-print-footer{flex:0 0 auto;margin-top:.8mm;padding-top:.6mm;border-top:.25mm solid #111;text-align:center;font-size:8pt;line-height:1}
 }
+
+/* Improve printed name and altitude legibility within the fitted cards */
+@media print {
+  #loadPrintArea .load-manifest-name {
+    font-size: 1.2em !important;
+    line-height: 1.05 !important;
+  }
+  #loadPrintArea .load-manifest-card.tandem .load-jumper-extra {
+    font-size: calc(var(--load-print-card-font, 10pt) + 1pt) !important;
+    line-height: 1.05 !important;
+  }
+  #loadPrintArea .load-manifest-altitude {
+    font-size: 1.15em !important;
+  }
+}
