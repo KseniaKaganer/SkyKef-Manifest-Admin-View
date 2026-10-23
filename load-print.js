@@ -7,7 +7,7 @@
     let hasHopAndPop=false;
     const altitudes=new Set();
     const addAltitude=value=>{
-      const match=String(value??'').trim().match(/^(\\d+(?:\\.\\d+)?)/);
+      const match=String(value??'').trim().match(/^(\d+(?:\.\d+)?)/);
       if(!match)return;
       let number=Number(match[1]);
       if(number>1000)number/=1000;
@@ -17,11 +17,11 @@
       card.querySelectorAll('.load-manifest-altitude').forEach(node=>addAltitude(node.textContent));
       card.querySelectorAll('.load-jumper-extra').forEach(node=>{
         const detail=String(node.textContent??'');
-        if(/\\bH\\s*&\\s*P\\b/i.test(detail))hasHopAndPop=true;
+        if(/\bH\s*&\s*P\b/i.test(detail))hasHopAndPop=true;
         detail.split('·').forEach(part=>{
           const value=part.trim();
-          if(/^(?:altitude|height)\\s*:?\\s*\\d/i.test(value))addAltitude(value.replace(/^(?:altitude|height)\\s*:?\\s*/i,''));
-          else if(/^\\d+(?:\\.\\d+)?$/.test(value))addAltitude(value);
+          if(/^(?:altitude|height)\s*:?\s*\d/i.test(value))addAltitude(value.replace(/^(?:altitude|height)\s*:?\s*/i,''));
+          else if(/^\d+(?:\.\d+)?$/.test(value))addAltitude(value);
         });
       });
     });
@@ -34,6 +34,8 @@
     clearPrintArea();
     printArea=document.createElement('section');printArea.id='loadPrintArea';
     printArea.dir=document.documentElement.dir || 'ltr';
+    const manifest=document.getElementById('loadBody').cloneNode(true);
+    manifest.removeAttribute('id');
     const {hasHopAndPop,altitudes}=collectAltitudeLines(manifest);
     const altitudeHeader=document.createElement('div');altitudeHeader.className='load-print-altitudes';
     const title=document.createElement('h1');title.textContent='Altitudes';
@@ -48,8 +50,6 @@
     const printHeader=document.createElement('div');printHeader.className='load-print-top';printHeader.append(timestamp,altitudeHeader);
     const load=document.createElement('h2');load.textContent=document.getElementById('loadTitle').textContent.split('·')[0].trim();
     const summary=document.createElement('p');summary.className='load-print-counts';summary.textContent=document.getElementById('loadSummary').textContent;
-    const manifest=document.getElementById('loadBody').cloneNode(true);
-    manifest.removeAttribute('id');
     let printRows=0;
     manifest.querySelectorAll('.load-manifest-pair').forEach(pair=>{
       const videoRows=pair.querySelectorAll('.load-manifest-video-stack .load-manifest-card').length;
