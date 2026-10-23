@@ -24,3 +24,14 @@
  #loadPrintArea.compact-load-print .load-manifest-card.tandem{min-height:13mm}
  #loadPrintArea.compact-load-print .load-jumper-extra{font-size:7.5pt}
 }
+/* Monochrome printing: use clear outlines instead of shaded blocks */
+@media print{
+ #loadPrintArea .load-manifest-grid{background:#fff!important;color:#000!important;padding:0!important;print-color-adjust:economy;-webkit-print-color-adjust:economy}
+ #loadPrintArea .load-manifest-card,#loadPrintArea .load-manifest-card.video,#loadPrintArea .load-manifest-card.rental{background:#fff!important;color:#000!important;border:1px solid #111}
+ #loadPrintArea .load-manifest-card.tandem{background:#fff!important;color:#000!important;border:2px solid #000}
+ #loadPrintArea .load-manifest-card.rental{border:2px dashed #000}
+ #loadPrintArea .load-manifest-card.tandem .load-jumper-extra{font-size:10pt!important;line-height:1.25}
+ #loadPrintArea .load-manifest-empty-message{background:#fff!important;color:#000!important;border:1px solid #111}
+ #loadPrintArea .load-manifest-empty-cell{background:transparent!important}
+ #loadPrintArea.compact-load-print .load-manifest-card.tandem .load-jumper-extra{font-size:8.5pt!important}
+}
