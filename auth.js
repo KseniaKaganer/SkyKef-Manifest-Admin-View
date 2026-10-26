@@ -60,14 +60,18 @@
 
   function getSession() {
     try {
-      const raw = sessionStorage.getItem(SESSION_KEY);
+      const raw = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const session = JSON.parse(raw);
       if (session?.role === "manifest") {
         session.role = "admin";
-        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       }
-      return session && session.username && ["admin", "manifest", "jumper"].includes(session.role) ? session : null;
+      if (!session || !session.username || !["admin", "manifest", "jumper"].includes(session.role)) return null;
+      // Move existing tab sessions into shared storage without requiring another login.
+      localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      sessionStorage.removeItem(SESSION_KEY);
+      return session;
     } catch {
       return null;
     }
@@ -141,7 +145,7 @@
 
   function createSession(username, role) {
     if (!["admin", "manifest"].includes(role)) throw new Error("Invalid login role");
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
       username: String(username).trim(),
       role,
       loggedInAt: Date.now()
@@ -150,7 +154,7 @@
 
   function createJumperSession(jumper) {
     const username = `${jumper?.Name ?? ""} ${jumper?.Surname ?? ""}`.trim() || String(jumper?.Name || "Jumper");
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
       username,
       role: "jumper",
       jumperKey: String(jumper.key),
@@ -215,9 +219,16 @@
   }
 
   function logout() {
+    localStorage.removeItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
     location.replace("index.html");
   }
+
+  window.addEventListener("storage", event => {
+    if (event.key !== SESSION_KEY && event.key !== null) return;
+    sessionStorage.removeItem(SESSION_KEY);
+    location.reload();
+  });
 
   async function getLoginUsers() {
     const lists = await Promise.all(["admin", "manifest"].map(async role => {
