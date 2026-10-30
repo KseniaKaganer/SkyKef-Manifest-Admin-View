@@ -187,3 +187,32 @@
     line-height: 1.05 !important;
   }
 }
+
+/* Compact phone manifests: give names the full card width. */
+@media screen and (max-width:600px) {
+  .load-manifest-grid { padding:6px; gap:6px; }
+  .load-manifest-pairs,.load-manifest-video-stack { gap:6px; }
+  .load-manifest-pair,.load-manifest-rest { gap:6px; }
+  .load-manifest-rest { grid-auto-rows:auto; }
+  .load-manifest-card,.load-manifest-card.tandem {
+    min-height:64px; padding:8px; gap:5px; border-radius:8px;
+    font-size:14px; line-height:1.25;
+  }
+  .load-manifest-card.jumper {
+    display:flex; flex-direction:column; align-items:stretch; justify-content:center;
+  }
+  .load-manifest-card.jumper .load-manifest-name,
+  .load-manifest-name { font-size:15px; line-height:1.2; overflow-wrap:break-word; }
+  .load-manifest-card.jumper .load-manifest-centered-main { width:100%; text-align:left; }
+  .load-manifest-card.jumper .load-manifest-side-details {
+    width:100%; text-align:left; font-size:12px; overflow-wrap:break-word;
+  }
+  .load-manifest-card.jumper .load-manifest-side-details .load-jumper-extra {
+    margin-top:2px; font-size:12px; line-height:1.25;
+  }
+  .load-manifest-card.tandem .load-jumper-extra { font-size:12px!important; line-height:1.25; }
+  .load-manifest-altitude { font-size:14px; }
+  .load-manifest-meta { min-width:24px; }
+  .load-manifest-empty-cell { min-height:64px; }
+  .load-summary { font-size:13px; overflow-wrap:break-word; }
+}
