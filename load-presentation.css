@@ -216,3 +216,38 @@
   .load-manifest-empty-cell { min-height:64px; }
   .load-summary { font-size:13px; overflow-wrap:break-word; }
 }
+
+/* Joined screen cells separated by fine rules instead of gutters. */
+@media screen {
+  .load-manifest-grid {
+    padding:0; gap:0; background:#fff; min-height:0;
+  }
+  .load-manifest-pairs,.load-manifest-video-stack,
+  .load-manifest-pair,.load-manifest-rest { gap:0; }
+  .load-manifest-card,.load-manifest-card.tandem,
+  .load-manifest-card.video,.load-manifest-card.rental {
+    border:0; border-inline-end:1px solid #89939d;
+    border-bottom:1px solid #89939d; border-radius:0; box-shadow:none;
+  }
+  .load-manifest-card,.load-manifest-card.video,
+  .load-manifest-empty-message { background:#fff; }
+  .load-manifest-empty-cell {
+    border-inline-end:1px solid #89939d; border-bottom:1px solid #89939d;
+    background:#fff;
+  }
+  .load-manifest-empty-message { border:0; border-radius:0; }
+}
+@media screen and (max-width:600px) {
+  .page:has(.loads-layout) { padding-inline:0; }
+  #publicLoadsCard {
+    width:100%; max-width:none; box-sizing:border-box;
+    padding:0; border:0; border-radius:0;
+  }
+  #publicLoadsIntro,#jumperManifestSummary,
+  .page:has(.loads-layout) > .today-loads-head,
+  .page:has(.loads-layout) > .hero,
+  .page:has(.loads-layout) > .status { margin-inline:12px; }
+  .loads-layout { width:100%; min-width:0; }
+  .load-detail-panel,.loads-list-panel { border-inline:0; border-radius:0; min-width:0; }
+  .load-manifest-scroll { max-height:none; overflow:visible; }
+}
