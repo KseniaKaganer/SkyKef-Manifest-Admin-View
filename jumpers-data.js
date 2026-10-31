@@ -28,11 +28,13 @@ function saveViewState(){
 }
 const logbookCache=new Map();
 let todayJumpCounts=new Map();
+const todayDateInput=todayOnly?document.getElementById("reportDateInput"):null;
+const todayCalendar=todayOnly?createReportCalendar(todayDateInput,fetchDb):null;
 const todayJumpSort=document.getElementById("todayJumpSort");
 const displayName=j=>`${j.Name??""} ${j.Surname??""}`.trim()||"Unnamed jumper";
 function normalize(data){if(!data)return[];if(Array.isArray(data))return data.map((v,i)=>v?({key:String(i),...v}):null).filter(Boolean);if(typeof data==="object")return Object.entries(data).filter(([,v])=>v&&typeof v==="object").map(([k,v])=>({key:k,...v}));return[]}
 function renderList(){const q=searchInput.value.trim().toLowerCase();const filtered=jumpers.filter(j=>[j.Name,j.Surname,j.Phone,j.Id,j.Uid].filter(v=>v!==undefined&&v!==null).join(" ").toLowerCase().includes(q));listEl.innerHTML="";
-if(!filtered.length){const e=document.createElement("div");e.className="detail-empty";e.textContent=q?"No jumpers match your search.":todayOnly?"No jumpers are manifested on today’s loads.":"No jumpers found.";listEl.appendChild(e)}
+if(!filtered.length){const e=document.createElement("div");e.className="detail-empty";e.textContent=q?"No jumpers match your search.":todayOnly?"No jumpers are manifested on the selected date’s loads.":"No jumpers found.";listEl.appendChild(e)}
 else {
 const appendRow=(j,target)=>{const b=document.createElement("button");b.type="button";b.className="jumper-row"+(j.key===selectedKey?" active":"");const n=document.createElement("div");n.className="jumper-name";n.textContent=displayName(j);const s=document.createElement("div");s.className="jumper-sub";s.textContent=todayOnly?`UID: ${j.Uid??j.uid??j.key}`:j.Id?`ID: ${j.Id}`:`Record: ${j.key}`;
 if(todayOnly){
@@ -75,7 +77,7 @@ Object.keys(j).filter(k=>k!=="key" && !["numberofjumpestoday","numberofjumpstoda
 
 function hasData(value){return value!==null&&value!==undefined&&(typeof value!=="object"||Object.keys(value).length>0)}
 function hasWorkerArray(j){return Object.keys(j||{}).some(k=>k.toLowerCase()==="worker"&&hasData(j[k]))}
-async function fetchDb(path){const r=await fetch(`${DB}/${path}.json`,{cache:"no-store"});if(!r.ok)throw new Error(`${path}: HTTP ${r.status}`);return r.json()}
+async function fetchDb(path,shallow=false){const r=await fetch(`${DB}/${path}.json${shallow?"?shallow=true":""}`,{cache:"no-store"});if(!r.ok)throw new Error(`${path}: HTTP ${r.status}`);return r.json()}
 function treeContainsUid(node,uid){if(!node||typeof node!=="object")return false;if(Object.prototype.hasOwnProperty.call(node,String(uid)))return true;return Object.values(node).some(v=>treeContainsUid(v,uid))}
 function collectNameKeys(node,j){
  if(!node||typeof node!=="object")return[];
@@ -364,14 +366,25 @@ async function loadLogbook(jumper){
 detailsTab.addEventListener("click",()=>setDetailTab("details"));
 logbookTab.addEventListener("click",()=>setDetailTab("logbook"));
 
-async function load(){const savedView=readViewState();statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;try{const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const allJumpers=normalize(await r.json());
+async function load(refreshDates=false){const savedView=readViewState();statusEl.textContent="Loading jumpers…";reloadBtn.disabled=true;todayCalendar?.setBusy(true);try{if(!await SkyKefAdminAuth.ready)return;const r=await fetch(FIREBASE_URL,{cache:"no-store"});if(!r.ok)throw new Error(`HTTP ${r.status}`);const allJumpers=normalize(await r.json());
 if(todayOnly){
-  const [loads,currentData]=await Promise.all([fetchDb("loads"),fetchDb("current_data")]);
-  const date=SkyKefAdminAuth.formatDate(currentData?.date);
-  document.getElementById("todayDate").textContent=`Date: ${date}`;
-  const today=new Intl.DateTimeFormat("en-GB",{timeZone:"Asia/Jerusalem",day:"2-digit",month:"2-digit",year:"numeric"}).format(new Date());
-  todayJumpCounts=date===today?countTodayJumps(loads):new Map();
-  jumpers=date===today?filterTodayJumpers(allJumpers,loads):[];
+  const currentData=await fetchDb("current_data");
+  const formattedDate=SkyKefAdminAuth.formatDate(currentData?.date);
+  const match=formattedDate.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  const currentDate=match?`${match[3]}-${match[2]}-${match[1]}`:"";
+  if(refreshDates || !todayDateInput.value)await todayCalendar.refresh(currentDate);
+  const selectedDate=todayDateInput.value;
+  let loads=null;
+  if(selectedDate && todayCalendar.has(selectedDate)){
+    const [year,month,day]=selectedDate.split("-").map(Number);
+    const historyPath=`loads_history/${year}/${month}/${day}`;
+    loads=await fetchDb(selectedDate===currentDate?"loads":historyPath);
+    if(selectedDate===currentDate && loads==null)loads=await fetchDb(historyPath);
+  }
+  document.getElementById("todayDate").textContent=selectedDate
+    ?`Date: ${selectedDate.split("-").reverse().join("/")}`:"No active dates available.";
+  todayJumpCounts=countTodayJumps(loads);
+  jumpers=filterTodayJumpers(allJumpers,loads);
 }else jumpers=allJumpers;
 jumpers.sort((a,b)=>displayName(a).localeCompare(displayName(b),undefined,{sensitivity:"base"}));
 selectedKey=null;
@@ -391,7 +404,7 @@ if(savedView){
   }
   setDetailTab(savedView.tab==="logbook"?"logbook":"details");
 }
-}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false}}
+}catch(e){console.error(e);statusEl.textContent="Could not load Firebase data.";listEl.innerHTML='<div class="detail-empty">Failed to load jumpers. Check Firebase rules and the database URL.</div>'}finally{reloadBtn.disabled=false;todayCalendar?.setBusy(false)}}
 todayJumpSort?.addEventListener("click",()=>{
   const ascending=todayJumpSort.value!=="asc";
   todayJumpSort.value=ascending?"asc":"desc";
@@ -400,4 +413,4 @@ todayJumpSort?.addEventListener("click",()=>{
   todayJumpSort.setAttribute("aria-pressed",String(ascending));
   renderList();
 });
-searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",load);load();
+searchInput.addEventListener("input",renderList);reloadBtn.addEventListener("click",()=>load(true));todayDateInput?.addEventListener("change",()=>load());load(true);
