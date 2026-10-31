@@ -1,6 +1,9 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Today Jumpers | SkyKef Manifest Admin View</title><link rel="stylesheet" href="style.css?v=settings-theme-1">  <script src="preferences.js?v=local-checkin-14"></script>
 <script src="auth.js?v=merge-history-1"></script>
+<link rel="stylesheet" href="report-calendar.css?v=sunday-1">
 <style>
+.daily-report-date-control{position:relative;display:inline-flex;align-items:center;gap:8px;margin-bottom:12px}
+
 #todayDate{display:inline-block;margin:0 0 20px;padding:10px 14px;font-size:1.15rem;font-weight:700;line-height:1.4;color:var(--text);background:var(--theme-hover, #10253a);border:1px solid #315a7f;border-radius:10px}
 
 .today-jumper-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
@@ -22,7 +25,14 @@
     </nav></div></header>
 <main class="page">
 <h2>Today Jumpers</h2>
-<p id="todayDate" class="status">Loading today’s date…</p>
+<div class="daily-report-date-control"><span>Date</span><input id="reportDateInput" type="hidden">
+<button id="reportCalendarButton" class="small-btn" type="button" aria-expanded="false" aria-controls="reportCalendarPopup" disabled>Loading dates…</button>
+<div id="reportCalendarPopup" class="report-calendar" hidden role="dialog" aria-label="Choose work day">
+<div class="report-calendar-nav"><button id="reportCalendarPrev" type="button" aria-label="Previous month">‹</button><select id="reportCalendarMonth" aria-label="Month"></select><select id="reportCalendarYear" aria-label="Year"></select><button id="reportCalendarNext" type="button" aria-label="Next month">›</button></div>
+<div class="report-calendar-weekdays" aria-hidden="true"><span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span></div>
+<div id="reportCalendarDays" class="report-calendar-days"></div><p id="reportCalendarMessage" role="status"></p>
+</div></div>
+<p id="todayDate" class="status">Loading active date…</p>
 <div class="toolbar"><input id="searchInput" class="search" type="search" placeholder="Search jumper by name, surname, phone or ID..."><button id="reloadBtn" class="small-btn" type="button">Reload Data</button></div>
 <div id="status" class="status">Loading jumpers…</div><section class="admin-grid"><div class="list-panel"><div class="panel-head today-list-heading"><span>Today Jumpers</span><button id="todayJumpSort" class="small-btn today-sort-toggle" type="button" value="desc" aria-label="Sort by jumps: most to fewest" aria-pressed="false">Most to fewest ↓</button></div><div id="jumpersList" class="jumpers-list"></div></div><div class="detail-panel">
   <div class="detail-tabs" role="tablist" aria-label="Jumper information">
@@ -56,4 +66,5 @@
 <script src="today-jumpers-data.js?v=today-toggle-3"></script>
 <script src="logbook-annual-stats.js?v=collapsible-2"></script>
 <script src="jumper-editor.js?v=editor-rows-1"></script>
-<script src="jumpers-data.js?v=today-toggle-3"></script></body></html>
+<script src="report-calendar.js?v=sunday-1"></script>
+<script src="jumpers-data.js?v=active-dates-4"></script></body></html>
